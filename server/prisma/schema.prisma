@@ -1,0 +1,200 @@
+// ==============================================================================
+// Appointly — Prisma Schema Definition (Sprint 1)
+// ==============================================================================
+// Reference: System-Level SDS Section 3 & Sprint 1 Engineering Contracts
+// Database: PostgreSQL 16
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------------------------
+// Enums
+// ------------------------------------------------------------------------------
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProfileStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ExceptionType {
+  HOLIDAY
+  BREAK
+  UNAVAILABLE
+  CUSTOM_HOURS
+}
+
+// ------------------------------------------------------------------------------
+// Models
+// ------------------------------------------------------------------------------
+
+/// Stores shared authentication credentials and role assignments for all system users.
+model User {
+  userId            String              @id @default(uuid()) @map("user_id") @db.Uuid
+  email             String              @unique @db.VarChar(255)
+  passwordHash      String              @map("password_hash") @db.VarChar(255)
+  role              Role                @default(PATIENT)
+  accountStatus     AccountStatus       @default(ACTIVE) @map("account_status")
+  refreshTokenHash  String?             @map("refresh_token_hash") @db.VarChar(255)
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  patient           Patient?
+  doctor            Doctor?
+  createdExceptions ScheduleException[]
+  updatedSettings   ClinicSetting[]
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+/// Stores essential demographic and contact data for registered patients.
+/// Must not contain diagnosis, treatment, prescription, or laboratory result information.
+model Patient {
+  patientId   String    @id @default(uuid()) @map("patient_id") @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  fullName    String    @map("full_name") @db.VarChar(150)
+  phoneNumber String    @map("phone_number") @db.VarChar(30)
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user        User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("patients")
+}
+
+/// Stores medical provider profile metadata and booking eligibility status.
+model Doctor {
+  doctorId                  String              @id @default(uuid()) @map("doctor_id") @db.Uuid
+  userId                    String              @unique @map("user_id") @db.Uuid
+  fullName                  String              @map("full_name") @db.VarChar(150)
+  specialization            String              @db.VarChar(150)
+  professionalLicenseNumber String?             @map("professional_license_number") @db.VarChar(100)
+  profileStatus             ProfileStatus       @default(ACTIVE) @map("profile_status")
+  createdAt                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user                      User                @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  doctorServices            DoctorService[]
+  schedules                 DoctorSchedule[]
+  exceptions                ScheduleException[]
+
+  @@map("doctors")
+}
+
+/// Stores the clinic's catalog of billable/schedulable outpatient services.
+model MedicalService {
+  serviceId       String          @id @default(uuid()) @map("service_id") @db.Uuid
+  serviceName     String          @unique @map("service_name") @db.VarChar(150)
+  description     String?         @db.Text
+  durationMinutes Int             @map("duration_minutes") // CHECK (duration_minutes > 0 AND duration_minutes <= 480)
+  serviceStatus   ServiceStatus   @default(ACTIVE) @map("service_status")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  doctorServices  DoctorService[]
+
+  @@map("medical_services")
+}
+
+/// Join entity modeling the many-to-many assignment between doctors and medical services.
+model DoctorService {
+  doctorServiceId String         @id @default(uuid()) @map("doctor_service_id") @db.Uuid
+  doctorId        String         @map("doctor_id") @db.Uuid
+  serviceId       String         @map("service_id") @db.Uuid
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  doctor          Doctor         @relation(fields: [doctorId], references: [doctorId], onDelete: Cascade)
+  service         MedicalService @relation(fields: [serviceId], references: [serviceId], onDelete: Cascade)
+
+  @@unique([doctorId, serviceId])
+  @@map("doctor_services")
+}
+
+/// Stores recurring weekly working windows for each doctor.
+model DoctorSchedule {
+  scheduleId String   @id @default(uuid()) @map("schedule_id") @db.Uuid
+  doctorId   String   @map("doctor_id") @db.Uuid
+  dayOfWeek  Int      @map("day_of_week") @db.SmallInt // CHECK (day_of_week >= 0 AND day_of_week <= 6)
+  startTime  String   @map("start_time") @db.VarChar(8) // HH:mm:ss
+  endTime    String   @map("end_time") @db.VarChar(8)   // HH:mm:ss, CHECK (end_time > start_time)
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  doctor     Doctor   @relation(fields: [doctorId], references: [doctorId], onDelete: Cascade)
+
+  @@map("doctor_schedules")
+}
+
+/// Stores date-specific schedule overrides, breaks, days off, and holidays.
+model ScheduleException {
+  exceptionId   String        @id @default(uuid()) @map("exception_id") @db.Uuid
+  doctorId      String        @map("doctor_id") @db.Uuid
+  exceptionDate DateTime      @map("exception_date") @db.Date
+  startTime     String?       @map("start_time") @db.VarChar(8) // HH:mm:ss (NULL for full-day)
+  endTime       String?       @map("end_time") @db.VarChar(8)   // HH:mm:ss (NULL for full-day)
+  exceptionType ExceptionType @map("exception_type")
+  reason        String?       @db.VarChar(255)
+  createdBy     String        @map("created_by") @db.Uuid
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  doctor        Doctor        @relation(fields: [doctorId], references: [doctorId], onDelete: Cascade)
+  author        User          @relation(fields: [createdBy], references: [userId], onDelete: Cascade)
+
+  @@map("schedule_exceptions")
+}
+
+/// Stores clinic-wide configurable operational parameters governed by Clinic Administrators.
+model ClinicSetting {
+  settingId                  String    @id @default(uuid()) @map("setting_id") @db.Uuid
+  clinicName                 String    @map("clinic_name") @db.VarChar(150)
+  timezone                   String    @default("Asia/Bangkok") @db.VarChar(64)
+  fixedStartIntervalMinutes  Int       @default(15) @map("fixed_start_interval_minutes") // CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60))
+  cancellationCutoffHours    Int       @default(24) @map("cancellation_cutoff_hours")     // CHECK (cancellation_cutoff_hours >= 0)
+  reminderLeadHours          Int       @default(24) @map("reminder_lead_hours")           // CHECK (reminder_lead_hours > 0)
+  updatedBy                  String?   @map("updated_by") @db.Uuid
+  updatedAt                  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  updater                    User?     @relation(fields: [updatedBy], references: [userId], onDelete: SetNull)
+
+  @@map("clinic_settings")
+}
+
+/// Records administrative overrides, account status toggles, and security-sensitive operations.
+model AuditLog {
+  auditId    String   @id @default(uuid()) @map("audit_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  actionType String   @map("action_type") @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String   @map("entity_id") @db.Uuid
+  details    Json?    @db.JsonB
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("audit_logs")
+}

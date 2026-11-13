@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: Appointly Clinic Appointment & Scheduling Management API
+  description: |
+    RESTful API specification for Appointly, a three-tier clinic appointment
+    and scheduling management system providing role-scoped capabilities for
+    Patients, Doctors, and Clinic Administrators.
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local Development Server
+  - url: https://appointly-api-w34327vnaq-as.a.run.app/api/v1
+    description: GCP Cloud Run Staging/Production Server
+
+paths:
+  /health:
+    get:
+      summary: Liveness Health Probe
+      description: Returns 200 OK when the Express server process is running and responsive.
+      operationId: getHealth
+      tags:
+        - System
+      responses:
+        '200':
+          description: Server is live and healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                  - status
+
+  /ready:
+    get:
+      summary: Readiness Database Probe
+      description: Verifies end-to-end database connectivity by executing a SELECT 1 query against PostgreSQL 16.
+      operationId: getReady
+      tags:
+        - System
+      responses:
+        '200':
+          description: Database connection is active and responsive.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  db:
+                    type: string
+                    example: connected
+                required:
+                  - db
+        '503':
+          description: Database connection failed or unreachable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  db:
+                    type: string
+                    example: disconnected
+                required:
+                  - db
+
+components:
+  schemas:
+    SuccessEnvelope:
+      type: object
+      description: Standardized JSON success envelope.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          description: Payload data.
+        message:
+          type: string
+          example: Operation completed successfully.
+      required:
+        - success
+
+    ErrorEnvelope:
+      type: object
+      description: Standardized JSON error envelope.
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INVALID_SCHEDULE_WINDOW
+            message:
+              type: string
+              example: Schedule windows on the same day must not overlap.
+          required:
+            - code
+            - message
+      required:
+        - success
+        - error
+

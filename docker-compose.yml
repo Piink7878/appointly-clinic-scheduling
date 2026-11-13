@@ -1,18 +1,18 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: toktickit-db
+    container_name: appointly-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-toktickit}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-toktickit}
-      POSTGRES_DB: ${POSTGRES_DB:-toktickit}
+      POSTGRES_USER: ${POSTGRES_USER:-appointly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-appointly_dev_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-appointly}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-toktickit} -d ${POSTGRES_DB:-toktickit}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appointly} -d ${POSTGRES_DB:-appointly}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -21,24 +21,21 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: toktickit-migrate
+    container_name: appointly-migrate
     restart: "no"
     depends_on:
       db:
         condition: service_healthy
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-toktickit}:${POSTGRES_PASSWORD:-toktickit}@db:5432/${POSTGRES_DB:-toktickit}?schema=public
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdminInitial123!}
-      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-DemoInitial123!}
-      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-appointly}:${POSTGRES_PASSWORD:-appointly_dev_secret}@db:5432/${POSTGRES_DB:-appointly}?schema=public
     command: ["sh", "-c", "npx prisma migrate deploy && npm run prisma:seed"]
 
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: toktickit-server
+    container_name: appointly-server
     restart: unless-stopped
     depends_on:
       db:
@@ -49,7 +46,11 @@ services:
       NODE_ENV: production
       TZ: Asia/Bangkok
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-toktickit}:${POSTGRES_PASSWORD:-toktickit}@db:5432/${POSTGRES_DB:-toktickit}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-appointly}:${POSTGRES_PASSWORD:-appointly_dev_secret}@db:5432/${POSTGRES_DB:-appointly}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-your_super_secret_access_jwt_key_32bytes_minimum}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your_super_secret_refresh_jwt_key_32bytes_minimum}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      CLINIC_DEFAULT_TIMEZONE: ${CLINIC_DEFAULT_TIMEZONE:-Asia/Bangkok}
     ports:
       - "3000:3000"
 
@@ -59,7 +60,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ""
-    container_name: toktickit-client
+    container_name: appointly-client
     restart: unless-stopped
     depends_on:
       - server

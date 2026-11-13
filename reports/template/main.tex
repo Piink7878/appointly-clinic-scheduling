@@ -1,0 +1,27 @@
+\documentclass[12pt,a4paper]{article}
+
+\input{reports/template/preamble.tex}
+
+\title{\textbf{Appointly: Clinic Appointment \& Scheduling Management System}\\[0.5em]\large Deliverable Report Template}
+\author{Appointly Engineering Team}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+This document serves as the primary LaTeX reporting template for Appointly project deliverables.
+
+\section{System Architecture Overview}
+Appointly is designed as a Three-Tier Modular Monolith:
+\begin{itemize}
+    \item \textbf{Presentation Layer:} React + TypeScript + Vite + Tailwind CSS.
+    \item \textbf{Application Layer:} Node.js + Express + TypeScript.
+    \item \textbf{Data Layer:} PostgreSQL 16 + Prisma ORM with GiST exclusion constraints.
+\end{itemize}
+
+\end{document}
+

@@ -124,6 +124,15 @@ export async function fetchApi<T = unknown>(
 }
 
 /**
+ * Returns the `data` member of a `{ success, data, message }` envelope,
+ * tolerating a bare payload for resilience.
+ */
+export function unwrapData<T>(res: ApiResponse<T> | T): T {
+  const wrapped = res as ApiResponse<T>;
+  return (wrapped && wrapped.data !== undefined ? wrapped.data : res) as T;
+}
+
+/**
  * Convenient REST helper client methods
  */
 export const apiClient = {

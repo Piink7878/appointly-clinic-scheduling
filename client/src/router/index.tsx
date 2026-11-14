@@ -15,7 +15,10 @@ import { PatientServicesPage } from '../modules/patients/PatientServicesPage';
 import { PatientProfilePage } from '../modules/patients/PatientProfilePage';
 import { AdminPatientsPage } from '../modules/patients/AdminPatientsPage';
 import { DoctorSchedulePage } from '../modules/doctors/DoctorSchedulePage';
-import { AdminDoctorsPage } from '../modules/admin/AdminDoctorsPage';
+import { AdminDoctorsPage } from '../modules/doctors/AdminDoctorsPage';
+import { PatientDoctorsPage } from '../modules/doctors/PatientDoctorsPage';
+// Placeholder landing page still used by admin sections that are not built yet.
+import { AdminDoctorsPage as AdminPlaceholderPage } from '../modules/admin/AdminDoctorsPage';
 
 export const AppRouter: React.FC = () => {
   return (
@@ -62,6 +65,7 @@ export const AppRouter: React.FC = () => {
           <Route path="/patient" element={<PatientLayout />}>
             <Route index element={<Navigate to="/patient/services" replace />} />
             <Route path="services" element={<PatientServicesPage />} />
+            <Route path="doctors" element={<PatientDoctorsPage />} />
             <Route path="appointments" element={<PatientServicesPage />} />
             <Route path="profile" element={<PatientProfilePage />} />
           </Route>
@@ -85,9 +89,9 @@ export const AppRouter: React.FC = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/doctors" replace />} />
             <Route path="doctors" element={<AdminDoctorsPage />} />
-            <Route path="services" element={<AdminDoctorsPage />} />
-            <Route path="schedules" element={<AdminDoctorsPage />} />
-            <Route path="settings" element={<AdminDoctorsPage />} />
+            <Route path="services" element={<AdminPlaceholderPage />} />
+            <Route path="schedules" element={<AdminPlaceholderPage />} />
+            <Route path="settings" element={<AdminPlaceholderPage />} />
             <Route path="patients" element={<AdminPatientsPage />} />
           </Route>
         </Route>

@@ -8,10 +8,11 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Activity, LogOut, User, AlertTriangle, Calendar } from 'lucide-react';
+import { Activity, LogOut, User, AlertTriangle, Calendar, Stethoscope } from 'lucide-react';
 
 const NAV_ITEMS = [
   { to: '/patient/services', label: 'Services & Doctors', Icon: Activity },
+  { to: '/patient/doctors', label: 'Find a Doctor', Icon: Stethoscope },
   { to: '/patient/appointments', label: 'My Appointments', Icon: Calendar },
   { to: '/patient/profile', label: 'My Profile', Icon: User },
 ];
@@ -53,7 +54,7 @@ export const PatientLayout: React.FC = () => {
               </div>
 
               {/* Portal Links */}
-              <nav aria-label="Patient portal" className="hidden md:flex space-x-1">
+              <nav aria-label="Patient portal" className="hidden lg:flex space-x-1">
                 {NAV_ITEMS.map(({ to, label, Icon }) => (
                   <NavLink key={to} to={to} className={navLinkClass}>
                     <Icon className="w-4 h-4 mr-1.5" />
@@ -84,10 +85,10 @@ export const PatientLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Small-screen navigation (desktop nav above is hidden below md) */}
+        {/* Small-screen navigation (desktop nav above is hidden below lg) */}
         <nav
           aria-label="Patient portal (mobile)"
-          className="md:hidden border-t border-slate-100 px-4 sm:px-6 py-2 flex gap-1 overflow-x-auto"
+          className="lg:hidden border-t border-slate-100 px-4 sm:px-6 py-2 flex gap-1 overflow-x-auto"
         >
           {NAV_ITEMS.map(({ to, label, Icon }) => (
             <NavLink

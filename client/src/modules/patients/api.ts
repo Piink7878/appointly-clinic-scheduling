@@ -8,7 +8,7 @@
 // The backend wraps payloads as { success, data, message }; we read `data`.
 // ==============================================================================
 
-import { apiClient } from '../../shared/api';
+import { apiClient, unwrapData as unwrap } from '../../shared/api';
 import { ApiResponse } from '../../shared/types';
 import {
   ListPatientsParams,
@@ -18,12 +18,6 @@ import {
 } from './types';
 
 export const DEFAULT_PAGE_SIZE = 20;
-
-/** Returns `res.data`, tolerating a bare payload for resilience. */
-function unwrap<T>(res: ApiResponse<T> | T): T {
-  const wrapped = res as ApiResponse<T>;
-  return (wrapped && wrapped.data !== undefined ? wrapped.data : res) as T;
-}
 
 export async function getMyProfile(signal?: AbortSignal): Promise<PatientProfile> {
   const res = await apiClient.get<ApiResponse<PatientProfile>>('/patients/me', { signal });

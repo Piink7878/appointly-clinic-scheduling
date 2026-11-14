@@ -11,7 +11,7 @@
 // The server stays the authority; these checks give instant inline feedback.
 // ==============================================================================
 
-import { CreateDoctorInput, Doctor, UpdateDoctorInput } from './types';
+import { type CreateDoctorInput, type Doctor, type UpdateDoctorInput } from './types';
 
 export const DOCTOR_LIMITS = {
   email: 255,

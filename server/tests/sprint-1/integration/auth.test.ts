@@ -8,10 +8,10 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 describe('Auth & RBAC System (F-001)', () => {
   const validPassword = 'ChangeMe123!';
   const adminEmail = 'admin@appointly.local';

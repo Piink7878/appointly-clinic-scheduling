@@ -2,7 +2,7 @@
 // Appointly Server — Shared Types & Request Extensions
 // ==============================================================================
 
-import { Request } from 'express';
+import { type Request } from 'express';
 
 export type UserRole = 'PATIENT' | 'DOCTOR' | 'ADMIN';
 
@@ -13,6 +13,8 @@ export interface AuthUserPayload {
 }
 
 declare global {
+  // Augmenting Express's own `Express.Request` is only possible through a namespace declaration.
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: AuthUserPayload;

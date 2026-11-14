@@ -16,7 +16,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CalendarClock, Users } from 'lucide-react';
 import { AlertBanner, Modal, Skeleton, StatusBadge } from '../../shared/components';
 import { listDoctors } from '../doctors/api';
-import { Doctor } from '../doctors/types';
+import { type Doctor } from '../doctors/types';
 import {
   createDoctorException,
   deleteDoctorException,
@@ -24,7 +24,7 @@ import {
   saveDoctorSchedule,
 } from './api';
 import { ScheduleEditor } from './ScheduleEditor';
-import { MySchedule } from './types';
+import { type MySchedule } from './types';
 
 const doctorLabel = (d: Doctor): string =>
   `${d.fullName} — ${d.specialization}${d.profileStatus === 'INACTIVE' ? ' (inactive)' : ''}`;

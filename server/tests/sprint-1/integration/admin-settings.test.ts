@@ -8,10 +8,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 describe('F-007: Administrator Schedule & Clinic Configuration (STS-S1-009)', () => {
   const validPassword = 'ChangeMe123!';
   const adminEmail = 'admin@appointly.local';

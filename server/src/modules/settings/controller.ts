@@ -5,7 +5,7 @@
 // Exposes HTTP endpoints for public clinic settings reading and admin updates.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { settingsService } from './service';
 import { updateSettingsSchema } from './validation';
 import { AppError } from '../../shared/middleware/errorHandler';

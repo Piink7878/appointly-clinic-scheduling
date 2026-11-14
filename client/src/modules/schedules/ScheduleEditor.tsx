@@ -17,11 +17,11 @@ import { Save, Undo2 } from 'lucide-react';
 import { ApiClientError } from '../../shared/api';
 import { AlertBanner, FormField, Modal } from '../../shared/components';
 import { ExceptionsManager } from './ExceptionsManager';
-import { CreateExceptionInput, MySchedule, ScheduleException, ShiftInput, WeeklyShift } from './types';
+import { type CreateExceptionInput, type MySchedule, type ScheduleException, type ShiftInput, type WeeklyShift } from './types';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 import {
   REASON_MAX_LENGTH,
-  WeekDraft,
+  type WeekDraft,
   draftToPayload,
   isWeekDirty,
   shiftsToDraft,

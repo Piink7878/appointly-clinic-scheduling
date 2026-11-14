@@ -17,7 +17,7 @@ import { useDebouncedValue } from '../../shared/hooks';
 import { listServices } from './api';
 import { ServiceFormModal } from './ServiceFormModal';
 import { ServiceStatusModal } from './ServiceStatusModal';
-import { MedicalService, ServiceStatusFilter } from './types';
+import { type MedicalService, type ServiceStatusFilter } from './types';
 import { formatDuration } from './validation';
 
 export const SEARCH_DEBOUNCE_MS = 300;

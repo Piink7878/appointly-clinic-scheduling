@@ -13,10 +13,19 @@ import { isValidUuid } from '../../shared/utils/uuid';
 import { isUniqueViolation } from '../../shared/utils/prismaErrors';
 import { hashPassword } from '../../shared/utils/security';
 import {
-  CreateDoctorInput,
-  UpdateDoctorInput,
-  GetDoctorsQueryInput,
+  type CreateDoctorInput,
+  type UpdateDoctorInput,
+  type GetDoctorsQueryInput,
 } from './validation';
+
+/** A Service row as the formatters read it. */
+type ServiceRecord = Prisma.MedicalServiceGetPayload<object>;
+
+/** A Doctor row plus the optional relations the queries `include`. Only what the formatters read. */
+type DoctorRecord = Prisma.DoctorGetPayload<object> & {
+  user?: Pick<Prisma.UserGetPayload<object>, 'userId' | 'email' | 'role' | 'accountStatus'> | null;
+  doctorServices?: Array<Prisma.DoctorServiceGetPayload<object> & { service?: ServiceRecord | null }>;
+};
 
 export class DoctorService {
   /**
@@ -584,11 +593,11 @@ export class DoctorService {
    * choose a doctor. Contact e-mail, licence number, user/account identifiers
    * and INACTIVE services (BR-004) are never exposed to non-admin roles.
    */
-  private formatPublicDoctor(doctor: any) {
-    const services = (doctor.doctorServices || [])
-      .map((ds: any) => ds.service)
-      .filter((svc: any) => svc && svc.serviceStatus === ServiceStatus.ACTIVE)
-      .map((svc: any) => ({
+  private formatPublicDoctor(doctor: DoctorRecord) {
+    const services = (doctor.doctorServices ?? [])
+      .map((ds) => ds.service)
+      .filter((svc): svc is ServiceRecord => !!svc && svc.serviceStatus === ServiceStatus.ACTIVE)
+      .map((svc) => ({
         serviceId: svc.serviceId,
         serviceName: svc.serviceName,
         description: svc.description,
@@ -605,8 +614,8 @@ export class DoctorService {
     };
   }
 
-  private formatDoctor(doctor: any) {
-    const doctorServices = (doctor.doctorServices || []).map((ds: any) => ({
+  private formatDoctor(doctor: DoctorRecord) {
+    const doctorServices = (doctor.doctorServices ?? []).map((ds) => ({
       doctorServiceId: ds.doctorServiceId,
       doctorId: ds.doctorId,
       serviceId: ds.serviceId,
@@ -622,8 +631,8 @@ export class DoctorService {
         : undefined,
     }));
 
-    const services = (doctor.doctorServices || [])
-      .map((ds: any) => ds.service)
+    const services = (doctor.doctorServices ?? [])
+      .map((ds) => ds.service)
       .filter(Boolean);
 
     return {

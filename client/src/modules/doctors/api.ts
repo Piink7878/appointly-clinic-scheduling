@@ -13,14 +13,14 @@
 // ==============================================================================
 
 import { apiClient, unwrapData } from '../../shared/api';
-import { ApiResponse } from '../../shared/types';
+import { type ApiResponse } from '../../shared/types';
 import {
-  CreateDoctorInput,
-  Doctor,
-  DoctorAssignment,
-  ListDoctorsParams,
-  ProfileStatus,
-  UpdateDoctorInput,
+  type CreateDoctorInput,
+  type Doctor,
+  type DoctorAssignment,
+  type ListDoctorsParams,
+  type ProfileStatus,
+  type UpdateDoctorInput,
 } from './types';
 
 export async function listDoctors({

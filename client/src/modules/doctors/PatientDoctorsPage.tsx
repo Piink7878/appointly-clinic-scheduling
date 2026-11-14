@@ -18,9 +18,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Clock, Stethoscope, UserRound } from 'lucide-react';
 import { AlertBanner, Skeleton } from '../../shared/components';
 import { listServices } from '../services/api';
-import { MedicalService } from '../services/types';
+import { type MedicalService } from '../services/types';
 import { listDoctors } from './api';
-import { Doctor } from './types';
+import { type Doctor } from './types';
 
 const initialsOf = (name: string): string =>
   name

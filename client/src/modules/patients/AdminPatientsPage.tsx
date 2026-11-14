@@ -15,7 +15,7 @@ import { AlertBanner, Skeleton, StatusBadge } from '../../shared/components';
 import { useDebouncedValue } from '../../shared/hooks';
 import { formatDate } from '../../shared/utils';
 import { DEFAULT_PAGE_SIZE, listPatients } from './api';
-import { PatientDirectoryItem, PatientListResult } from './types';
+import { type PatientDirectoryItem, type PatientListResult } from './types';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 

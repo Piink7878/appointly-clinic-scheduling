@@ -7,12 +7,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { AuthContext, AuthContextType } from '../../src/shared/context/AuthContext';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AuthContext, type AuthContextType } from '../../src/shared/context/AuthContext';
 import { LoginPage } from '../../src/modules/auth/LoginPage';
 import { ProtectedRoute } from '../../src/shared/components/ProtectedRoute';
 import { ApiClientError } from '../../src/shared/api';
-import { UserProfile } from '../../src/shared/types';
+import { type UserProfile } from '../../src/shared/types';
 
 describe('Frontend Authentication & RBAC UI (F-001)', () => {
   beforeEach(() => {
@@ -176,5 +176,52 @@ describe('Frontend Authentication & RBAC UI (F-001)', () => {
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('user')).toBeNull();
+  });
+  describe('post-login redirect', () => {
+    const adminUser: UserProfile = { userId: 'a', email: 'admin@appointly.local', role: 'ADMIN' };
+    const patientUser: UserProfile = { userId: 'p', email: 'patient@appointly.local', role: 'PATIENT' };
+
+    const Where: React.FC<{ label: string }> = ({ label }) => {
+      const location = useLocation();
+      return <div>{`${label}|${location.pathname}|${location.search}|${location.hash}`}</div>;
+    };
+
+    const signInFrom = async (user: UserProfile, from: { pathname: string; search?: string; hash?: string }) => {
+      const login = vi.fn().mockResolvedValue(user);
+      renderWithAuth(
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Where label="page" />} />
+        </Routes>,
+        { login },
+        [{ pathname: '/login', state: { from } } as never]
+      );
+      fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: user.email } });
+      fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: 'ChangeMe123!' } });
+      fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+    };
+
+    it('returns to the page the user wanted INCLUDING its query string and hash', async () => {
+      await signInFrom(adminUser, { pathname: '/admin/schedules', search: '?doctorId=abc-123', hash: '#top' });
+      expect(await screen.findByText('page|/admin/schedules|?doctorId=abc-123|#top')).toBeDefined();
+    });
+
+    it('ignores a deep link into another portal and lands on the role default instead', async () => {
+      await signInFrom(patientUser, { pathname: '/admin/doctors', search: '?x=1' });
+      expect(await screen.findByText('page|/patient/services||')).toBeDefined();
+    });
+  });
+
+  it('shows the server message when sign-in is rate limited (429)', async () => {
+    const login = vi
+      .fn()
+      .mockRejectedValue(new ApiClientError('Too many failed sign-in attempts. Try again in 15 minute(s).', 'TOO_MANY_REQUESTS', 429));
+    renderWithAuth(<LoginPage />, { login });
+
+    fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'admin@appointly.local' } });
+    fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: 'wrong' } });
+    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Too many failed sign-in attempts');
   });
 });

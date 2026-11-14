@@ -7,7 +7,7 @@
 // ==============================================================================
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { UserProfile, ApiResponse } from '../types';
+import { type UserProfile, type ApiResponse } from '../types';
 import { apiClient } from '../api';
 
 export interface AuthContextType {

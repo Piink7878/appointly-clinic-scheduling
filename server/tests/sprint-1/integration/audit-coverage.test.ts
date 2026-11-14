@@ -9,9 +9,9 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
-import { cookiesOf } from '../helpers';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
+import { cookiesOf } from '../../helpers';
 
 describe('AuditLog coverage for administrative actions', () => {
   const stamp = Date.now();

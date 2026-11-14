@@ -10,8 +10,8 @@
 // ==============================================================================
 
 import { apiClient, unwrapData } from '../../shared/api';
-import { ApiResponse } from '../../shared/types';
-import { ListServicesParams, MedicalService, ServiceInput, ServiceStatus } from './types';
+import { type ApiResponse } from '../../shared/types';
+import { type ListServicesParams, type MedicalService, type ServiceInput, type ServiceStatus } from './types';
 
 export async function listServices({
   status,

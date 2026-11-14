@@ -11,7 +11,7 @@
 import React, { useState } from 'react';
 import { AlertBanner, Modal } from '../../shared/components';
 import { updateServiceStatus } from './api';
-import { MedicalService, ServiceStatus } from './types';
+import { type MedicalService, type ServiceStatus } from './types';
 
 export interface ServiceStatusModalProps {
   service: MedicalService;

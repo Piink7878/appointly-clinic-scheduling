@@ -9,8 +9,8 @@
 // ==============================================================================
 
 import { apiClient, unwrapData } from '../../shared/api';
-import { ApiResponse } from '../../shared/types';
-import { ClinicSettings, UpdateSettingsInput } from './types';
+import { type ApiResponse } from '../../shared/types';
+import { type ClinicSettings, type UpdateSettingsInput } from './types';
 
 const pick = (data: Partial<ClinicSettings>): ClinicSettings => ({
   clinicName: data.clinicName ?? '',

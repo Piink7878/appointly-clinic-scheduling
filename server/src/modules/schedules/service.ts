@@ -5,13 +5,13 @@
 // Manages weekly working shifts, split shifts, date-specific exceptions, and audit logging.
 // ==============================================================================
 
-import { ExceptionType } from '@prisma/client';
+import { type ExceptionType } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
 import { isValidUuid } from '../../shared/utils/uuid';
 import { parseClinicCalendarDate } from '../../shared/utils/timezone';
-import { scheduleValidator, ShiftInput, ExceptionInput } from './scheduleValidator';
-import { CreateExceptionInput } from './validation';
+import { scheduleValidator, type ShiftInput, type ExceptionInput } from './scheduleValidator';
+import { type CreateExceptionInput } from './validation';
 
 export class ScheduleService {
   /**

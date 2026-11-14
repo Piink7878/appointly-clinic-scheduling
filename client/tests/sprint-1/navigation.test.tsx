@@ -10,8 +10,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within, cleanup } from '@testing-library/react';
-import { AuthContext, AuthContextType } from '../../src/shared/context/AuthContext';
-import { UserProfile, UserRole } from '../../src/shared/types';
+import { AuthContext, type AuthContextType } from '../../src/shared/context/AuthContext';
+import { type UserProfile, type UserRole } from '../../src/shared/types';
 import { AppRouter } from '../../src/router';
 import { getRoleLandingPath } from '../../src/shared/utils';
 

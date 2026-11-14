@@ -6,7 +6,7 @@
 // - Intercepts 401 Unauthorized responses to perform automatic token refresh.
 // ==============================================================================
 
-import { ApiResponse } from '../types';
+import { type ApiResponse } from '../types';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 

@@ -121,6 +121,10 @@ Appointly strictly adheres to the Twelve-Factor App methodology. All configurati
 | `CORS_ORIGIN` | Backend | No | `http://localhost:5173` | Allowed frontend origin for CORS credentials |
 | `COOKIE_SECURE` | Backend | No | `false` | `false` on HTTP localhost, `true` in HTTPS production |
 | `CLINIC_DEFAULT_TIMEZONE` | Backend | No | `Asia/Bangkok` | Default clinic timezone for slot calculation & display |
+| `LOGIN_RATE_LIMIT_MAX_PER_ACCOUNT` | Backend | No | `10` | Failed sign-ins per e-mail per window before `429 TOO_MANY_REQUESTS` (SDS 7.1) |
+| `LOGIN_RATE_LIMIT_MAX_PER_IP` | Backend | No | `100` | Failed sign-ins per client IP per window |
+| `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Backend | No | `15` | Length of the sliding window |
+| `TRUST_PROXY` | Backend | No | `0` | Reverse proxies in front of the API (`1` on Cloud Run / nginx) so the limiter sees the real client IP |
 | `SEED_ADMIN_EMAIL` | Backend | No | `admin@appointly.local` | Seed administrator account email |
 | `SEED_DEFAULT_PASSWORD` | Backend | **Yes** | `ChangeMe123!` | Seed test account initial password |
 | `VITE_API_BASE_URL` | Frontend | No | `http://localhost:4000/api/v1` | Base REST API URL consumed by Vite frontend |
@@ -238,6 +242,9 @@ Run all test suites across the monorepo:
 ```bash
 # Run tests for both server and client:
 npm test
+
+# Static checks (ESLint + strict TypeScript, no unused code) for both packages:
+npm run lint
 ```
 
 ### 7.2 Workspace-Specific Tests
@@ -250,7 +257,31 @@ npm run test:server
 npm run test:client
 ```
 
-### 7.3 Deployment Scripts Verification
+Tests are organised by tier under each package's `tests/sprint-N/` folder
+(Sprint 1 Contracts section 3.1):
+
+| Tier | Location | Needs |
+| :--- | :--- | :--- |
+| Unit (pure functions) | `server/tests/sprint-1/unit/` | nothing |
+| Integration (real app, real PostgreSQL) | `server/tests/sprint-1/integration/` | a migrated and seeded database |
+| Component / UI | `client/tests/sprint-1/*.test.tsx` | nothing (API mocked) |
+| End-to-end (real browser) | `client/tests/sprint-1/e2e/` | see 7.3 |
+
+The server integration tests change data: point `DATABASE_URL` at a disposable database
+(for example `appointly_test`), then `npx prisma migrate reset --force` and `npx prisma db seed` for a clean state.
+
+### 7.3 End-to-End Tests (Playwright)
+
+Three browser journeys cover the Sprint 1 acceptance criteria against the real API and a seeded database.
+They are not part of `npm test` or CI. Details: [`client/tests/sprint-1/e2e/README.md`](client/tests/sprint-1/e2e/README.md).
+
+```bash
+npx playwright install chromium     # first time only (run inside client/)
+# DATABASE_URL must point at a disposable database whose name ends in _test
+npm run test:e2e
+```
+
+### 7.4 Deployment Scripts Verification
 
 To test deployment automation scripts locally (does not require GCP access):
 

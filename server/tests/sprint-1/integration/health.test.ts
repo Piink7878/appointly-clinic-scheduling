@@ -8,9 +8,9 @@ import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { z } from 'zod';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
-import { config } from '../../src/shared/config';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
+import { config } from '../../../src/shared/config';
 import {
   formatUtcToTimezone,
   toBangkokDateString,
@@ -18,9 +18,9 @@ import {
   parseBangkokToUtc,
   isValidTimezone,
   BANGKOK_TIMEZONE,
-} from '../../src/shared/utils/timezone';
-import { sanitizeLogData } from '../../src/shared/utils/logger';
-import { errorHandler, AppError } from '../../src/shared/middleware/errorHandler';
+} from '../../../src/shared/utils/timezone';
+import { sanitizeLogData } from '../../../src/shared/utils/logger';
+import { errorHandler, AppError } from '../../../src/shared/middleware/errorHandler';
 
 describe('Server Foundation & Health Checks', () => {
   it('GET /api/v1/health should return status ok', async () => {

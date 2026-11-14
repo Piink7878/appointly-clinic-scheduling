@@ -15,11 +15,11 @@ import { ApiClientError } from '../../shared/api';
 import { AlertBanner, Skeleton } from '../../shared/components';
 import { getMaxDobDate, toDateInputValue } from '../../shared/utils';
 import { getMyProfile, updateMyProfile } from './api';
-import { PatientProfile } from './types';
+import { type PatientProfile } from './types';
 import {
   normalizePhone,
-  ProfileFormErrors,
-  ProfileFormValues,
+  type ProfileFormErrors,
+  type ProfileFormValues,
   validateProfileForm,
 } from './validation';
 

@@ -5,9 +5,9 @@
 // Manages clinic-wide operational parameters and configuration audit logging.
 // ==============================================================================
 
-import { Prisma } from '@prisma/client';
+import { type Prisma } from '@prisma/client';
 import { prisma } from '../../shared/database';
-import { UpdateSettingsInput } from './validation';
+import { type UpdateSettingsInput } from './validation';
 import { CLINIC_TIMEZONE } from '../../shared/utils/timezone';
 
 const SETTING_FIELDS = [

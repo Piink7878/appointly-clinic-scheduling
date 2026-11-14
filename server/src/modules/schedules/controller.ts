@@ -5,7 +5,7 @@
 // Exposes HTTP endpoints for doctor self-schedule management and admin schedule governance.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { scheduleService } from './service';
 import {
   updateScheduleSchema,
@@ -15,6 +15,18 @@ import {
 import { AppError } from '../../shared/middleware/errorHandler';
 
 import { sendSuccess } from '../../shared/utils/response';
+/**
+ * An administrator overriding a doctor's schedule must say why (SDS 6.1 "with audit reason",
+ * 7.3). The reason is recorded in the AuditLog, so it is required here — not just in the UI.
+ */
+function requireOverrideReason(value: unknown): string {
+  const reason = typeof value === 'string' ? value.trim() : '';
+  if (!reason) {
+    throw AppError.badRequest('A reason is required for administrator schedule overrides.', 'VALIDATION_ERROR');
+  }
+  return reason;
+}
+
 export class ScheduleController {
   /**
    * GET /api/v1/doctors/me/schedule
@@ -168,19 +180,13 @@ export class ScheduleController {
       const doctorId = req.params.doctorId || req.params.id;
       const parsed = updateScheduleSchema.parse(req.body);
       const shifts = extractShiftsFromInput(parsed);
-      const reason =
-        (parsed && typeof parsed === 'object' && ('reason' in parsed || 'overrideReason' in parsed)
-          ? (parsed as Record<string, unknown>).reason || (parsed as Record<string, unknown>).overrideReason
-          : undefined) ||
-        req.body?.reason ||
-        req.body?.overrideReason ||
-        'ADMIN_SCHEDULE_UPDATE';
+      const reason = requireOverrideReason(req.body?.reason ?? req.body?.overrideReason);
 
       const updatedSchedules = await scheduleService.updateDoctorSchedule(
         doctorId,
         shifts,
         req.user.userId,
-        String(reason)
+        reason
       );
 
       const result = {
@@ -224,6 +230,7 @@ export class ScheduleController {
 
       const doctorId = req.params.doctorId || req.params.id;
       const validatedInput = createExceptionSchema.parse(req.body);
+      requireOverrideReason(validatedInput.reason);
       const exception = await scheduleService.createException(
         doctorId,
         validatedInput,

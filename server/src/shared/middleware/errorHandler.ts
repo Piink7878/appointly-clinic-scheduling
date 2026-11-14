@@ -6,7 +6,7 @@
 // Redacts sensitive PII and unhandled internal stack traces from client responses.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';

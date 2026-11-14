@@ -19,7 +19,7 @@ import { listDoctors } from './api';
 import { DoctorFormModal } from './DoctorFormModal';
 import { DoctorServicesModal } from './DoctorServicesModal';
 import { DoctorStatusModal } from './DoctorStatusModal';
-import { Doctor, DoctorStatusFilter } from './types';
+import { type Doctor, type DoctorStatusFilter } from './types';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 

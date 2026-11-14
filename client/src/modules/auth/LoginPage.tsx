@@ -55,7 +55,8 @@ export const LoginPage: React.FC = () => {
       const loggedInUser = await login(trimmedEmail, password);
 
       // Determine target destination
-      const fromPath = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      const from = (location.state as { from?: { pathname: string; search?: string; hash?: string } })?.from;
+      const fromPath = from?.pathname;
       const roleDefault = getRoleLandingPath(loggedInUser.role);
 
       // Only preserve deep link if it belongs to the authenticated role
@@ -65,7 +66,8 @@ export const LoginPage: React.FC = () => {
           (loggedInUser.role === 'DOCTOR' && fromPath.startsWith('/doctor')) ||
           (loggedInUser.role === 'ADMIN' && fromPath.startsWith('/admin')));
 
-      const targetPath = isAuthorizedDeepLink ? fromPath : roleDefault;
+      // keep ?query and #hash too: /admin/schedules?doctorId=… must come back with its doctor selected
+      const targetPath = isAuthorizedDeepLink ? `${fromPath}${from?.search ?? ''}${from?.hash ?? ''}` : roleDefault;
       navigate(targetPath, { replace: true });
     } catch (err) {
       if (err instanceof ApiClientError) {

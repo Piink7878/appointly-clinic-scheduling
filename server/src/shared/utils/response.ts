@@ -5,7 +5,7 @@
 // Enforces standard JSON response envelope structure across all controller endpoints.
 // ==============================================================================
 
-import { Response } from 'express';
+import { type Response } from 'express';
 
 export interface SuccessEnvelope<T = unknown> {
   success: true;

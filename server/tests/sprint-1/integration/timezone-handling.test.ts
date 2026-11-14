@@ -7,14 +7,14 @@
 // - API timestamps are ISO 8601 UTC ("…Z")
 // - a calendar date supplied as a timestamp resolves to the CLINIC-LOCAL day, and an
 //   impossible date is rejected instead of silently rolling over
+//   (the pure conversion logic is unit-tested in unit/timezone.test.ts)
 // ==============================================================================
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
-import { parseClinicCalendarDate } from '../../src/shared/utils/timezone';
-import { cookiesOf } from '../helpers';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
+import { cookiesOf } from '../../helpers';
 
 describe('Timezone & calendar-date handling', () => {
   let adminCookies: string[];
@@ -67,26 +67,6 @@ describe('Timezone & calendar-date handling', () => {
         expect(d.updatedAt).toMatch(/Z$/);
       }
     });
-  });
-
-  describe('parseClinicCalendarDate', () => {
-    it.each([
-      ['2099-12-25', '2099-12-25'],
-      ['2099-12-25T01:00:00+07:00', '2099-12-25'], // Bangkok morning, still the 25th (UTC says the 24th)
-      ['2099-12-24T18:00:00Z', '2099-12-25'], // = 01:00 on the 25th in Bangkok
-      ['2099-12-25T16:59:59Z', '2099-12-25'], // 23:59:59 in Bangkok
-      ['2099-12-25T17:00:00Z', '2099-12-26'], // midnight in Bangkok -> next day
-      ['2096-02-29', '2096-02-29'], // leap day
-    ])('%s -> %s', (input, expected) => {
-      expect(parseClinicCalendarDate(input)).toBe(expected);
-    });
-
-    it.each(['2099-02-30', '2099-13-01', '2099-00-10', '2099-04-31', '2097-02-29', 'tomorrow', '', '99999-01-01', '31/12/2099'])(
-      'rejects %j',
-      (input) => {
-        expect(parseClinicCalendarDate(input)).toBeNull();
-      }
-    );
   });
 
   describe('POST /admin/doctors/:id/exceptions stores the clinic-local calendar day', () => {

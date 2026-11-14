@@ -1,4 +1,4 @@
-import { UserRole } from '../types';
+import { type UserRole } from '../types';
 
 /** The page a user lands on after signing in, per role (SDS 4.2). */
 export const getRoleLandingPath = (role: UserRole): string => {

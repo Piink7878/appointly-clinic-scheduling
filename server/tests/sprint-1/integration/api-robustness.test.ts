@@ -9,10 +9,10 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 type Role = 'PATIENT' | 'DOCTOR' | 'ADMIN';
 
 const UUID = '00000000-0000-4000-8000-000000000000';

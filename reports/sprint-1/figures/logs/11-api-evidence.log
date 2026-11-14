@@ -1,0 +1,119 @@
+# Appointly Sprint 1 - API evidence (2026-11-14T23:17:07Z, base http://localhost:4100/api/v1)
+
+### STS-S1-001  ADMIN signs in: 200 + HttpOnly / SameSite=Strict cookies
+$ curl -X POST /auth/login -d '{"email":"admin@appointly.local","password":"<seed demo password>"}'
+HTTP/1.1 200 OK
+Set-Cookie: access_token=<redacted>; Max-Age=900; Path=/; Expires=Sat, 14 Nov 2026 23:32:07 GMT; HttpOnly; SameSite=Strict
+Set-Cookie: refresh_token=<redacted>; Max-Age=604800; Path=/; Expires=Sat, 21 Nov 2026 23:17:07 GMT; HttpOnly; SameSite=Strict
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":{"userId":"aa52ef46-9190-4795-9638-37ebb531bdb5","email":"admin@appointly.local","role":"ADMIN"},"message":"Login successful."}
+
+### STS-S1-001  GET /auth/me returns the role of the signed-in user
+$ curl -X GET /auth/me
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":{"userId":"aa52ef46-9190-4795-9638-37ebb531bdb5","email":"admin@appointly.local","role":"ADMIN","accountStatus":"ACTIVE","profileId":"aa52ef46-9190-4795-9638-37ebb531bdb5","fullName":"Clinic Administrator"},"message":"Current user retrieved successfully."}
+
+### STS-S1-001  POST /auth/logout revokes the session
+$ curl -X POST /auth/logout
+HTTP/1.1 200 OK
+Set-Cookie: access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict
+Set-Cookie: refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":null,"message":"Logged out successfully."}
+
+### STS-S1-001  GET /auth/me after logout: 401
+$ curl -X GET /auth/me
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"UNAUTHORIZED","message":"Authentication token is required."}}
+
+### STS-S1-001  INACTIVE account: 403 ACCOUNT_INACTIVE
+$ curl -X POST /auth/login -d '{"email":"inactive@appointly.local","password":"<seed demo password>"}'
+HTTP/1.1 403 Forbidden
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"ACCOUNT_INACTIVE","message":"Account is inactive. Please contact your clinic administrator."}}
+
+### STS-S1-002  Wrong password: 401
+$ curl -X POST /auth/login -d '{"email":"patient.arisa@appointly.local","password":"<seed demo password>"}'
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"INVALID_CREDENTIALS","message":"Invalid email or password."}}
+
+### STS-S1-002  Protected endpoint without a cookie: 401
+$ curl -X GET /doctors/me/schedule
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"UNAUTHORIZED","message":"Authentication token is required."}}
+
+### STS-S1-003  PATIENT signs in
+$ curl -X POST /auth/login -d '{"email":"patient.arisa@appointly.local","password":"<seed demo password>"}'
+HTTP/1.1 200 OK
+Set-Cookie: access_token=<redacted>; Max-Age=900; Path=/; Expires=Sat, 14 Nov 2026 23:32:09 GMT; HttpOnly; SameSite=Strict
+Set-Cookie: refresh_token=<redacted>; Max-Age=604800; Path=/; Expires=Sat, 21 Nov 2026 23:17:09 GMT; HttpOnly; SameSite=Strict
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":{"userId":"3e7a6c52-8816-4c2c-a111-10e79523d0dd","email":"patient.arisa@appointly.local","role":"PATIENT"},"message":"Login successful."}
+
+### STS-S1-003  PATIENT -> GET /admin/patients: 403 FORBIDDEN
+$ curl -X GET /admin/patients
+HTTP/1.1 403 Forbidden
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"FORBIDDEN","message":"Access forbidden: Role 'PATIENT' lacks permission for this resource."}}
+
+### STS-S1-003  PATIENT -> PATCH /admin/settings: 403 FORBIDDEN
+$ curl -X PATCH /admin/settings -d '{"cancellationCutoffHours":12}'
+HTTP/1.1 403 Forbidden
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"FORBIDDEN","message":"Access forbidden: Role 'PATIENT' lacks permission for this resource."}}
+
+### STS-S1-008  DOCTOR signs in
+$ curl -X POST /auth/login -d '{"email":"doctor@appointly.local","password":"<seed demo password>"}'
+HTTP/1.1 200 OK
+Set-Cookie: access_token=<redacted>; Max-Age=900; Path=/; Expires=Sat, 14 Nov 2026 23:32:10 GMT; HttpOnly; SameSite=Strict
+Set-Cookie: refresh_token=<redacted>; Max-Age=604800; Path=/; Expires=Sat, 21 Nov 2026 23:17:10 GMT; HttpOnly; SameSite=Strict
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":{"userId":"80faeef1-b286-4740-b0ec-1264010f202a","email":"doctor@appointly.local","role":"DOCTOR"},"message":"Login successful."}
+
+### STS-S1-008  Overlapping shifts 11:00-14:00 vs 09:00-12:00: 422 INVALID_SCHEDULE_WINDOW
+$ curl -X PUT /doctors/me/schedule -d '{"shifts":[{"dayOfWeek":6,"startTime":"09:00","endTime":"12:00","isActive":true},{"dayOfWeek":6,"startTime":"11:00","endTime":"14:00","isActive":true}]}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"INVALID_SCHEDULE_WINDOW","message":"Schedule windows on the same day (6) must not overlap: [09:00–12:00] and [11:00–14:00]."}}
+
+### STS-S1-006  ADMIN signs in
+$ curl -X POST /auth/login -d '{"email":"admin@appointly.local","password":"<seed demo password>"}'
+HTTP/1.1 200 OK
+Set-Cookie: access_token=<redacted>; Max-Age=900; Path=/; Expires=Sat, 14 Nov 2026 23:32:10 GMT; HttpOnly; SameSite=Strict
+Set-Cookie: refresh_token=<redacted>; Max-Age=604800; Path=/; Expires=Sat, 21 Nov 2026 23:17:10 GMT; HttpOnly; SameSite=Strict
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":{"userId":"aa52ef46-9190-4795-9638-37ebb531bdb5","email":"admin@appointly.local","role":"ADMIN"},"message":"Login successful."}
+
+### STS-S1-006  Service duration 0 is rejected: 400
+$ curl -X POST /admin/services -d '{"serviceName":"Boundary Zero","durationMinutes":0}'
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"VALIDATION_ERROR","message":"durationMinutes: Duration must be between 1 and 480 minutes"}}
+
+### STS-S1-006  Service duration 481 is rejected: 400
+$ curl -X POST /admin/services -d '{"serviceName":"Boundary Over","durationMinutes":481}'
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"VALIDATION_ERROR","message":"durationMinutes: Duration must be between 1 and 480 minutes"}}
+
+### STS-S1-009  Cancellation cutoff -1 is rejected: 400
+$ curl -X PATCH /admin/settings -d '{"cancellationCutoffHours":-1}'
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"VALIDATION_ERROR","message":"cancellationCutoffHours: cancellationCutoffHours must be an integer greater than or equal to 0"}}
+
+### STS-S1-009  Cancellation cutoff 0 (boundary) is accepted: 200
+$ curl -X PATCH /admin/settings -d '{"cancellationCutoffHours":0,"fixedStartIntervalMinutes":15}'
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+{"success":true,"data":{"settingId":"533af77c-c221-4036-90b8-1cee0c10d90f","clinicName":"Appointly Clinic","timezone":"Asia/Bangkok","fixedStartIntervalMinutes":15,"cancellationCutoffHours":0,"reminderLeadHours":24,"updatedBy":"aa52ef46-9190-4795-9638-37ebb531bdb5","updatedAt":"2026-11-14T23:17:12.916Z"},"message":"Clinic settings updated successfully."}
+
+### STS-S1-007  Re-assigning an already assigned (doctor, service) pair: 409 DUPLICATE_ASSIGNMENT
+$ curl -X POST /admin/doctors/7c426ab8-b318-4586-88ee-9dc1ae8c8b63/services -d '{"serviceId":"68744ebc-4be6-44a1-a478-10e10b59849e"}'
+HTTP/1.1 409 Conflict
+Content-Type: application/json; charset=utf-8
+{"success":false,"error":{"code":"DUPLICATE_ASSIGNMENT","message":"Doctor is already assigned to this service."}}

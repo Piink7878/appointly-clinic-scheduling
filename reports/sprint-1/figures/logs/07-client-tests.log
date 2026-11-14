@@ -1,0 +1,121 @@
+$ npx vitest run   # client: component/UI tests (API mocked)
+
+ RUN  v2.1.9 <repo>/client
+
+stderr | tests/sprint-1/auth.test.tsx > Frontend Authentication & RBAC UI (F-001) > renders login form elements and quick-fill test accounts
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/auth.test.tsx > Frontend Authentication & RBAC UI (F-001) > post-login redirect > returns to the page the user wanted INCLUDING its query string and hash
+Warning: An update to MemoryRouter inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at MemoryRouter (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1097:7)
+Warning: An update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at LoginPage (<repo>\client\src\modules\auth\LoginPage.tsx:18:77)
+    at RenderedRoute (<repo>\node_modules\react-router\dist\umd\react-router.development.js:535:7)
+    at Routes (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1269:7)
+    at Router (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1203:17)
+    at MemoryRouter (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1097:7)
+
+stderr | tests/sprint-1/auth.test.tsx > Frontend Authentication & RBAC UI (F-001) > post-login redirect > ignores a deep link into another portal and lands on the role default instead
+Warning: An update to MemoryRouter inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at MemoryRouter (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1097:7)
+Warning: An update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at LoginPage (<repo>\client\src\modules\auth\LoginPage.tsx:18:77)
+    at RenderedRoute (<repo>\node_modules\react-router\dist\umd\react-router.development.js:535:7)
+    at Routes (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1269:7)
+    at Router (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1203:17)
+    at MemoryRouter (<repo>\node_modules\react-router\dist\umd\react-router.development.js:1097:7)
+
+ ✓ tests/sprint-1/auth.test.tsx (11 tests) 309ms
+stderr | tests/sprint-1/app.test.tsx > Client Foundation & App Rendering > renders welcome heading
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/sprint-1/app.test.tsx (1 test) 40ms
+stderr | tests/sprint-1/doctor-services.test.tsx > Admin Doctor-Service Assignment (/admin/doctors → Manage Services) > adds a "Manage Services" button to every doctor row and card
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/patients.test.tsx > Patient Profile Page (/patient/profile) > shows a loading skeleton while the profile is being fetched
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/admin-schedules.test.tsx > Admin Doctor Schedules (/admin/schedules) > doctor dropdown > loads every doctor (GET /doctors, all statuses) and flags inactive ones
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/navigation.test.tsx > PATIENT navigation > the desktop and small-screen menus link to exactly the Sprint 1 pages for this role
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/admin-settings.test.tsx > Admin Clinic Settings page (/admin/settings) > shows a loading skeleton, then the current values from GET /settings/public
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/schedules.test.tsx > Weekly Recurring Schedule Editor (/doctor/schedule) > shows a loading skeleton, then all 7 days from Sunday to Saturday
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/services.test.tsx > AdminServicesPage (/admin/services) > shows a loading skeleton, then the table and cards with all required columns
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/sprint-1/doctors.test.tsx > AdminDoctorsPage (/admin/doctors) > shows a loading skeleton, then the table and cards with all required columns
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/sprint-1/admin-settings.test.tsx (39 tests) 1369ms
+ ✓ tests/sprint-1/doctor-services.test.tsx (21 tests) 1795ms
+ ✓ tests/sprint-1/admin-schedules.test.tsx (20 tests) 1928ms
+ ✓ tests/sprint-1/patients.test.tsx (23 tests) 2246ms
+   ✓ Admin Patient Directory (/admin/patients) > shows a search-specific empty state and Clear search restores the list 668ms
+   ✓ Admin Patient Directory (/admin/patients) > paginates with Next/Previous and returns to page 1 on a new search 366ms
+   ✓ Admin Patient Directory (/admin/patients) > ignores a stale response that arrives after a newer search 326ms
+ ✓ tests/sprint-1/schedules.test.tsx (47 tests) 2525ms
+ ✓ tests/sprint-1/services.test.tsx (63 tests) 2714ms
+ ✓ tests/sprint-1/doctors.test.tsx (48 tests) 2720ms
+   ✓ AdminDoctorsPage (/admin/doctors) > shows a loading skeleton, then the table and cards with all required columns 341ms
+ ✓ tests/sprint-1/navigation.test.tsx (47 tests) 3176ms
+
+ Test Files  10 passed (10)
+      Tests  320 passed (320)
+   Start at  06:00:40
+   Duration  6.22s (transform 1.83s, setup 0ms, collect 9.14s, tests 18.82s, environment 10.20s, prepare 5.50s)
+
+client tests exit=0

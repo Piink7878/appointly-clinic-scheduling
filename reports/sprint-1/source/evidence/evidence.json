@@ -1,0 +1,1056 @@
+{
+  "generatedAt": "2026-11-14T23:01:05.727Z",
+  "git": {
+    "branch": "sprint-1-staging",
+    "commit": "09abe14"
+  },
+  "suites": {
+    "server": [
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/admin-settings.test.ts",
+        "path": "server/tests/sprint-1/integration/admin-settings.test.ts",
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 173
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/api-robustness.test.ts",
+        "path": "server/tests/sprint-1/integration/api-robustness.test.ts",
+        "total": 91,
+        "passed": 91,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 1452
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/audit-coverage.test.ts",
+        "path": "server/tests/sprint-1/integration/audit-coverage.test.ts",
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 369
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/auth.test.ts",
+        "path": "server/tests/sprint-1/integration/auth.test.ts",
+        "total": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 1265
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/doctor-services.test.ts",
+        "path": "server/tests/sprint-1/integration/doctor-services.test.ts",
+        "total": 30,
+        "passed": 30,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 511
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/doctors.test.ts",
+        "path": "server/tests/sprint-1/integration/doctors.test.ts",
+        "total": 27,
+        "passed": 27,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 1112
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/health.test.ts",
+        "path": "server/tests/sprint-1/integration/health.test.ts",
+        "total": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 143
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/login-rate-limit.test.ts",
+        "path": "server/tests/sprint-1/integration/login-rate-limit.test.ts",
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 3788
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/patients.test.ts",
+        "path": "server/tests/sprint-1/integration/patients.test.ts",
+        "total": 19,
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 226
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/route-guards.test.ts",
+        "path": "server/tests/sprint-1/integration/route-guards.test.ts",
+        "total": 67,
+        "passed": 67,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 526
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/schedule-audit.test.ts",
+        "path": "server/tests/sprint-1/integration/schedule-audit.test.ts",
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 255
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/schedule-privacy.test.ts",
+        "path": "server/tests/sprint-1/integration/schedule-privacy.test.ts",
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 151
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/schedules.test.ts",
+        "path": "server/tests/sprint-1/integration/schedules.test.ts",
+        "total": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 344
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/services.test.ts",
+        "path": "server/tests/sprint-1/integration/services.test.ts",
+        "total": 41,
+        "passed": 41,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 464
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/settings-bounds.test.ts",
+        "path": "server/tests/sprint-1/integration/settings-bounds.test.ts",
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 92
+      },
+      {
+        "package": "server",
+        "tier": "Integration (API + PostgreSQL)",
+        "file": "integration/timezone-handling.test.ts",
+        "path": "server/tests/sprint-1/integration/timezone-handling.test.ts",
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 168
+      },
+      {
+        "package": "server",
+        "tier": "Unit",
+        "file": "unit/loginRateLimiter.test.ts",
+        "path": "server/tests/sprint-1/unit/loginRateLimiter.test.ts",
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 10
+      },
+      {
+        "package": "server",
+        "tier": "Unit",
+        "file": "unit/scheduleValidator.test.ts",
+        "path": "server/tests/sprint-1/unit/scheduleValidator.test.ts",
+        "total": 17,
+        "passed": 17,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 6
+      },
+      {
+        "package": "server",
+        "tier": "Unit",
+        "file": "unit/security.test.ts",
+        "path": "server/tests/sprint-1/unit/security.test.ts",
+        "total": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 443
+      },
+      {
+        "package": "server",
+        "tier": "Unit",
+        "file": "unit/shared-utils.test.ts",
+        "path": "server/tests/sprint-1/unit/shared-utils.test.ts",
+        "total": 19,
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 12
+      },
+      {
+        "package": "server",
+        "tier": "Unit",
+        "file": "unit/timezone.test.ts",
+        "path": "server/tests/sprint-1/unit/timezone.test.ts",
+        "total": 35,
+        "passed": 35,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 25
+      }
+    ],
+    "client": [
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "admin-schedules.test.tsx",
+        "path": "client/tests/sprint-1/admin-schedules.test.tsx",
+        "total": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 1925
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "admin-settings.test.tsx",
+        "path": "client/tests/sprint-1/admin-settings.test.tsx",
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 1368
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "app.test.tsx",
+        "path": "client/tests/sprint-1/app.test.tsx",
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 39
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "auth.test.tsx",
+        "path": "client/tests/sprint-1/auth.test.tsx",
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 308
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "doctor-services.test.tsx",
+        "path": "client/tests/sprint-1/doctor-services.test.tsx",
+        "total": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 1794
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "doctors.test.tsx",
+        "path": "client/tests/sprint-1/doctors.test.tsx",
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 2719
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "navigation.test.tsx",
+        "path": "client/tests/sprint-1/navigation.test.tsx",
+        "total": 47,
+        "passed": 47,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 3175
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "patients.test.tsx",
+        "path": "client/tests/sprint-1/patients.test.tsx",
+        "total": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 2245
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "schedules.test.tsx",
+        "path": "client/tests/sprint-1/schedules.test.tsx",
+        "total": 47,
+        "passed": 47,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 2523
+      },
+      {
+        "package": "client",
+        "tier": "Component / UI",
+        "file": "services.test.tsx",
+        "path": "client/tests/sprint-1/services.test.tsx",
+        "total": 63,
+        "passed": 63,
+        "failed": 0,
+        "skipped": 0,
+        "ms": 2711
+      }
+    ]
+  },
+  "e2e": [
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "ADMIN signs in with the seeded account and lands in their own portal",
+      "status": "passed",
+      "ms": 751
+    },
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "DOCTOR signs in with the seeded account and lands in their own portal",
+      "status": "passed",
+      "ms": 657
+    },
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "PATIENT signs in with the seeded account and lands in their own portal",
+      "status": "passed",
+      "ms": 527
+    },
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "a wrong password is rejected with a clear message and no session",
+      "status": "passed",
+      "ms": 436
+    },
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "RBAC: an unauthenticated visitor opening /admin/doctors is sent to /login",
+      "status": "passed",
+      "ms": 301
+    },
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "RBAC: a PATIENT opening /admin/doctors is blocked and redirected away",
+      "status": "passed",
+      "ms": 611
+    },
+    {
+      "journey": "Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002)",
+      "title": "a PATIENT edits their own profile and the change is still there after a reload (PostgreSQL)",
+      "status": "passed",
+      "ms": 861
+    },
+    {
+      "journey": "Journey 2 — Admin Catalog & Doctor-Service Assignment (F-003, F-004, F-005)",
+      "title": "ADMIN creates a service and assigns it to an ACTIVE doctor; a PATIENT sees only that doctor for it",
+      "status": "passed",
+      "ms": 1615
+    },
+    {
+      "journey": "Journey 3 — Doctor Self-Schedule, Overlap Rejection & Clinic Settings (F-006, F-007)",
+      "title": "DOCTOR saves 09:00–12:00 and 13:00–17:00 and the shifts survive a reload",
+      "status": "passed",
+      "ms": 770
+    },
+    {
+      "journey": "Journey 3 — Doctor Self-Schedule, Overlap Rejection & Clinic Settings (F-006, F-007)",
+      "title": "DOCTOR entering overlapping windows (09:00–13:00 + 12:00–16:00) is told so and nothing is saved",
+      "status": "passed",
+      "ms": 779
+    },
+    {
+      "journey": "Journey 3 — Doctor Self-Schedule, Overlap Rejection & Clinic Settings (F-006, F-007)",
+      "title": "ADMIN checks and updates the clinic settings (Asia/Bangkok) and they persist",
+      "status": "passed",
+      "ms": 680
+    }
+  ],
+  "totals": {
+    "server": {
+      "files": 21,
+      "tests": 504,
+      "passed": 504,
+      "failed": 0
+    },
+    "client": {
+      "files": 10,
+      "tests": 320,
+      "passed": 320,
+      "failed": 0
+    },
+    "e2e": {
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    }
+  },
+  "acs": [
+    {
+      "id": "AC-F001-01",
+      "kind": "Positive",
+      "label": "Positive — Login, Identity Retrieval & Logout",
+      "feature": "F-001: Authentication & Role Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        }
+      ]
+    },
+    {
+      "id": "AC-F001-02",
+      "kind": "Negative",
+      "label": "Negative — Invalid Credentials & Unauthenticated Access",
+      "feature": "F-001: Authentication & Role Management",
+      "files": [
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        },
+        {
+          "path": "server/tests/sprint-1/integration/login-rate-limit.test.ts",
+          "tests": 7
+        },
+        {
+          "path": "server/tests/sprint-1/unit/loginRateLimiter.test.ts",
+          "tests": 18
+        }
+      ]
+    },
+    {
+      "id": "AC-F001-03",
+      "kind": "Negative",
+      "label": "Negative — Backend RBAC Privilege Escalation",
+      "feature": "F-001: Authentication & Role Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "client/tests/sprint-1/navigation.test.tsx",
+          "tests": 47
+        },
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        },
+        {
+          "path": "server/tests/sprint-1/integration/route-guards.test.ts",
+          "tests": 67
+        }
+      ]
+    },
+    {
+      "id": "AC-F001-04",
+      "kind": "Boundary",
+      "label": "Boundary — Inactive Account Login",
+      "feature": "F-001: Authentication & Role Management",
+      "files": [
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        }
+      ]
+    },
+    {
+      "id": "AC-F002-01",
+      "kind": "Positive",
+      "label": "Positive — Self Profile View & Update",
+      "feature": "F-002: Patient Profile Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "client/tests/sprint-1/patients.test.tsx",
+          "tests": 23
+        },
+        {
+          "path": "server/tests/sprint-1/integration/patients.test.ts",
+          "tests": 19
+        }
+      ]
+    },
+    {
+      "id": "AC-F002-02",
+      "kind": "Negative",
+      "label": "Negative — Role & Ownership Restriction",
+      "feature": "F-002: Patient Profile Management",
+      "files": [
+        {
+          "path": "server/tests/sprint-1/integration/patients.test.ts",
+          "tests": 19
+        },
+        {
+          "path": "server/tests/sprint-1/integration/route-guards.test.ts",
+          "tests": 67
+        }
+      ]
+    },
+    {
+      "id": "AC-F002-03",
+      "kind": "Boundary",
+      "label": "Boundary — Empty Mandatory Fields & Future DOB",
+      "feature": "F-002: Patient Profile Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/patients.test.tsx",
+          "tests": 23
+        },
+        {
+          "path": "server/tests/sprint-1/integration/api-robustness.test.ts",
+          "tests": 91
+        },
+        {
+          "path": "server/tests/sprint-1/integration/patients.test.ts",
+          "tests": 19
+        }
+      ]
+    },
+    {
+      "id": "AC-F003-01",
+      "kind": "Positive",
+      "label": "Positive — Doctor Creation & Active Listing",
+      "feature": "F-003: Doctor Profile Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctors.test.tsx",
+          "tests": 48
+        },
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "AC-F003-02",
+      "kind": "Negative",
+      "label": "Negative — Deactivated Doctor Filtering",
+      "feature": "F-003: Doctor Profile Management",
+      "files": [
+        {
+          "path": "server/tests/sprint-1/integration/audit-coverage.test.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "AC-F003-03",
+      "kind": "Boundary",
+      "label": "Boundary — Duplicate Email & Specialization Length",
+      "feature": "F-003: Doctor Profile Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctors.test.tsx",
+          "tests": 48
+        },
+        {
+          "path": "server/tests/sprint-1/integration/api-robustness.test.ts",
+          "tests": 91
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "AC-F004-01",
+      "kind": "Positive",
+      "label": "Positive — Service Creation & Listing",
+      "feature": "F-004: Medical Service Catalog",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "client/tests/sprint-1/services.test.tsx",
+          "tests": 63
+        },
+        {
+          "path": "server/tests/sprint-1/integration/services.test.ts",
+          "tests": 41
+        }
+      ]
+    },
+    {
+      "id": "AC-F004-02",
+      "kind": "Negative",
+      "label": "Negative — Inactive Service Exclusion",
+      "feature": "F-004: Medical Service Catalog",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/services.test.tsx",
+          "tests": 63
+        },
+        {
+          "path": "server/tests/sprint-1/integration/audit-coverage.test.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/services.test.ts",
+          "tests": 41
+        }
+      ]
+    },
+    {
+      "id": "AC-F004-03",
+      "kind": "Boundary",
+      "label": "Boundary — Duration Lower & Upper Bounds",
+      "feature": "F-004: Medical Service Catalog",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/services.test.tsx",
+          "tests": 63
+        },
+        {
+          "path": "server/tests/sprint-1/integration/api-robustness.test.ts",
+          "tests": 91
+        },
+        {
+          "path": "server/tests/sprint-1/integration/services.test.ts",
+          "tests": 41
+        }
+      ]
+    },
+    {
+      "id": "AC-F005-01",
+      "kind": "Positive",
+      "label": "Positive — Assignment & Filtered Retrieval",
+      "feature": "F-005: Doctor-Service Assignment",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctor-services.test.tsx",
+          "tests": 21
+        },
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/audit-coverage.test.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctor-services.test.ts",
+          "tests": 30
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "AC-F005-02",
+      "kind": "Negative",
+      "label": "Negative — Duplicate Assignment Rejection",
+      "feature": "F-005: Doctor-Service Assignment",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctor-services.test.tsx",
+          "tests": 21
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctor-services.test.ts",
+          "tests": 30
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "AC-F005-03",
+      "kind": "Boundary",
+      "label": "Boundary — Zero Assigned Doctors",
+      "feature": "F-005: Doctor-Service Assignment",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctor-services.test.tsx",
+          "tests": 21
+        },
+        {
+          "path": "client/tests/sprint-1/doctors.test.tsx",
+          "tests": 48
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctor-services.test.ts",
+          "tests": 30
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "AC-F006-01",
+      "kind": "Positive",
+      "label": "Positive — Immediate Split-Shift Persistence",
+      "feature": "F-006: Doctor Self-Schedule Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "client/tests/sprint-1/schedules.test.tsx",
+          "tests": 47
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        }
+      ]
+    },
+    {
+      "id": "AC-F006-02",
+      "kind": "Negative",
+      "label": "Negative — Overlapping or Inverted Shift Windows",
+      "feature": "F-006: Doctor Self-Schedule Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/schedules.test.tsx",
+          "tests": 47
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        },
+        {
+          "path": "server/tests/sprint-1/unit/scheduleValidator.test.ts",
+          "tests": 17
+        }
+      ]
+    },
+    {
+      "id": "AC-F006-03",
+      "kind": "Boundary",
+      "label": "Boundary — Adjacent Shifts & Full-Day Holiday Exception",
+      "feature": "F-006: Doctor Self-Schedule Management",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/schedules.test.tsx",
+          "tests": 47
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        }
+      ]
+    },
+    {
+      "id": "AC-F007-01",
+      "kind": "Positive",
+      "label": "Positive — Admin Schedule Override & Clinic Settings Update",
+      "feature": "F-007: Administrator Schedule & Clinic Configuration",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/admin-schedules.test.tsx",
+          "tests": 20
+        },
+        {
+          "path": "client/tests/sprint-1/admin-settings.test.tsx",
+          "tests": 39
+        },
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/admin-settings.test.ts",
+          "tests": 13
+        },
+        {
+          "path": "server/tests/sprint-1/integration/audit-coverage.test.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedule-audit.test.ts",
+          "tests": 13
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        }
+      ]
+    },
+    {
+      "id": "AC-F007-02",
+      "kind": "Negative",
+      "label": "Negative — Unauthorized Settings Access & Invalid Timezone",
+      "feature": "F-007: Administrator Schedule & Clinic Configuration",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/admin-settings.test.tsx",
+          "tests": 39
+        },
+        {
+          "path": "server/tests/sprint-1/integration/admin-settings.test.ts",
+          "tests": 13
+        }
+      ]
+    },
+    {
+      "id": "AC-F007-03",
+      "kind": "Boundary",
+      "label": "Boundary — Interval & Cutoff Lower Bounds",
+      "feature": "F-007: Administrator Schedule & Clinic Configuration",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/admin-settings.test.tsx",
+          "tests": 39
+        },
+        {
+          "path": "server/tests/sprint-1/integration/admin-settings.test.ts",
+          "tests": 13
+        },
+        {
+          "path": "server/tests/sprint-1/integration/api-robustness.test.ts",
+          "tests": 91
+        },
+        {
+          "path": "server/tests/sprint-1/integration/settings-bounds.test.ts",
+          "tests": 4
+        }
+      ]
+    }
+  ],
+  "sts": [
+    {
+      "id": "STS-S1-001",
+      "acs": "AC-F001-01, AC-F001-04",
+      "level": "API + E2E",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/e2e/sprint-1.spec.ts",
+          "tests": 11
+        },
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-002",
+      "acs": "AC-F001-02",
+      "level": "API",
+      "files": [
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-003",
+      "acs": "AC-F001-03, AC-F002-02",
+      "level": "API",
+      "files": [
+        {
+          "path": "server/tests/sprint-1/integration/auth.test.ts",
+          "tests": 20
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        },
+        {
+          "path": "server/tests/sprint-1/integration/patients.test.ts",
+          "tests": 19
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        },
+        {
+          "path": "server/tests/sprint-1/integration/services.test.ts",
+          "tests": 41
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-004",
+      "acs": "AC-F002-01, AC-F002-03",
+      "level": "API + E2E",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/patients.test.tsx",
+          "tests": 23
+        },
+        {
+          "path": "server/tests/sprint-1/integration/patients.test.ts",
+          "tests": 19
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-005",
+      "acs": "AC-F003-01, AC-F003-02, AC-F003-03",
+      "level": "API",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctors.test.tsx",
+          "tests": 48
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-006",
+      "acs": "AC-F004-01, AC-F004-02, AC-F004-03",
+      "level": "API",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/services.test.tsx",
+          "tests": 63
+        },
+        {
+          "path": "server/tests/sprint-1/integration/services.test.ts",
+          "tests": 41
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-007",
+      "acs": "AC-F005-01, AC-F005-02, AC-F005-03",
+      "level": "API + E2E",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/doctor-services.test.tsx",
+          "tests": 21
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctor-services.test.ts",
+          "tests": 30
+        },
+        {
+          "path": "server/tests/sprint-1/integration/doctors.test.ts",
+          "tests": 27
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-008",
+      "acs": "AC-F006-01, AC-F006-02, AC-F006-03",
+      "level": "Unit + API + E2E",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/schedules.test.tsx",
+          "tests": 47
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        },
+        {
+          "path": "server/tests/sprint-1/unit/scheduleValidator.test.ts",
+          "tests": 17
+        }
+      ]
+    },
+    {
+      "id": "STS-S1-009",
+      "acs": "AC-F007-01, AC-F007-02, AC-F007-03",
+      "level": "API",
+      "files": [
+        {
+          "path": "client/tests/sprint-1/admin-schedules.test.tsx",
+          "tests": 20
+        },
+        {
+          "path": "client/tests/sprint-1/admin-settings.test.tsx",
+          "tests": 39
+        },
+        {
+          "path": "server/tests/sprint-1/integration/admin-settings.test.ts",
+          "tests": 13
+        },
+        {
+          "path": "server/tests/sprint-1/integration/schedules.test.ts",
+          "tests": 22
+        }
+      ]
+    }
+  ]
+}

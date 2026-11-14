@@ -1,0 +1,83 @@
+-- Appointly Sprint 1 - database evidence (2026-11-14T23:17:15.242Z)
+-- PostgreSQL 16.13
+
+-- Versioned Prisma migrations (Definition of Done 3)
+appointly_test=> select migration_name, finished_at from _prisma_migrations order by started_at;
+       migration_name        |          finished_at          
+-----------------------------+-------------------------------
+ 20261113172926_init_sprint1 | 2026-11-14 23:16:44.429917+00
+(1 row)
+
+-- F-001: seeded accounts; passwords stored as Argon2id hashes (value truncated)
+appointly_test=> select email, role, account_status, left(password_hash, 31) || '...' as password_hash from users order by role, email;
+             email              |  role   | account_status |           password_hash            
+--------------------------------+---------+----------------+------------------------------------
+ inactive@appointly.local       | PATIENT | INACTIVE       | $argon2id$v=19$m=65536,t=3,p=4$...
+ patient.arisa@appointly.local  | PATIENT | ACTIVE         | $argon2id$v=19$m=65536,t=3,p=4$...
+ patient@appointly.local        | PATIENT | ACTIVE         | $argon2id$v=19$m=65536,t=3,p=4$...
+ doctor.somchai@appointly.local | DOCTOR  | ACTIVE         | $argon2id$v=19$m=65536,t=3,p=4$...
+ doctor@appointly.local         | DOCTOR  | ACTIVE         | $argon2id$v=19$m=65536,t=3,p=4$...
+ admin@appointly.local          | ADMIN   | ACTIVE         | $argon2id$v=19$m=65536,t=3,p=4$...
+(6 rows)
+
+-- F-002: the patient profile edited through the UI is stored in PostgreSQL
+appointly_test=> select p.full_name, p.phone_number, p.date_of_birth, u.email from patients p join users u on u.user_id = p.user_id where u.email = 'patient.arisa@appointly.local';
+    full_name    | phone_number | date_of_birth |             email             
+-----------------+--------------+---------------+-------------------------------
+ Arisa Wongsuwan | 0898765432   | 1991-02-03    | patient.arisa@appointly.local
+(1 row)
+
+-- F-004 / F-005: the service created in the UI and its doctor assignments
+appointly_test=> select s.service_name, s.duration_minutes, s.service_status, d.full_name as assigned_doctor, u.email from medical_services s join doctor_services ds on ds.service_id = s.service_id join doctors d on d.doctor_id = ds.doctor_id join users u on u.user_id = d.user_id where s.service_name = 'Dental Cleaning' order by d.full_name;
+  service_name   | duration_minutes | service_status |   assigned_doctor   |         email          
+-----------------+------------------+----------------+---------------------+------------------------
+ Dental Cleaning |               30 | ACTIVE         | Dr. Somchai Prasert | doctor@appointly.local
+(1 row)
+
+-- F-006: split shifts saved on Saturday (day_of_week = 6) by the doctor
+appointly_test=> select u.email, ds.day_of_week, ds.start_time, ds.end_time, ds.is_active from doctor_schedules ds join doctors d on d.doctor_id = ds.doctor_id join users u on u.user_id = d.user_id where u.email = 'doctor@appointly.local' and ds.day_of_week = 6 order by ds.start_time;
+         email          | day_of_week | start_time | end_time | is_active 
+------------------------+-------------+------------+----------+-----------
+ doctor@appointly.local |           6 | 09:00      | 12:00    | t
+ doctor@appointly.local |           6 | 13:00      | 17:00    | t
+(2 rows)
+
+-- F-006: the full-day HOLIDAY exception (start_time and end_time are NULL)
+appointly_test=> select u.email, e.exception_date, e.exception_type, e.start_time, e.end_time, e.reason from schedule_exceptions e join doctors d on d.doctor_id = e.doctor_id join users u on u.user_id = d.user_id;
+         email          | exception_date | exception_type | start_time | end_time |      reason      
+------------------------+----------------+----------------+------------+----------+------------------
+ doctor@appointly.local | 2026-12-31     | HOLIDAY        |            |          | New Year holiday
+(1 row)
+
+-- F-006: database CHECK constraints guarding schedule windows
+appointly_test=> select conname, pg_get_constraintdef(oid) as definition from pg_constraint where conrelid = 'doctor_schedules'::regclass and contype = 'c' order by conname;
+             conname              |                     definition                      
+----------------------------------+-----------------------------------------------------
+ chk_doctor_schedules_day_of_week | CHECK (((day_of_week >= 0) AND (day_of_week <= 6)))
+ chk_doctor_schedules_time_window | CHECK (((end_time)::text > (start_time)::text))
+(2 rows)
+
+-- F-007: clinic settings after the administrator update
+appointly_test=> select clinic_name, timezone, fixed_start_interval_minutes, cancellation_cutoff_hours, reminder_lead_hours from clinic_settings;
+   clinic_name    |   timezone   | fixed_start_interval_minutes | cancellation_cutoff_hours | reminder_lead_hours 
+------------------+--------------+------------------------------+---------------------------+---------------------
+ Appointly Clinic | Asia/Bangkok |                           15 |                         0 |                  24
+(1 row)
+
+-- F-007: the settings change was audited with the administrator user and a UTC timestamp (AC-F007-01)
+appointly_test=> select a.action_type, a.entity_type, u.email as performed_by, a.created_at from audit_logs a join users u on u.user_id = a.user_id where a.action_type = 'CLINIC_SETTINGS_UPDATED' order by a.created_at desc limit 3;
+       action_type       |  entity_type  |     performed_by      |         created_at         
+-------------------------+---------------+-----------------------+----------------------------
+ CLINIC_SETTINGS_UPDATED | ClinicSetting | admin@appointly.local | 2026-11-14 23:17:12.919+00
+ CLINIC_SETTINGS_UPDATED | ClinicSetting | admin@appointly.local | 2026-11-14 23:17:06.222+00
+(2 rows)
+
+-- Audit trail of the UI journeys (most recent 10 entries)
+appointly_test=> select a.action_type, a.entity_type, u.email as performed_by, a.created_at from audit_logs a join users u on u.user_id = a.user_id order by a.created_at desc limit 10;
+       action_type       |  entity_type   |     performed_by      |         created_at         
+-------------------------+----------------+-----------------------+----------------------------
+ CLINIC_SETTINGS_UPDATED | ClinicSetting  | admin@appointly.local | 2026-11-14 23:17:12.919+00
+ CLINIC_SETTINGS_UPDATED | ClinicSetting  | admin@appointly.local | 2026-11-14 23:17:06.222+00
+ DOCTOR_SERVICE_ASSIGNED | DoctorService  | admin@appointly.local | 2026-11-14 23:16:58.925+00
+ SERVICE_CREATED         | MedicalService | admin@appointly.local | 2026-11-14 23:16:58.404+00
+(4 rows)

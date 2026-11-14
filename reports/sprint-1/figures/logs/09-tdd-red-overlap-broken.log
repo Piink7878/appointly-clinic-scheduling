@@ -1,0 +1,22 @@
+$ # RED: the overlap rule is deliberately broken (doShiftsOverlap always returns false)
+$ npx vitest run tests/sprint-1/unit/scheduleValidator.test.ts
+   × 1. scheduleValidator Domain Validation Unit Tests > Shift overlap detection (strict overlap vs back-to-back) > detects strict overlap: 09:00–13:00 and 12:00–16:00 overlap (returns true) 6ms
+     → expected false to be true // Object.is equality
+   × 1. scheduleValidator Domain Validation Unit Tests > Shift overlap detection (strict overlap vs back-to-back) > detects containment overlap: 09:00–17:00 and 10:00–14:00 overlap (returns true) 1ms
+     → expected false to be true // Object.is equality
+   × 1. scheduleValidator Domain Validation Unit Tests > Shift overlap detection (strict overlap vs back-to-back) > detects identical shift overlap: 09:00–12:00 and 09:00–12:00 overlap (returns true) 1ms
+     → expected false to be true // Object.is equality
+   × 1. scheduleValidator Domain Validation Unit Tests > Multi-shift array validation (validateShifts) > rejects overlapping shifts on the same day with 422 INVALID_SCHEDULE_WINDOW 1ms
+     → expected undefined to be 422 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/sprint-1/unit/scheduleValidator.test.ts > 1. scheduleValidator Domain Validation Unit Tests > Shift overlap detection (strict overlap vs back-to-back) > detects strict overlap: 09:00–13:00 and 12:00–16:00 overlap (returns true)
+AssertionError: expected false to be true // Object.is equality
+ FAIL  tests/sprint-1/unit/scheduleValidator.test.ts > 1. scheduleValidator Domain Validation Unit Tests > Shift overlap detection (strict overlap vs back-to-back) > detects containment overlap: 09:00–17:00 and 10:00–14:00 overlap (returns true)
+AssertionError: expected false to be true // Object.is equality
+ FAIL  tests/sprint-1/unit/scheduleValidator.test.ts > 1. scheduleValidator Domain Validation Unit Tests > Shift overlap detection (strict overlap vs back-to-back) > detects identical shift overlap: 09:00–12:00 and 09:00–12:00 overlap (returns true)
+AssertionError: expected false to be true // Object.is equality
+ FAIL  tests/sprint-1/unit/scheduleValidator.test.ts > 1. scheduleValidator Domain Validation Unit Tests > Multi-shift array validation (validateShifts) > rejects overlapping shifts on the same day with 422 INVALID_SCHEDULE_WINDOW
+AssertionError: expected undefined to be 422 // Object.is equality
+ Test Files  1 failed (1)
+      Tests  4 failed | 13 passed (17)
+   Duration  447ms (transform 110ms, setup 0ms, collect 152ms, tests 14ms, environment 0ms, prepare 87ms)

@@ -15,6 +15,7 @@ import { PatientServicesPage } from '../modules/patients/PatientServicesPage';
 import { PatientProfilePage } from '../modules/patients/PatientProfilePage';
 import { AdminPatientsPage } from '../modules/patients/AdminPatientsPage';
 import { DoctorSchedulePage } from '../modules/doctors/DoctorSchedulePage';
+import { DoctorScheduleManagerPage } from '../modules/schedules/DoctorScheduleManagerPage';
 import { AdminDoctorsPage } from '../modules/doctors/AdminDoctorsPage';
 import { PatientDoctorsPage } from '../modules/doctors/PatientDoctorsPage';
 import { AdminServicesPage } from '../modules/services/AdminServicesPage';
@@ -79,7 +80,7 @@ export const AppRouter: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['DOCTOR']} />}>
           <Route path="/doctor" element={<DoctorLayout />}>
             <Route index element={<Navigate to="/doctor/schedule" replace />} />
-            <Route path="schedule" element={<DoctorSchedulePage />} />
+            <Route path="schedule" element={<DoctorScheduleManagerPage />} />
             <Route path="appointments" element={<DoctorSchedulePage />} />
           </Route>
         </Route>

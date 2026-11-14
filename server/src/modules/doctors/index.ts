@@ -8,6 +8,7 @@
 import { Router } from 'express';
 import { authGuard, roleGuard } from '../../shared/middleware';
 import { doctorController } from './controller';
+import { scheduleController } from '../schedules';
 
 export const doctorsRouter = Router();
 
@@ -23,6 +24,58 @@ doctorsRouter.get(
   authGuard,
   roleGuard('PATIENT', 'DOCTOR', 'ADMIN'),
   (req, res, next) => doctorController.getDoctors(req, res, next)
+);
+
+/**
+ * Doctor Self-Schedule Management Routes (F-006)
+ * Reference: System-Level SDS Section 3.2F, 3.2G, 5.2, 6 & Sprint 1 Contracts (F-006)
+ * Mounted before /:doctorId to ensure /me/schedule and /me/exceptions are matched first.
+ */
+doctorsRouter.get(
+  '/me/schedule',
+  authGuard,
+  roleGuard('DOCTOR'),
+  (req, res, next) => scheduleController.getMySchedule(req, res, next)
+);
+
+doctorsRouter.put(
+  '/me/schedule',
+  authGuard,
+  roleGuard('DOCTOR'),
+  (req, res, next) => scheduleController.updateMySchedule(req, res, next)
+);
+
+doctorsRouter.get(
+  '/me/exceptions',
+  authGuard,
+  roleGuard('DOCTOR'),
+  (req, res, next) => scheduleController.getMyExceptions(req, res, next)
+);
+
+doctorsRouter.post(
+  '/me/exceptions',
+  authGuard,
+  roleGuard('DOCTOR'),
+  (req, res, next) => scheduleController.createMyException(req, res, next)
+);
+
+doctorsRouter.delete(
+  '/me/exceptions/:exceptionId',
+  authGuard,
+  roleGuard('DOCTOR'),
+  (req, res, next) => scheduleController.deleteMyException(req, res, next)
+);
+
+/**
+ * GET /api/v1/doctors/:doctorId/schedule
+ * Accessible by: ADMIN only. A schedule includes private exception reasons, so
+ * patients and other doctors must not read it; a doctor reads their own via /me/schedule.
+ */
+doctorsRouter.get(
+  '/:doctorId/schedule',
+  authGuard,
+  roleGuard('ADMIN'),
+  (req, res, next) => scheduleController.getDoctorScheduleAdmin(req, res, next)
 );
 
 /**

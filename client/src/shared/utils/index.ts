@@ -22,6 +22,9 @@ export const toDateInputValue = (value: string | null | undefined): string => {
 const bangkokDateString = (now: Date): string =>
   now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
 
+/** Today's calendar date (YYYY-MM-DD) in the clinic timezone (Asia/Bangkok). */
+export const getBangkokToday = (now: Date = new Date()): string => bangkokDateString(now);
+
 /**
  * Latest selectable date of birth (YYYY-MM-DD).
  *

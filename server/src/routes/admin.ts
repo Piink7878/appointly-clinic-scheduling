@@ -8,6 +8,7 @@
 import { Router } from 'express';
 import { authGuard, roleGuard } from '../shared/middleware';
 import { sendSuccess } from '../shared/utils/response';
+import { patientController } from '../modules/patients';
 
 export const adminRouter = Router();
 
@@ -15,12 +16,13 @@ export const adminRouter = Router();
 adminRouter.use(authGuard, roleGuard('ADMIN'));
 
 /**
- * Dummy placeholder endpoints for Sprint 1 RBAC cross-role permission testing.
- * (Actual business logic implemented in respective domain modules).
+ * GET /api/v1/admin/patients
+ * Reference: System-Level SDS Section 5.2 & Sprint 1 Contracts (F-002)
+ * Searches and lists patient accounts with pagination metadata.
  */
-adminRouter.get('/patients', (_req, res) => {
-  sendSuccess(res, { patients: [] }, 'Admin patient directory placeholder');
-});
+adminRouter.get('/patients', authGuard, roleGuard('ADMIN'), (req, res, next) =>
+  patientController.getPatients(req, res, next)
+);
 
 adminRouter.post('/services', (_req, res) => {
   sendSuccess(res, { service: {} }, 'Admin create service placeholder', 201);

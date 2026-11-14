@@ -10,6 +10,12 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Activity, LogOut, User, AlertTriangle, Calendar } from 'lucide-react';
 
+const NAV_ITEMS = [
+  { to: '/patient/services', label: 'Services & Doctors', Icon: Activity },
+  { to: '/patient/appointments', label: 'My Appointments', Icon: Calendar },
+  { to: '/patient/profile', label: 'My Profile', Icon: User },
+];
+
 export const PatientLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -47,19 +53,13 @@ export const PatientLayout: React.FC = () => {
               </div>
 
               {/* Portal Links */}
-              <nav className="hidden md:flex space-x-1">
-                <NavLink to="/patient/services" className={navLinkClass}>
-                  <Activity className="w-4 h-4 mr-1.5" />
-                  Services & Doctors
-                </NavLink>
-                <NavLink to="/patient/appointments" className={navLinkClass}>
-                  <Calendar className="w-4 h-4 mr-1.5" />
-                  My Appointments
-                </NavLink>
-                <NavLink to="/patient/profile" className={navLinkClass}>
-                  <User className="w-4 h-4 mr-1.5" />
-                  My Profile
-                </NavLink>
+              <nav aria-label="Patient portal" className="hidden md:flex space-x-1">
+                {NAV_ITEMS.map(({ to, label, Icon }) => (
+                  <NavLink key={to} to={to} className={navLinkClass}>
+                    <Icon className="w-4 h-4 mr-1.5" />
+                    {label}
+                  </NavLink>
+                ))}
               </nav>
             </div>
 
@@ -83,6 +83,23 @@ export const PatientLayout: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Small-screen navigation (desktop nav above is hidden below md) */}
+        <nav
+          aria-label="Patient portal (mobile)"
+          className="md:hidden border-t border-slate-100 px-4 sm:px-6 py-2 flex gap-1 overflow-x-auto"
+        >
+          {NAV_ITEMS.map(({ to, label, Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={(state) => `${navLinkClass(state)} whitespace-nowrap flex-shrink-0`}
+            >
+              <Icon className="w-4 h-4 mr-1.5" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
       </header>
 
       {/* Emergency Disclaimer Banner (SDS Section 4.1) */}

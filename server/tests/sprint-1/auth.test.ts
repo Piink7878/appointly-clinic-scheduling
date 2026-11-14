@@ -271,12 +271,28 @@ describe('Auth & RBAC System (F-001)', () => {
       expect(resPatients.status).toBe(200);
       expect(resPatients.body.success).toBe(true);
 
+      // Ensure test idempotency by removing previous test service if present
+      const existingPed = await prisma.medicalService.findMany({
+        where: { serviceName: 'Pediatrics Consultation' },
+      });
+      if (existingPed.length > 0) {
+        const pedIds = existingPed.map((s) => s.serviceId);
+        await prisma.auditLog.deleteMany({ where: { entityId: { in: pedIds } } });
+        await prisma.medicalService.deleteMany({ where: { serviceId: { in: pedIds } } });
+      }
+
       const resServices = await request(app)
         .post('/api/v1/admin/services')
         .set('Cookie', adminCookies)
         .send({ serviceName: 'Pediatrics Consultation' });
       expect(resServices.status).toBe(201);
       expect(resServices.body.success).toBe(true);
+
+      const createdPedId = resServices.body?.data?.serviceId || resServices.body?.serviceId;
+      if (createdPedId) {
+        await prisma.auditLog.deleteMany({ where: { entityId: createdPedId } });
+        await prisma.medicalService.deleteMany({ where: { serviceId: createdPedId } });
+      }
 
       const resSettings = await request(app)
         .patch('/api/v1/admin/settings')

@@ -17,6 +17,8 @@ import { AdminPatientsPage } from '../modules/patients/AdminPatientsPage';
 import { DoctorSchedulePage } from '../modules/doctors/DoctorSchedulePage';
 import { AdminDoctorsPage } from '../modules/doctors/AdminDoctorsPage';
 import { PatientDoctorsPage } from '../modules/doctors/PatientDoctorsPage';
+import { AdminServicesPage } from '../modules/services/AdminServicesPage';
+import { PatientServiceCatalogPage } from '../modules/services/PatientServiceCatalogPage';
 // Placeholder landing page still used by admin sections that are not built yet.
 import { AdminDoctorsPage as AdminPlaceholderPage } from '../modules/admin/AdminDoctorsPage';
 
@@ -64,7 +66,7 @@ export const AppRouter: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={['PATIENT']} />}>
           <Route path="/patient" element={<PatientLayout />}>
             <Route index element={<Navigate to="/patient/services" replace />} />
-            <Route path="services" element={<PatientServicesPage />} />
+            <Route path="services" element={<PatientServiceCatalogPage />} />
             <Route path="doctors" element={<PatientDoctorsPage />} />
             <Route path="appointments" element={<PatientServicesPage />} />
             <Route path="profile" element={<PatientProfilePage />} />
@@ -89,7 +91,7 @@ export const AppRouter: React.FC = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/doctors" replace />} />
             <Route path="doctors" element={<AdminDoctorsPage />} />
-            <Route path="services" element={<AdminPlaceholderPage />} />
+            <Route path="services" element={<AdminServicesPage />} />
             <Route path="schedules" element={<AdminPlaceholderPage />} />
             <Route path="settings" element={<AdminPlaceholderPage />} />
             <Route path="patients" element={<AdminPatientsPage />} />

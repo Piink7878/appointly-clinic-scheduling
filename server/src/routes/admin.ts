@@ -10,6 +10,7 @@ import { authGuard, roleGuard } from '../shared/middleware';
 import { sendSuccess } from '../shared/utils/response';
 import { patientController } from '../modules/patients';
 import { doctorController } from '../modules/doctors';
+import { serviceController } from '../modules/services';
 
 export const adminRouter = Router();
 
@@ -42,9 +43,17 @@ adminRouter.delete('/doctors/:doctorId/services/:serviceId', (req, res, next) =>
   doctorController.unassignService(req, res, next)
 );
 
-adminRouter.post('/services', (_req, res) => {
-  sendSuccess(res, { service: {} }, 'Admin create service placeholder', 201);
-});
+/**
+ * Medical Service Catalog Management Routes (F-004)
+ * Reference: System-Level SDS Section 3.2D, 3.2L, 5.2, 6 & Sprint 1 Contracts (F-004)
+ */
+adminRouter.get('/services', (req, res, next) => serviceController.getServices(req, res, next));
+adminRouter.get('/services/:serviceId', (req, res, next) => serviceController.getServiceById(req, res, next));
+adminRouter.post('/services', (req, res, next) => serviceController.createService(req, res, next));
+adminRouter.put('/services/:serviceId', (req, res, next) => serviceController.updateService(req, res, next));
+adminRouter.patch('/services/:serviceId/status', (req, res, next) =>
+  serviceController.updateServiceStatus(req, res, next)
+);
 
 adminRouter.patch('/settings', (_req, res) => {
   sendSuccess(res, { updated: true }, 'Admin settings update placeholder');

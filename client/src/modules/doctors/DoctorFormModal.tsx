@@ -13,7 +13,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { ApiClientError } from '../../shared/api';
-import { AlertBanner, Modal } from '../../shared/components';
+import { AlertBanner, FormField as Field, Modal, fieldInputClass as inputClass } from '../../shared/components';
 import { createDoctor, updateDoctor } from './api';
 import { Doctor } from './types';
 import {
@@ -37,50 +37,6 @@ export interface DoctorFormModalProps {
   /** Called after a successful save with the text for the success banner. */
   onSaved: (message: string) => void;
 }
-
-const inputClass = (invalid: boolean, readOnly = false) =>
-  `block w-full px-3 py-2.5 border rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
-    invalid
-      ? 'border-red-400 focus:ring-red-500 focus:border-red-500'
-      : 'border-slate-300 focus:ring-amber-500 focus:border-amber-500'
-  } ${readOnly ? 'bg-slate-50 text-slate-500' : 'bg-white'}`;
-
-interface FieldProps {
-  id: string;
-  label: string;
-  error?: string;
-  hint?: string;
-  required?: boolean;
-  children: (describedBy: string | undefined) => React.ReactNode;
-}
-
-const Field: React.FC<FieldProps> = ({ id, label, error, hint, required, children }) => {
-  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
-  return (
-    <div>
-      <div className="flex items-baseline gap-1 mb-1">
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700">
-          {label}
-        </label>
-        {required && (
-          <span className="text-red-500 text-sm" aria-hidden="true">
-            *
-          </span>
-        )}
-      </div>
-      {children(describedBy)}
-      {error ? (
-        <p id={`${id}-error`} className="mt-1 text-xs text-red-600">
-          {error}
-        </p>
-      ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1 text-xs text-slate-500">
-          {hint}
-        </p>
-      ) : null}
-    </div>
-  );
-};
 
 export const DoctorFormModal: React.FC<DoctorFormModalProps> = ({ mode, doctor, onClose, onSaved }) => {
   const isEdit = mode === 'edit';

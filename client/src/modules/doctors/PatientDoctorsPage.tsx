@@ -6,15 +6,19 @@
 // - GET /api/v1/doctors[?serviceId=]  (PATIENT receives ACTIVE doctors only)
 // - Cards with specialization and service badges (only ACTIVE services, BR-004)
 // - Skeleton cards while loading, guided empty state, error banner with retry
-// - `?serviceId=` (linked from the service catalog) narrows to qualified doctors
+// - Service filter dropdown (GET /api/v1/services): choosing a service calls
+//   GET /api/v1/doctors?serviceId=<id>; the choice lives in the URL so the
+//   "View available doctors" link on the service catalog lands pre-filtered
 // Only public-facing fields are displayed: contact e-mail, licence number and
 // account ids are intentionally not rendered to patients.
 // ==============================================================================
 
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Clock, Stethoscope, UserRound, X } from 'lucide-react';
+import { Clock, Stethoscope, UserRound } from 'lucide-react';
 import { AlertBanner, Skeleton } from '../../shared/components';
+import { listServices } from '../services/api';
+import { MedicalService } from '../services/types';
 import { listDoctors } from './api';
 import { Doctor } from './types';
 
@@ -37,6 +41,31 @@ export const PatientDoctorsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Options for the service filter (patients only ever receive ACTIVE services).
+  const [serviceOptions, setServiceOptions] = useState<MedicalService[]>([]);
+  const [servicesLoaded, setServicesLoaded] = useState(false);
+  const [servicesFailed, setServicesFailed] = useState(false);
+  const [servicesReloadKey, setServicesReloadKey] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setServicesFailed(false);
+
+    listServices({ signal: controller.signal })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setServiceOptions(result.filter((svc) => svc.serviceStatus === 'ACTIVE'));
+        setServicesLoaded(true);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setServicesFailed(true);
+        setServicesLoaded(true);
+      });
+
+    return () => controller.abort();
+  }, [servicesReloadKey]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,12 +94,11 @@ export const PatientDoctorsPage: React.FC = () => {
   const showEmpty = !isLoading && error === null && doctors !== null && items.length === 0;
   const showCards = !isLoading && error === null && items.length > 0;
 
-  // Name of the service we are filtering by, when any returned doctor carries it.
-  const filteredServiceName = serviceId
-    ? items.flatMap((d) => d.services ?? []).find((s) => s.serviceId === serviceId)?.serviceName
-    : undefined;
-
+  const selectService = (id: string) => setSearchParams(id ? { serviceId: id } : {});
   const clearServiceFilter = () => setSearchParams({}, { replace: true });
+
+  // A deep link may carry a service that is not in the (active) list: keep it selectable.
+  const selectedKnown = serviceOptions.some((svc) => svc.serviceId === serviceId);
 
   return (
     <div className="space-y-6">
@@ -81,21 +109,39 @@ export const PatientDoctorsPage: React.FC = () => {
         </p>
       </div>
 
-      {serviceId && (
-        <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 border border-sky-200 pl-3 pr-1.5 py-1 text-sm text-sky-900">
-          <span>
-            Showing doctors for <strong>{filteredServiceName ?? 'the selected service'}</strong>
-          </span>
-          <button
-            type="button"
-            onClick={clearServiceFilter}
-            aria-label="Remove service filter"
-            className="rounded-full p-1 text-sky-700 hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      {/* Service filter */}
+      <div className="w-full sm:max-w-xs">
+        <label htmlFor="doctor-service-filter" className="block text-sm font-medium text-slate-700 mb-1">
+          Filter by service
+        </label>
+        <select
+          id="doctor-service-filter"
+          value={serviceId}
+          onChange={(e) => selectService(e.target.value)}
+          className="block w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+        >
+          <option value="">All services</option>
+          {serviceId && !selectedKnown && <option value={serviceId}>Selected service</option>}
+          {serviceOptions.map((svc) => (
+            <option key={svc.serviceId} value={svc.serviceId}>
+              {svc.serviceName} ({durationLabel(svc.durationMinutes)})
+            </option>
+          ))}
+        </select>
+        {servicesFailed && (
+          <p role="alert" className="mt-1 text-xs text-red-600">
+            Couldn&rsquo;t load the service list.{' '}
+            <button
+              type="button"
+              onClick={() => setServicesReloadKey((k) => k + 1)}
+              className="font-semibold underline hover:text-red-800"
+            >
+              Retry
+            </button>
+          </p>
+        )}
+        {!servicesLoaded && <p className="mt-1 text-xs text-slate-400">Loading services…</p>}
+      </div>
 
       {error && (
         <AlertBanner
@@ -146,9 +192,11 @@ export const PatientDoctorsPage: React.FC = () => {
           </div>
           {serviceId ? (
             <>
-              <h2 className="text-base font-semibold text-slate-900">No doctors available for this service</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                No doctors are currently available for this service
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
-                No active doctor currently offers this service. Please check back later or browse all doctors.
+                Please check back later or choose a different service.
               </p>
               <button
                 type="button"

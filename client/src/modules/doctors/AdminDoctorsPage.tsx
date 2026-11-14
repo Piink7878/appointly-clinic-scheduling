@@ -5,17 +5,19 @@
 //            SDS Sections 4.2 & 4.3
 // - GET   /api/v1/doctors?status=&search=   (ADMIN sees ACTIVE and INACTIVE)
 // - Add (POST) / Edit (PUT) in a modal; Activate/Deactivate (PATCH) behind a
-//   confirmation modal; success / error banners
+//   confirmation modal; "Manage Services" opens the F-005 assignment modal;
+//   success / error banners
 // - Table on >= md, stacked cards below md (NFR-022)
 // - Skeleton while loading, guided empty states, error banner with retry
 // ==============================================================================
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pencil, Plus, Power, Search, SearchX, Stethoscope, X } from 'lucide-react';
+import { ListChecks, Pencil, Plus, Power, Search, SearchX, Stethoscope, X } from 'lucide-react';
 import { AlertBanner, Skeleton, StatusBadge } from '../../shared/components';
 import { useDebouncedValue } from '../../shared/hooks';
 import { listDoctors } from './api';
 import { DoctorFormModal } from './DoctorFormModal';
+import { DoctorServicesModal } from './DoctorServicesModal';
 import { DoctorStatusModal } from './DoctorStatusModal';
 import { Doctor, DoctorStatusFilter } from './types';
 
@@ -25,6 +27,7 @@ type ModalState =
   | { type: 'create' }
   | { type: 'edit'; doctor: Doctor }
   | { type: 'status'; doctor: Doctor }
+  | { type: 'services'; doctor: Doctor }
   | null;
 
 interface Banner {
@@ -109,6 +112,15 @@ export const AdminDoctorsPage: React.FC = () => {
       >
         <Pencil className="w-3.5 h-3.5 mr-1" />
         Edit
+      </button>
+      <button
+        type="button"
+        onClick={() => setModal({ type: 'services', doctor: d })}
+        aria-label={`Manage services for ${d.fullName}`}
+        className={secondaryButton}
+      >
+        <ListChecks className="w-3.5 h-3.5 mr-1" />
+        Manage Services
       </button>
       <button
         type="button"
@@ -343,6 +355,7 @@ export const AdminDoctorsPage: React.FC = () => {
       {modal?.type === 'edit' && (
         <DoctorFormModal mode="edit" doctor={modal.doctor} onClose={closeModal} onSaved={handleDone} />
       )}
+      {modal?.type === 'services' && <DoctorServicesModal doctor={modal.doctor} onClose={closeModal} />}
       {modal?.type === 'status' && (
         <DoctorStatusModal doctor={modal.doctor} onClose={closeModal} onChanged={handleDone} />
       )}

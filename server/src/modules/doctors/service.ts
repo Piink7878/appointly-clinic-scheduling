@@ -422,15 +422,17 @@ export class DoctorService {
   }
 
   /**
-   * Assigns a medical service to a doctor (F-005).
-   * Validates doctor and service existence and prevents duplicate assignments (409 DUPLICATE_ASSIGNMENT).
+   * Assigns one or more medical services to a doctor (F-005, FR-011, BR-002).
+   * - 404 DOCTOR_NOT_FOUND / SERVICE_NOT_FOUND when the doctor or any service does not exist
+   * - 409 DUPLICATE_ASSIGNMENT when a (doctor, service) pair already exists. The database
+   *   UNIQUE (doctor_id, service_id) constraint is the authority: a Prisma P2002 is mapped
+   *   to the 409, so two concurrent identical requests cannot both succeed.
+   * - Every assignment and its AuditLog entry (DOCTOR_SERVICE_ASSIGNED) are written in ONE
+   *   transaction: either all requested services are assigned or none are.
    */
-  async assignService(adminUserId: string, doctorId: string, serviceId: string) {
+  async assignServices(adminUserId: string, doctorId: string, serviceIds: string[]) {
     if (!isValidUuid(doctorId)) {
       throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
-    }
-    if (!isValidUuid(serviceId)) {
-      throw AppError.notFound('Medical service not found.', 'SERVICE_NOT_FOUND');
     }
 
     const doctor = await prisma.doctor.findUnique({ where: { doctorId } });
@@ -438,95 +440,110 @@ export class DoctorService {
       throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
     }
 
-    const service = await prisma.medicalService.findUnique({ where: { serviceId } });
-    if (!service) {
-      throw AppError.notFound('Medical service not found.', 'SERVICE_NOT_FOUND');
+    const services = await prisma.medicalService.findMany({
+      where: { serviceId: { in: serviceIds } },
+    });
+    const foundIds = new Set(services.map((svc) => svc.serviceId));
+    const missing = serviceIds.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw AppError.notFound(
+        serviceIds.length === 1
+          ? 'Medical service not found.'
+          : `Medical service not found: ${missing.join(', ')}`,
+        'SERVICE_NOT_FOUND'
+      );
     }
+    const serviceById = new Map(services.map((svc) => [svc.serviceId, svc]));
 
-    const existingAssignment = await prisma.doctorService.findUnique({
-      where: {
-        doctorId_serviceId: {
-          doctorId,
-          serviceId,
-        },
-      },
-    });
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const assignments = [];
+        for (const serviceId of serviceIds) {
+          const service = serviceById.get(serviceId)!;
+          const assignment = await tx.doctorService.create({
+            data: { doctorId, serviceId },
+            include: { service: true },
+          });
 
-    if (existingAssignment) {
-      throw AppError.conflict('Doctor is already assigned to this service.', 'DUPLICATE_ASSIGNMENT');
+          await tx.auditLog.create({
+            data: {
+              userId: adminUserId,
+              actionType: 'DOCTOR_SERVICE_ASSIGNED',
+              entityType: 'DoctorService',
+              entityId: assignment.doctorServiceId,
+              details: {
+                doctorId,
+                serviceId,
+                serviceName: service.serviceName,
+              },
+            },
+          });
+
+          assignments.push(assignment);
+        }
+        return assignments;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw AppError.conflict('Doctor is already assigned to this service.', 'DUPLICATE_ASSIGNMENT');
+        }
+        // The doctor or a service was deleted between the existence check and the insert.
+        if (error.code === 'P2003') {
+          throw AppError.notFound('Doctor or medical service not found.', 'SERVICE_NOT_FOUND');
+        }
+      }
+      throw error;
     }
-
-    const assignment = await prisma.doctorService.create({
-      data: {
-        doctorId,
-        serviceId,
-      },
-      include: {
-        service: true,
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        userId: adminUserId,
-        actionType: 'DOCTOR_SERVICE_ASSIGNED',
-        entityType: 'DoctorService',
-        entityId: assignment.doctorServiceId,
-        details: {
-          doctorId,
-          serviceId,
-          serviceName: service.serviceName,
-        },
-      },
-    });
-
-    return assignment;
   }
 
   /**
    * Unassigns a medical service from a doctor (F-005).
+   * 404 ASSIGNMENT_NOT_FOUND when the pair does not exist. The deletion and its AuditLog
+   * entry (DOCTOR_SERVICE_UNASSIGNED) share one transaction.
    */
   async unassignService(adminUserId: string, doctorId: string, serviceId: string) {
     if (!isValidUuid(doctorId) || !isValidUuid(serviceId)) {
       throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
     }
 
-    const assignment = await prisma.doctorService.findUnique({
-      where: {
-        doctorId_serviceId: {
-          doctorId,
-          serviceId,
-        },
-      },
-    });
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const assignment = await tx.doctorService.findUnique({
+          where: { doctorId_serviceId: { doctorId, serviceId } },
+          include: { service: true },
+        });
+        if (!assignment) {
+          throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
+        }
 
-    if (!assignment) {
-      throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
+        await tx.doctorService.delete({
+          where: { doctorId_serviceId: { doctorId, serviceId } },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId: adminUserId,
+            actionType: 'DOCTOR_SERVICE_UNASSIGNED',
+            entityType: 'DoctorService',
+            entityId: assignment.doctorServiceId,
+            details: {
+              doctorId,
+              serviceId,
+              serviceName: assignment.service.serviceName,
+            },
+          },
+        });
+
+        return { unassigned: true, doctorId, serviceId };
+      });
+    } catch (error) {
+      // A concurrent request removed the row first: P2025 "record to delete does not exist".
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
+      }
+      throw error;
     }
-
-    await prisma.doctorService.delete({
-      where: {
-        doctorId_serviceId: {
-          doctorId,
-          serviceId,
-        },
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        userId: adminUserId,
-        actionType: 'DOCTOR_SERVICE_UNASSIGNED',
-        entityType: 'DoctorService',
-        entityId: assignment.doctorServiceId,
-        details: {
-          doctorId,
-          serviceId,
-        },
-      },
-    });
-
-    return { unassigned: true, doctorId, serviceId };
   }
 
   /**

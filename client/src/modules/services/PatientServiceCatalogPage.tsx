@@ -4,12 +4,13 @@
 // Reference: Sprint 1 Contracts Section 1.4 (F-004); AC-F004-01/02;
 //            SDS Sections 4.2 & 4.3
 // - GET /api/v1/services  (PATIENT receives ACTIVE services only — FR-018, BR-004)
-// - Cards with name, description and a duration badge (e.g. "45 mins")
+// - Cards with name, description, a duration badge (e.g. "45 mins") and a
+//   "View available doctors" link to /patient/doctors?serviceId=<id> (F-005)
 // - Skeleton cards while loading, guided empty state, error banner with retry
 // ==============================================================================
 
 import React, { useEffect, useState } from 'react';
-import { Clock, Stethoscope } from 'lucide-react';
+import { Clock, Stethoscope, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AlertBanner, Skeleton } from '../../shared/components';
 import { listServices } from './api';
@@ -120,11 +121,19 @@ export const PatientServiceCatalogPage: React.FC = () => {
               <p className="text-sm text-slate-600 break-words flex-1">
                 {s.description || <span className="text-slate-400">No description provided.</span>}
               </p>
-              <div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-800 border border-sky-100">
                   <Clock className="w-3 h-3" aria-hidden="true" />
                   {formatDuration(s.durationMinutes)}
                 </span>
+                <Link
+                  to={`/patient/doctors?serviceId=${encodeURIComponent(s.serviceId)}`}
+                  aria-label={`View available doctors for ${s.serviceName}`}
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+                >
+                  <Users className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
+                  View available doctors
+                </Link>
               </div>
             </li>
           ))}

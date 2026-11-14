@@ -109,12 +109,39 @@ export type GetDoctorsQueryInput = z.infer<typeof getDoctorsQuerySchema>;
 
 /**
  * Validates doctor-service assignment: POST /api/v1/admin/doctors/:doctorId/services
+ * Accepts exactly one of:
+ *   - { serviceId: UUID }
+ *   - { serviceIds: UUID[] }   (1..50 entries; duplicates in the list are collapsed)
+ * Output is normalized to `serviceIds` plus the original `batch` flag, which the
+ * controller uses to pick the response shape.
  */
-export const assignServiceSchema = z.object({
-  serviceId: z
-    .string({ required_error: 'Service ID is required' })
-    .uuid('Invalid service ID format'),
-});
+export const MAX_BATCH_ASSIGNMENTS = 50;
+
+export const assignServiceSchema = z
+  .object({
+    serviceId: z.string({ invalid_type_error: 'Service ID must be a string' }).uuid('Invalid service ID format').optional(),
+    serviceIds: z
+      .array(z.string({ invalid_type_error: 'Service ID must be a string' }).uuid('Invalid service ID format'))
+      .min(1, 'At least one service ID is required')
+      .max(MAX_BATCH_ASSIGNMENTS, `At most ${MAX_BATCH_ASSIGNMENTS} services can be assigned at once`)
+      .optional(),
+  })
+  .superRefine((value, ctx) => {
+    const hasSingle = value.serviceId !== undefined;
+    const hasBatch = value.serviceIds !== undefined;
+    if (hasSingle === hasBatch) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: hasSingle
+          ? "Provide either 'serviceId' or 'serviceIds', not both"
+          : "Service ID is required ('serviceId' or 'serviceIds')",
+      });
+    }
+  })
+  .transform((value) => ({
+    batch: value.serviceIds !== undefined,
+    serviceIds: Array.from(new Set(value.serviceIds ?? [value.serviceId as string])),
+  }));
 
 export type AssignServiceInput = z.infer<typeof assignServiceSchema>;
 

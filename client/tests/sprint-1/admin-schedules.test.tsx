@@ -10,9 +10,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AuthContext, AuthContextType } from '../../src/shared/context/AuthContext';
+import { AuthContext, type AuthContextType } from '../../src/shared/context/AuthContext';
 import { ApiClientError } from '../../src/shared/api';
-import { UserProfile } from '../../src/shared/types';
+import { type UserProfile } from '../../src/shared/types';
 import { AdminSchedulesPage } from '../../src/modules/schedules/AdminSchedulesPage';
 import type { ScheduleException, WeeklyShift } from '../../src/modules/schedules/types';
 import type { Doctor } from '../../src/modules/doctors/types';

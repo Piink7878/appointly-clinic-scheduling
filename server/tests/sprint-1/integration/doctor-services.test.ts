@@ -12,10 +12,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 describe('Doctor-Service Assignment (F-005)', () => {
   const validPassword = 'ChangeMe123!';
   const stamp = Date.now();

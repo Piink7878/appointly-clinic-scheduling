@@ -14,10 +14,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 describe('Doctor Management System (F-003, F-005)', () => {
   const validPassword = 'ChangeMe123!';
   const patientEmail = 'patient.arisa@appointly.local';

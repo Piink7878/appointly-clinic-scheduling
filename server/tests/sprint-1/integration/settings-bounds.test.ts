@@ -8,10 +8,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 describe('Clinic settings upper bounds (F-007)', () => {
   let adminCookies: string[];
   let original: Awaited<ReturnType<typeof prisma.clinicSetting.findFirstOrThrow>>;

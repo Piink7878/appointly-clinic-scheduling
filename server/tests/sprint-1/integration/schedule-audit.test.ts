@@ -9,10 +9,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
-import { prisma } from '../../src/shared/database';
+import { app } from '../../../src/app';
+import { prisma } from '../../../src/shared/database';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 describe('Administrator schedule & settings audit trail (F-007)', () => {
   const validPassword = 'ChangeMe123!';
   const stamp = Date.now();
@@ -87,17 +87,57 @@ describe('Administrator schedule & settings audit trail (F-007)', () => {
     }
   });
 
-  it('a PUT without a reason still audits once, with a default reason', async () => {
+  it.each([
+    ['is missing', undefined],
+    ['is empty', ''],
+    ['is only whitespace', '   '],
+    ['is not text', 42],
+  ])('an administrator override whose reason %s is refused (400): nothing saved, nothing audited (SDS 6.1)', async (_label, reason) => {
     const original = await prisma.doctorSchedule.findMany({ where: { doctorId } });
     const since = new Date();
     const res = await request(app)
       .put(`/api/v1/admin/doctors/${doctorId}/schedule`)
       .set('Cookie', adminCookies)
-      .send({ shifts: original.map((s) => ({ dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime, isActive: s.isActive })) });
-    expect(res.status).toBe(200);
+      .send({
+        shifts: [{ dayOfWeek: 3, startTime: '10:00', endTime: '11:00', isActive: true }],
+        ...(reason === undefined ? {} : { reason }),
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
 
+    expect(await auditRowsFor(doctorId, since)).toHaveLength(0);
+    expect(await prisma.doctorSchedule.count({ where: { doctorId } })).toBe(original.length);
+  });
+
+  it('the reason is stored trimmed in the audit entry, and overrideReason is accepted as an alias', async () => {
+    const original = await prisma.doctorSchedule.findMany({ where: { doctorId } });
+    const since = new Date();
+    const res = await request(app)
+      .put(`/api/v1/admin/doctors/${doctorId}/schedule`)
+      .set('Cookie', adminCookies)
+      .send({
+        shifts: original.map((s) => ({ dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime, isActive: s.isActive })),
+        overrideReason: '  Aliased reason  ',
+      });
+    expect(res.status).toBe(200);
     const rows = await auditRowsFor(doctorId, since);
     expect(rows.map((r) => r.actionType)).toEqual(['ADMIN_SCHEDULE_UPDATE']);
+    expect(rows[0].details).toMatchObject({ reason: 'Aliased reason' });
+  });
+
+  it('an administrator-created exception without a reason is refused (400) and writes nothing', async () => {
+    const since = new Date();
+    const before = await prisma.scheduleException.count({ where: { doctorId } });
+    for (const body of [
+      { exceptionDate: '2099-04-01', exceptionType: 'HOLIDAY' },
+      { exceptionDate: '2099-04-01', exceptionType: 'HOLIDAY', reason: '   ' },
+    ]) {
+      const res = await request(app).post(`/api/v1/admin/doctors/${doctorId}/exceptions`).set('Cookie', adminCookies).send(body);
+      expect(res.status).toBe(400);
+    }
+    expect(await prisma.scheduleException.count({ where: { doctorId } })).toBe(before);
+    expect(await auditRowsFor(doctorId, since)).toHaveLength(0);
   });
 
   it('a rejected PUT (422 overlap) writes no audit row and leaves the schedule unchanged', async () => {
@@ -153,7 +193,7 @@ describe('Administrator schedule & settings audit trail (F-007)', () => {
     const res = await request(app)
       .post(`/api/v1/admin/doctors/${doctorId}/exceptions`)
       .set('Cookie', adminCookies)
-      .send({ exceptionDate: '2099-03-16', exceptionType: 'BREAK', startTime: '14:00', endTime: '10:00' });
+      .send({ exceptionDate: '2099-03-16', exceptionType: 'BREAK', startTime: '14:00', endTime: '10:00', reason: 'Inverted' });
     expect(res.status).toBe(422);
 
     expect(await prisma.scheduleException.count({ where: { doctorId } })).toBe(before);

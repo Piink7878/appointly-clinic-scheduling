@@ -10,9 +10,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { AuthContext, AuthContextType } from '../../src/shared/context/AuthContext';
+import { AuthContext, type AuthContextType } from '../../src/shared/context/AuthContext';
 import { ApiClientError } from '../../src/shared/api';
-import { UserProfile } from '../../src/shared/types';
+import { type UserProfile } from '../../src/shared/types';
 import {
   DOCTOR_LIMITS,
   doctorToFormValues,

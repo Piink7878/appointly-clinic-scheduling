@@ -12,9 +12,9 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
-import { app } from '../../src/app';
+import { app } from '../../../src/app';
 
-import { cookiesOf } from '../helpers';
+import { cookiesOf } from '../../helpers';
 type Role = 'PATIENT' | 'DOCTOR' | 'ADMIN';
 const ALL: Role[] = ['PATIENT', 'DOCTOR', 'ADMIN'];
 const UUID = '00000000-0000-4000-8000-000000000000';

@@ -86,7 +86,7 @@ export const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                   return (
                     <li key={slot.key}>
                       <div className="flex flex-wrap items-end gap-3">
-                        <div className="w-28">
+                        <div className="w-32">
                           <label htmlFor={`${slot.key}-start`} className="block text-xs text-slate-500 mb-1">
                             Start
                           </label>
@@ -102,7 +102,7 @@ export const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({
                             className={timeInputClass(Boolean(error))}
                           />
                         </div>
-                        <div className="w-28">
+                        <div className="w-32">
                           <label htmlFor={`${slot.key}-end`} className="block text-xs text-slate-500 mb-1">
                             End
                           </label>

@@ -179,3 +179,23 @@ describe('placeholder entries are honest', () => {
     expect(screen.queryByText(/Sprint 1 Feature/)).toBeNull();
   });
 });
+
+describe('doctor header name', () => {
+  const original = USERS.DOCTOR.fullName;
+  afterEach(() => {
+    USERS.DOCTOR.fullName = original;
+  });
+
+  it.each([
+    ['Dr. Somchai Prasert', 'Dr. Somchai Prasert'], // the seeded name already carries the title: not doubled
+    ['Somchai Prasert', 'Dr. Somchai Prasert'], // a bare name gets the title
+    ['dr Somchai Prasert', 'dr Somchai Prasert'], // title without a full stop, any case: not doubled
+  ])('shows "%s" as "%s"', async (stored, shown) => {
+    USERS.DOCTOR.fullName = stored;
+    visit('/doctor/schedule', 'DOCTOR');
+    await screen.findAllByRole('heading', { level: 1 });
+
+    expect(screen.getByText(shown)).toBeDefined();
+    expect(screen.queryByText(/dr\.?\s+dr\.?\s/i)).toBeNull();
+  });
+});

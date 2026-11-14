@@ -1,3 +1,5 @@
-﻿// doctors module components & hooks
-export {};
+// ==============================================================================
+// Appointly Client — Doctors Module Exports
+// ==============================================================================
 
+export * from './DoctorSchedulePage';

@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { Activity, LogOut, User, AlertTriangle, Calendar, Stethoscope } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { to: '/patient/services', label: 'Services & Doctors', Icon: Activity },
+  { to: '/patient/services', label: 'Services', Icon: Activity },
   { to: '/patient/doctors', label: 'Find a Doctor', Icon: Stethoscope },
   { to: '/patient/appointments', label: 'My Appointments', Icon: Calendar },
   { to: '/patient/profile', label: 'My Profile', Icon: User },

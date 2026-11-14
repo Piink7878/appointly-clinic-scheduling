@@ -12,6 +12,8 @@ import { ProtectedRoute } from '../shared/components/ProtectedRoute';
 import { LoginPage } from '../modules/auth/LoginPage';
 import { UnauthorizedPage } from '../shared/components/UnauthorizedPage';
 import { PatientServicesPage } from '../modules/patients/PatientServicesPage';
+import { PatientProfilePage } from '../modules/patients/PatientProfilePage';
+import { AdminPatientsPage } from '../modules/patients/AdminPatientsPage';
 import { DoctorSchedulePage } from '../modules/doctors/DoctorSchedulePage';
 import { AdminDoctorsPage } from '../modules/admin/AdminDoctorsPage';
 
@@ -61,7 +63,7 @@ export const AppRouter: React.FC = () => {
             <Route index element={<Navigate to="/patient/services" replace />} />
             <Route path="services" element={<PatientServicesPage />} />
             <Route path="appointments" element={<PatientServicesPage />} />
-            <Route path="profile" element={<PatientServicesPage />} />
+            <Route path="profile" element={<PatientProfilePage />} />
           </Route>
         </Route>
 
@@ -86,7 +88,7 @@ export const AppRouter: React.FC = () => {
             <Route path="services" element={<AdminDoctorsPage />} />
             <Route path="schedules" element={<AdminDoctorsPage />} />
             <Route path="settings" element={<AdminDoctorsPage />} />
-            <Route path="patients" element={<AdminDoctorsPage />} />
+            <Route path="patients" element={<AdminPatientsPage />} />
           </Route>
         </Route>
 

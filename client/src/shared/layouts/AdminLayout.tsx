@@ -10,6 +10,14 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, LogOut, Users, Briefcase, Calendar, Settings, UserCheck } from 'lucide-react';
 
+const NAV_ITEMS = [
+  { to: '/admin/doctors', label: 'Doctors', Icon: UserCheck },
+  { to: '/admin/services', label: 'Services', Icon: Briefcase },
+  { to: '/admin/schedules', label: 'Schedules', Icon: Calendar },
+  { to: '/admin/settings', label: 'Clinic Settings', Icon: Settings },
+  { to: '/admin/patients', label: 'Patients', Icon: Users },
+];
+
 export const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -47,27 +55,13 @@ export const AdminLayout: React.FC = () => {
               </div>
 
               {/* Admin Portal Navigation */}
-              <nav className="hidden lg:flex space-x-1">
-                <NavLink to="/admin/doctors" className={navLinkClass}>
-                  <UserCheck className="w-4 h-4 mr-1.5" />
-                  Doctors
-                </NavLink>
-                <NavLink to="/admin/services" className={navLinkClass}>
-                  <Briefcase className="w-4 h-4 mr-1.5" />
-                  Services
-                </NavLink>
-                <NavLink to="/admin/schedules" className={navLinkClass}>
-                  <Calendar className="w-4 h-4 mr-1.5" />
-                  Schedules
-                </NavLink>
-                <NavLink to="/admin/settings" className={navLinkClass}>
-                  <Settings className="w-4 h-4 mr-1.5" />
-                  Clinic Settings
-                </NavLink>
-                <NavLink to="/admin/patients" className={navLinkClass}>
-                  <Users className="w-4 h-4 mr-1.5" />
-                  Patients
-                </NavLink>
+              <nav aria-label="Admin portal" className="hidden lg:flex space-x-1">
+                {NAV_ITEMS.map(({ to, label, Icon }) => (
+                  <NavLink key={to} to={to} className={navLinkClass}>
+                    <Icon className="w-4 h-4 mr-1.5" />
+                    {label}
+                  </NavLink>
+                ))}
               </nav>
             </div>
 
@@ -91,6 +85,23 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Small-screen navigation (desktop nav above is hidden below lg) */}
+        <nav
+          aria-label="Admin portal (mobile)"
+          className="lg:hidden border-t border-slate-100 px-4 sm:px-6 py-2 flex gap-1 overflow-x-auto"
+        >
+          {NAV_ITEMS.map(({ to, label, Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={(state) => `${navLinkClass(state)} whitespace-nowrap flex-shrink-0`}
+            >
+              <Icon className="w-4 h-4 mr-1.5" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
       </header>
 
       {/* Main Content Area */}

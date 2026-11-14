@@ -16,13 +16,18 @@ export interface DoctorServiceSummary {
   serviceStatus: ProfileStatus;
 }
 
+/**
+ * ADMIN receives the full record. PATIENT / DOCTOR receive only the public
+ * projection (doctorId, fullName, specialization, profileStatus, services), so
+ * every other field is optional here.
+ */
 export interface Doctor {
   doctorId: string;
-  userId: string;
+  userId?: string;
   email?: string;
   fullName: string;
   specialization: string;
-  professionalLicenseNumber: string | null;
+  professionalLicenseNumber?: string | null;
   profileStatus: ProfileStatus;
   accountStatus?: ProfileStatus;
   createdAt?: string;

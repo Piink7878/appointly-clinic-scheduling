@@ -86,7 +86,7 @@ export class DoctorService {
         orderBy: { fullName: 'asc' },
       });
 
-      return doctors.map(this.formatDoctor);
+      return doctors.map((doctor) => this.formatPublicDoctor(doctor));
     }
 
     // 2. ADMIN role: can view all doctors, with optional filters (?status=, ?search=, ?serviceId=)
@@ -180,7 +180,7 @@ export class DoctorService {
       throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
     }
 
-    return this.formatDoctor(doctor);
+    return userRole === 'ADMIN' ? this.formatDoctor(doctor) : this.formatPublicDoctor(doctor);
   }
 
   /**
@@ -527,6 +527,32 @@ export class DoctorService {
     });
 
     return { unassigned: true, doctorId, serviceId };
+  }
+
+  /**
+   * Patient/Doctor-facing projection (FR-012, NFR-004): only what is needed to
+   * choose a doctor. Contact e-mail, licence number, user/account identifiers
+   * and INACTIVE services (BR-004) are never exposed to non-admin roles.
+   */
+  private formatPublicDoctor(doctor: any) {
+    const services = (doctor.doctorServices || [])
+      .map((ds: any) => ds.service)
+      .filter((svc: any) => svc && svc.serviceStatus === ServiceStatus.ACTIVE)
+      .map((svc: any) => ({
+        serviceId: svc.serviceId,
+        serviceName: svc.serviceName,
+        description: svc.description,
+        durationMinutes: svc.durationMinutes,
+        serviceStatus: svc.serviceStatus,
+      }));
+
+    return {
+      doctorId: doctor.doctorId,
+      fullName: doctor.fullName,
+      specialization: doctor.specialization,
+      profileStatus: doctor.profileStatus,
+      services,
+    };
   }
 
   private formatDoctor(doctor: any) {

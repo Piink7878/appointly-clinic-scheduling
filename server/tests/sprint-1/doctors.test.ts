@@ -733,4 +733,90 @@ describe('Doctor Management System (F-003, F-005)', () => {
       expect(dbAssignment).toBeNull();
     });
   });
+  // ============================================================================
+  // 6. Non-admin responses expose a public projection only (FR-012, NFR-004, BR-004)
+  // ============================================================================
+  describe('6. Public doctor projection for PATIENT / DOCTOR', () => {
+    const inactiveServiceName = 'Inactive Projection Test Service';
+    const activeServiceName = 'Active Projection Test Service';
+    let projectionDoctorId: string;
+    let serviceIds: string[] = [];
+
+    beforeAll(async () => {
+      const doctor = await prisma.doctor.findFirst({
+        where: { profileStatus: 'ACTIVE', user: { accountStatus: 'ACTIVE' } },
+      });
+      projectionDoctorId = doctor!.doctorId;
+
+      const active = await prisma.medicalService.upsert({
+        where: { serviceName: activeServiceName },
+        update: { serviceStatus: 'ACTIVE' },
+        create: { serviceName: activeServiceName, durationMinutes: 20, serviceStatus: 'ACTIVE' },
+      });
+      const inactive = await prisma.medicalService.upsert({
+        where: { serviceName: inactiveServiceName },
+        update: { serviceStatus: 'INACTIVE' },
+        create: { serviceName: inactiveServiceName, durationMinutes: 20, serviceStatus: 'INACTIVE' },
+      });
+      serviceIds = [active.serviceId, inactive.serviceId];
+      for (const serviceId of serviceIds) {
+        await prisma.doctorService.upsert({
+          where: { doctorId_serviceId: { doctorId: projectionDoctorId, serviceId } },
+          update: {},
+          create: { doctorId: projectionDoctorId, serviceId },
+        });
+      }
+    });
+
+    afterAll(async () => {
+      await prisma.doctorService.deleteMany({ where: { serviceId: { in: serviceIds } } });
+      await prisma.medicalService.deleteMany({ where: { serviceId: { in: serviceIds } } });
+    });
+
+    const PRIVATE_FIELDS = [
+      'email',
+      'userId',
+      'professionalLicenseNumber',
+      'accountStatus',
+      'role',
+      'user',
+      'doctorServices',
+    ];
+
+    it.each([
+      ['PATIENT', () => patientCookies],
+      ['DOCTOR', () => doctorCookies],
+    ])('%s list omits private fields and inactive services', async (_role, cookies) => {
+      const res = await request(app).get('/api/v1/doctors').set('Cookie', cookies());
+      expect(res.status).toBe(200);
+
+      const doc = res.body.data.find((d: any) => d.doctorId === projectionDoctorId);
+      expect(doc).toBeDefined();
+      for (const field of PRIVATE_FIELDS) expect(doc).not.toHaveProperty(field);
+
+      const names = doc.services.map((s: any) => s.serviceName);
+      expect(names).toContain(activeServiceName);
+      expect(names).not.toContain(inactiveServiceName);
+    });
+
+    it('PATIENT GET /doctors/:doctorId omits private fields and inactive services', async () => {
+      const res = await request(app)
+        .get(`/api/v1/doctors/${projectionDoctorId}`)
+        .set('Cookie', patientCookies);
+      expect(res.status).toBe(200);
+      for (const field of PRIVATE_FIELDS) expect(res.body.data).not.toHaveProperty(field);
+      const names = res.body.data.services.map((s: any) => s.serviceName);
+      expect(names).not.toContain(inactiveServiceName);
+    });
+
+    it('ADMIN still receives the full record including inactive services', async () => {
+      const res = await request(app).get('/api/v1/doctors').set('Cookie', adminCookies);
+      expect(res.status).toBe(200);
+      const doc = res.body.data.find((d: any) => d.doctorId === projectionDoctorId);
+      expect(doc.email).toBeDefined();
+      expect(doc).toHaveProperty('professionalLicenseNumber');
+      const names = doc.services.map((s: any) => s.serviceName);
+      expect(names).toContain(inactiveServiceName);
+    });
+  });
 });

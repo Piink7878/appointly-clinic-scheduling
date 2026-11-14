@@ -15,13 +15,13 @@
 // ==============================================================================
 
 import { apiClient, unwrapData } from '../../shared/api';
-import { ApiResponse } from '../../shared/types';
+import { type ApiResponse } from '../../shared/types';
 import {
-  CreateExceptionInput,
-  MySchedule,
-  ScheduleException,
-  ShiftInput,
-  WeeklyShift,
+  type CreateExceptionInput,
+  type MySchedule,
+  type ScheduleException,
+  type ShiftInput,
+  type WeeklyShift,
 } from './types';
 
 export async function getMySchedule(signal?: AbortSignal): Promise<MySchedule> {

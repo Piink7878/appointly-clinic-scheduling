@@ -14,7 +14,7 @@ import { Clock, Stethoscope, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AlertBanner, Skeleton } from '../../shared/components';
 import { listServices } from './api';
-import { MedicalService } from './types';
+import { type MedicalService } from './types';
 import { formatDuration } from './validation';
 
 export const PatientServiceCatalogPage: React.FC = () => {

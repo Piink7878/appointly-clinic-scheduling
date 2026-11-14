@@ -9,12 +9,12 @@
 // ==============================================================================
 
 import { apiClient, unwrapData as unwrap } from '../../shared/api';
-import { ApiResponse } from '../../shared/types';
+import { type ApiResponse } from '../../shared/types';
 import {
-  ListPatientsParams,
-  PatientListResult,
-  PatientProfile,
-  UpdatePatientProfileInput,
+  type ListPatientsParams,
+  type PatientListResult,
+  type PatientProfile,
+  type UpdatePatientProfileInput,
 } from './types';
 
 export const DEFAULT_PAGE_SIZE = 20;

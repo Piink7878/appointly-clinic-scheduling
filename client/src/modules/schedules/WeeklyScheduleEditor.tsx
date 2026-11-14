@@ -11,9 +11,9 @@ import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import {
   DAY_NAMES,
-  SlotDraft,
-  WeekDraft,
-  WeekErrors,
+  type SlotDraft,
+  type WeekDraft,
+  type WeekErrors,
   newSlotKey,
   suggestSlot,
 } from './validation';

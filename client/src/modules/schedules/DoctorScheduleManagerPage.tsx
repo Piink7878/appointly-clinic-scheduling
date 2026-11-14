@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertBanner, Skeleton } from '../../shared/components';
 import { createException, deleteException, getMySchedule, saveMySchedule } from './api';
 import { ScheduleEditor } from './ScheduleEditor';
-import { MySchedule } from './types';
+import { type MySchedule } from './types';
 
 export const DoctorScheduleManagerPage: React.FC = () => {
   const [schedule, setSchedule] = useState<MySchedule | null>(null);

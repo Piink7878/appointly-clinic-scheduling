@@ -9,7 +9,7 @@
 // The server stays the authority; these checks give instant inline feedback.
 // ==============================================================================
 
-import { MedicalService, ServiceInput } from './types';
+import { type MedicalService, type ServiceInput } from './types';
 
 export const SERVICE_LIMITS = {
   name: 150,

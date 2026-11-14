@@ -13,13 +13,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Save, Undo2 } from 'lucide-react';
 import { AlertBanner, FormField, Skeleton, fieldInputClass } from '../../shared/components';
 import { getPublicSettings, updateSettings } from './api';
-import { ClinicSettings } from './types';
+import { type ClinicSettings } from './types';
 import {
   CLINIC_NAME_MAX,
   CUTOFF_HOURS_MAX,
   FIXED_START_INTERVALS,
-  SettingsFormErrors,
-  SettingsFormValues,
+  type SettingsFormErrors,
+  type SettingsFormValues,
   getTimezoneOptions,
   isSettingsDirty,
   settingsToForm,

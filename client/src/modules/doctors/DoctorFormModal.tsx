@@ -15,12 +15,12 @@ import { Eye, EyeOff } from 'lucide-react';
 import { ApiClientError } from '../../shared/api';
 import { AlertBanner, FormField as Field, Modal, fieldInputClass as inputClass } from '../../shared/components';
 import { createDoctor, updateDoctor } from './api';
-import { Doctor } from './types';
+import { type Doctor } from './types';
 import {
   DOCTOR_LIMITS,
-  DoctorFormErrors,
-  DoctorFormMode,
-  DoctorFormValues,
+  type DoctorFormErrors,
+  type DoctorFormMode,
+  type DoctorFormValues,
   doctorToFormValues,
   emptyDoctorForm,
   isDoctorFormDirty,

@@ -11,7 +11,7 @@
 // instant, row-level feedback.
 // ==============================================================================
 
-import { CreateExceptionInput, ExceptionType, ScheduleException, ShiftInput, WeeklyShift } from './types';
+import { type CreateExceptionInput, type ExceptionType, type ScheduleException, type ShiftInput, type WeeklyShift } from './types';
 
 export const DAY_NAMES = [
   'Sunday',

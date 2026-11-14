@@ -16,10 +16,10 @@ import { Link2, Link2Off } from 'lucide-react';
 import { ApiClientError } from '../../shared/api';
 import { AlertBanner, Modal, Skeleton, StatusBadge } from '../../shared/components';
 import { listServices } from '../services/api';
-import { MedicalService } from '../services/types';
+import { type MedicalService } from '../services/types';
 import { formatDuration } from '../services/validation';
 import { assignService, getDoctor, unassignService } from './api';
-import { Doctor } from './types';
+import { type Doctor } from './types';
 
 export interface DoctorServicesModalProps {
   doctor: Doctor;

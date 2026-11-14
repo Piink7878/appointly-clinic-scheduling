@@ -13,11 +13,11 @@ import React, { useState } from 'react';
 import { ApiClientError } from '../../shared/api';
 import { AlertBanner, FormField, Modal, fieldInputClass } from '../../shared/components';
 import { createService, updateService } from './api';
-import { MedicalService } from './types';
+import { type MedicalService } from './types';
 import {
   SERVICE_LIMITS,
-  ServiceFormErrors,
-  ServiceFormValues,
+  type ServiceFormErrors,
+  type ServiceFormValues,
   emptyServiceForm,
   isServiceFormDirty,
   serviceToFormValues,

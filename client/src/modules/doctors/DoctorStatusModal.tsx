@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { AlertBanner, Modal } from '../../shared/components';
 import { updateDoctorStatus } from './api';
-import { Doctor, ProfileStatus } from './types';
+import { type Doctor, type ProfileStatus } from './types';
 
 export interface DoctorStatusModalProps {
   doctor: Doctor;

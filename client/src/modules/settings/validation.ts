@@ -10,7 +10,7 @@
 // The server stays the authority; these checks give instant inline feedback.
 // ==============================================================================
 
-import { ClinicSettings, UpdateSettingsInput } from './types';
+import { type ClinicSettings, type UpdateSettingsInput } from './types';
 
 export const DEFAULT_TIMEZONE = 'Asia/Bangkok';
 export const FIXED_START_INTERVALS = [5, 10, 15, 20, 30, 60] as const;

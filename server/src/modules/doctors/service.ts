@@ -1,0 +1,665 @@
+// ==============================================================================
+// Appointly Server — Doctor Service Layer
+// ==============================================================================
+// Reference: System-Level SDS Section 3.2C, 3.2L, 5.2, 6 & Sprint 1 Contracts (F-003, F-005)
+// Handles doctor directory queries, atomic account creation, profile updates,
+// active status synchronization, and doctor-service assignments.
+// ==============================================================================
+
+import { Prisma, Role, AccountStatus, ProfileStatus, ServiceStatus } from '@prisma/client';
+import { prisma } from '../../shared/database';
+import { AppError } from '../../shared/middleware/errorHandler';
+import { isValidUuid } from '../../shared/utils/uuid';
+import { isUniqueViolation } from '../../shared/utils/prismaErrors';
+import { hashPassword } from '../../shared/utils/security';
+import {
+  type CreateDoctorInput,
+  type UpdateDoctorInput,
+  type GetDoctorsQueryInput,
+} from './validation';
+
+/** A Service row as the formatters read it. */
+type ServiceRecord = Prisma.MedicalServiceGetPayload<object>;
+
+/** A Doctor row plus the optional relations the queries `include`. Only what the formatters read. */
+type DoctorRecord = Prisma.DoctorGetPayload<object> & {
+  user?: Pick<Prisma.UserGetPayload<object>, 'userId' | 'email' | 'role' | 'accountStatus'> | null;
+  doctorServices?: Array<Prisma.DoctorServiceGetPayload<object> & { service?: ServiceRecord | null }>;
+};
+
+export class DoctorService {
+  /**
+   * Retrieves list of doctors according to requester role and optional query filters.
+   * - PATIENT / DOCTOR: strictly returns only doctors with profileStatus === 'ACTIVE'
+   *   and User.accountStatus === 'ACTIVE' (FR-012, FR-013, BR-003).
+   * - ADMIN: returns all doctors (supporting ?status=ACTIVE|INACTIVE and ?search=)
+   *   along with associated service details (DoctorService).
+   * - Optional ?serviceId= filter returns only doctors assigned to that active service.
+   */
+  async getDoctors(userRole: string, query: GetDoctorsQueryInput) {
+    const isAdmin = userRole === 'ADMIN';
+
+    // 1. Non-admin roles (PATIENT, DOCTOR) can ONLY view ACTIVE doctors with ACTIVE accounts
+    if (!isAdmin) {
+      const where: Prisma.DoctorWhereInput = {
+        profileStatus: ProfileStatus.ACTIVE,
+        user: {
+          accountStatus: AccountStatus.ACTIVE,
+        },
+      };
+
+      if (query.serviceId && query.serviceId.trim() !== '') {
+        const trimmedServiceId = query.serviceId.trim();
+        if (!isValidUuid(trimmedServiceId)) {
+          return [];
+        }
+        where.doctorServices = {
+          some: {
+            serviceId: trimmedServiceId,
+            service: {
+              serviceStatus: ServiceStatus.ACTIVE,
+            },
+          },
+        };
+      }
+
+      if (query.search && query.search.trim() !== '') {
+        const term = query.search.trim();
+        where.OR = [
+          { fullName: { contains: term, mode: 'insensitive' } },
+          { specialization: { contains: term, mode: 'insensitive' } },
+        ];
+      }
+
+      const doctors = await prisma.doctor.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              userId: true,
+              email: true,
+              role: true,
+              accountStatus: true,
+            },
+          },
+          doctorServices: {
+            include: {
+              service: true,
+            },
+          },
+        },
+        orderBy: { fullName: 'asc' },
+      });
+
+      return doctors.map((doctor) => this.formatPublicDoctor(doctor));
+    }
+
+    // 2. ADMIN role: can view all doctors, with optional filters (?status=, ?search=, ?serviceId=)
+    const where: Prisma.DoctorWhereInput = {};
+
+    if (query.status && query.status !== 'ALL') {
+      where.profileStatus = query.status === 'ACTIVE' ? ProfileStatus.ACTIVE : ProfileStatus.INACTIVE;
+    }
+
+    if (query.serviceId && query.serviceId.trim() !== '') {
+      const trimmedServiceId = query.serviceId.trim();
+      if (!isValidUuid(trimmedServiceId)) {
+        return [];
+      }
+      where.doctorServices = {
+        some: {
+          serviceId: trimmedServiceId,
+        },
+      };
+    }
+
+    if (query.search && query.search.trim() !== '') {
+      const term = query.search.trim();
+      where.OR = [
+        { fullName: { contains: term, mode: 'insensitive' } },
+        { specialization: { contains: term, mode: 'insensitive' } },
+        { professionalLicenseNumber: { contains: term, mode: 'insensitive' } },
+        { user: { email: { contains: term, mode: 'insensitive' } } },
+      ];
+    }
+
+    const doctors = await prisma.doctor.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            userId: true,
+            email: true,
+            role: true,
+            accountStatus: true,
+          },
+        },
+        doctorServices: {
+          include: {
+            service: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return doctors.map(this.formatDoctor);
+  }
+
+  /**
+   * Retrieves single doctor profile by doctorId.
+   */
+  async getDoctorById(doctorId: string, userRole: string) {
+    if (!isValidUuid(doctorId)) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const doctor = await prisma.doctor.findUnique({
+      where: { doctorId },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            email: true,
+            role: true,
+            accountStatus: true,
+          },
+        },
+        doctorServices: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    if (!doctor) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    // Non-admin cannot inspect inactive doctor profiles (Anti-enumeration NFR-004)
+    if (
+      userRole !== 'ADMIN' &&
+      (doctor.profileStatus !== ProfileStatus.ACTIVE || doctor.user.accountStatus !== AccountStatus.ACTIVE)
+    ) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    return userRole === 'ADMIN' ? this.formatDoctor(doctor) : this.formatPublicDoctor(doctor);
+  }
+
+  /**
+   * Creates a Doctor account atomically within a single PostgreSQL transaction.
+   * - Validates duplicate email case-insensitively (409 EMAIL_ALREADY_EXISTS)
+   * - Hashes password using Argon2id
+   * - Creates User (role='DOCTOR', account_status='ACTIVE')
+   * - Creates Doctor profile (profile_status='ACTIVE')
+   * - Records AuditLog (action_type: 'DOCTOR_CREATED')
+   */
+  async createDoctor(adminUserId: string, input: CreateDoctorInput) {
+    const normalizedEmail = input.email.trim().toLowerCase();
+
+    // 1. Initial check for existing email (case-insensitive)
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existingUser) {
+      throw AppError.conflict(
+        'An account with this email address already exists.',
+        'EMAIL_ALREADY_EXISTS'
+      );
+    }
+
+    // 2. Hash password with Argon2id before entering the transaction
+    const passwordHash = await hashPassword(input.password);
+
+    // 3. Execute within a single atomic PostgreSQL transaction
+    return prisma.$transaction(async (tx) => {
+      // Guard against race conditions during transaction start
+      const duplicateUser = await tx.user.findFirst({
+        where: {
+          email: {
+            equals: normalizedEmail,
+            mode: 'insensitive',
+          },
+        },
+      });
+
+      if (duplicateUser) {
+        throw AppError.conflict(
+          'An account with this email address already exists.',
+          'EMAIL_ALREADY_EXISTS'
+        );
+      }
+
+      // 3a. Create User record
+      const user = await tx.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          role: Role.DOCTOR,
+          accountStatus: AccountStatus.ACTIVE,
+        },
+      });
+
+      // 3b. Create Doctor profile record
+      const doctor = await tx.doctor.create({
+        data: {
+          userId: user.userId,
+          fullName: input.fullName.trim(),
+          specialization: input.specialization.trim(),
+          professionalLicenseNumber: input.professionalLicenseNumber?.trim() || null,
+          profileStatus: ProfileStatus.ACTIVE,
+        },
+      });
+
+      // 3c. Record AuditLog entry
+      await tx.auditLog.create({
+        data: {
+          userId: adminUserId,
+          actionType: 'DOCTOR_CREATED',
+          entityType: 'Doctor',
+          entityId: doctor.doctorId,
+          details: {
+            email: user.email,
+            fullName: doctor.fullName,
+            specialization: doctor.specialization,
+            professionalLicenseNumber: doctor.professionalLicenseNumber,
+          },
+        },
+      });
+
+      return {
+        doctorId: doctor.doctorId,
+        userId: user.userId,
+        email: user.email,
+        fullName: doctor.fullName,
+        specialization: doctor.specialization,
+        professionalLicenseNumber: doctor.professionalLicenseNumber,
+        profileStatus: doctor.profileStatus,
+        accountStatus: user.accountStatus,
+        role: user.role,
+        createdAt: doctor.createdAt,
+        updatedAt: doctor.updatedAt,
+        user: {
+          userId: user.userId,
+          email: user.email,
+          role: user.role,
+          accountStatus: user.accountStatus,
+        },
+        doctorServices: [],
+        services: [],
+      };
+    }).catch((error: unknown) => {
+      if (isUniqueViolation(error)) {
+        throw AppError.conflict(
+          'An account with this email address already exists.',
+          'EMAIL_ALREADY_EXISTS'
+        );
+      }
+      throw error;
+    });
+  }
+
+  /**
+   * Updates Doctor profile (fullName, specialization, professionalLicenseNumber).
+   * Throws 404 Not Found if doctorId is not found.
+   */
+  async updateDoctor(adminUserId: string, doctorId: string, input: UpdateDoctorInput) {
+    if (!isValidUuid(doctorId)) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const existingDoctor = await prisma.doctor.findUnique({
+      where: { doctorId },
+    });
+
+    if (!existingDoctor) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const next = {
+      fullName: input.fullName.trim(),
+      specialization: input.specialization.trim(),
+      professionalLicenseNumber:
+        input.professionalLicenseNumber !== undefined
+          ? input.professionalLicenseNumber?.trim() || null
+          : existingDoctor.professionalLicenseNumber,
+    };
+    const previous = {
+      fullName: existingDoctor.fullName,
+      specialization: existingDoctor.specialization,
+      professionalLicenseNumber: existingDoctor.professionalLicenseNumber,
+    };
+    const changed =
+      previous.fullName !== next.fullName ||
+      previous.specialization !== next.specialization ||
+      previous.professionalLicenseNumber !== next.professionalLicenseNumber;
+
+    // The change and its AuditLog entry (DOCTOR_PROFILE_UPDATED) are one atomic unit;
+    // an edit that changes nothing is not an event worth recording.
+    const updated = await prisma.$transaction(async (tx) => {
+      const row = await tx.doctor.update({
+        where: { doctorId },
+        data: next,
+        include: {
+          user: {
+            select: {
+              userId: true,
+              email: true,
+              role: true,
+              accountStatus: true,
+            },
+          },
+          doctorServices: {
+            include: {
+              service: true,
+            },
+          },
+        },
+      });
+
+      if (changed) {
+        await tx.auditLog.create({
+          data: {
+            userId: adminUserId,
+            actionType: 'DOCTOR_PROFILE_UPDATED',
+            entityType: 'Doctor',
+            entityId: doctorId,
+            details: { previous, current: next },
+          },
+        });
+      }
+
+      return row;
+    });
+
+    return this.formatDoctor(updated);
+  }
+
+  /**
+   * Updates Doctor profile status and synchronizes User account status.
+   * Atomically logs AuditLog (action_type: 'DOCTOR_STATUS_UPDATED').
+   */
+  async updateDoctorStatus(adminUserId: string, doctorId: string, profileStatus: ProfileStatus) {
+    if (!isValidUuid(doctorId)) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const existingDoctor = await prisma.doctor.findUnique({
+      where: { doctorId },
+      include: { user: true },
+    });
+
+    if (!existingDoctor) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const targetAccountStatus =
+      profileStatus === ProfileStatus.ACTIVE ? AccountStatus.ACTIVE : AccountStatus.INACTIVE;
+
+    return prisma.$transaction(async (tx) => {
+      // 1. Update Doctor.profile_status
+      const updatedDoctor = await tx.doctor.update({
+        where: { doctorId },
+        data: {
+          profileStatus,
+        },
+        include: {
+          user: {
+            select: {
+              userId: true,
+              email: true,
+              role: true,
+              accountStatus: true,
+            },
+          },
+          doctorServices: {
+            include: {
+              service: true,
+            },
+          },
+        },
+      });
+
+      // 2. Synchronize User.account_status accordingly
+      const updatedUser = await tx.user.update({
+        where: { userId: existingDoctor.userId },
+        data: {
+          accountStatus: targetAccountStatus,
+        },
+      });
+
+      // 3. Record AuditLog entry
+      await tx.auditLog.create({
+        data: {
+          userId: adminUserId,
+          actionType: 'DOCTOR_STATUS_UPDATED',
+          entityType: 'Doctor',
+          entityId: doctorId,
+          details: {
+            previousProfileStatus: existingDoctor.profileStatus,
+            newProfileStatus: profileStatus,
+            previousAccountStatus: existingDoctor.user.accountStatus,
+            newAccountStatus: updatedUser.accountStatus,
+          },
+        },
+      });
+
+      return {
+        ...this.formatDoctor(updatedDoctor),
+        accountStatus: updatedUser.accountStatus,
+        user: {
+          ...updatedDoctor.user,
+          accountStatus: updatedUser.accountStatus,
+        },
+      };
+    });
+  }
+
+  /**
+   * Assigns one or more medical services to a doctor (F-005, FR-011, BR-002).
+   * - 404 DOCTOR_NOT_FOUND / SERVICE_NOT_FOUND when the doctor or any service does not exist
+   * - 409 DUPLICATE_ASSIGNMENT when a (doctor, service) pair already exists. The database
+   *   UNIQUE (doctor_id, service_id) constraint is the authority: a Prisma P2002 is mapped
+   *   to the 409, so two concurrent identical requests cannot both succeed.
+   * - Every assignment and its AuditLog entry (DOCTOR_SERVICE_ASSIGNED) are written in ONE
+   *   transaction: either all requested services are assigned or none are.
+   */
+  async assignServices(adminUserId: string, doctorId: string, serviceIds: string[]) {
+    if (!isValidUuid(doctorId)) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const doctor = await prisma.doctor.findUnique({ where: { doctorId } });
+    if (!doctor) {
+      throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
+    }
+
+    const services = await prisma.medicalService.findMany({
+      where: { serviceId: { in: serviceIds } },
+    });
+    const foundIds = new Set(services.map((svc) => svc.serviceId));
+    const missing = serviceIds.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw AppError.notFound(
+        serviceIds.length === 1
+          ? 'Medical service not found.'
+          : `Medical service not found: ${missing.join(', ')}`,
+        'SERVICE_NOT_FOUND'
+      );
+    }
+    const serviceById = new Map(services.map((svc) => [svc.serviceId, svc]));
+
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const assignments = [];
+        for (const serviceId of serviceIds) {
+          const service = serviceById.get(serviceId)!;
+          const assignment = await tx.doctorService.create({
+            data: { doctorId, serviceId },
+            include: { service: true },
+          });
+
+          await tx.auditLog.create({
+            data: {
+              userId: adminUserId,
+              actionType: 'DOCTOR_SERVICE_ASSIGNED',
+              entityType: 'DoctorService',
+              entityId: assignment.doctorServiceId,
+              details: {
+                doctorId,
+                serviceId,
+                serviceName: service.serviceName,
+              },
+            },
+          });
+
+          assignments.push(assignment);
+        }
+        return assignments;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw AppError.conflict('Doctor is already assigned to this service.', 'DUPLICATE_ASSIGNMENT');
+        }
+        // The doctor or a service was deleted between the existence check and the insert.
+        if (error.code === 'P2003') {
+          throw AppError.notFound('Doctor or medical service not found.', 'SERVICE_NOT_FOUND');
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Unassigns a medical service from a doctor (F-005).
+   * 404 ASSIGNMENT_NOT_FOUND when the pair does not exist. The deletion and its AuditLog
+   * entry (DOCTOR_SERVICE_UNASSIGNED) share one transaction.
+   */
+  async unassignService(adminUserId: string, doctorId: string, serviceId: string) {
+    if (!isValidUuid(doctorId) || !isValidUuid(serviceId)) {
+      throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
+    }
+
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const assignment = await tx.doctorService.findUnique({
+          where: { doctorId_serviceId: { doctorId, serviceId } },
+          include: { service: true },
+        });
+        if (!assignment) {
+          throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
+        }
+
+        await tx.doctorService.delete({
+          where: { doctorId_serviceId: { doctorId, serviceId } },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId: adminUserId,
+            actionType: 'DOCTOR_SERVICE_UNASSIGNED',
+            entityType: 'DoctorService',
+            entityId: assignment.doctorServiceId,
+            details: {
+              doctorId,
+              serviceId,
+              serviceName: assignment.service.serviceName,
+            },
+          },
+        });
+
+        return { unassigned: true, doctorId, serviceId };
+      });
+    } catch (error) {
+      // A concurrent request removed the row first: P2025 "record to delete does not exist".
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw AppError.notFound('Doctor-service assignment not found.', 'ASSIGNMENT_NOT_FOUND');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Patient/Doctor-facing projection (FR-012, NFR-004): only what is needed to
+   * choose a doctor. Contact e-mail, licence number, user/account identifiers
+   * and INACTIVE services (BR-004) are never exposed to non-admin roles.
+   */
+  private formatPublicDoctor(doctor: DoctorRecord) {
+    const services = (doctor.doctorServices ?? [])
+      .map((ds) => ds.service)
+      .filter((svc): svc is ServiceRecord => !!svc && svc.serviceStatus === ServiceStatus.ACTIVE)
+      .map((svc) => ({
+        serviceId: svc.serviceId,
+        serviceName: svc.serviceName,
+        description: svc.description,
+        durationMinutes: svc.durationMinutes,
+        serviceStatus: svc.serviceStatus,
+      }));
+
+    return {
+      doctorId: doctor.doctorId,
+      fullName: doctor.fullName,
+      specialization: doctor.specialization,
+      profileStatus: doctor.profileStatus,
+      services,
+    };
+  }
+
+  private formatDoctor(doctor: DoctorRecord) {
+    const doctorServices = (doctor.doctorServices ?? []).map((ds) => ({
+      doctorServiceId: ds.doctorServiceId,
+      doctorId: ds.doctorId,
+      serviceId: ds.serviceId,
+      createdAt: ds.createdAt,
+      service: ds.service
+        ? {
+            serviceId: ds.service.serviceId,
+            serviceName: ds.service.serviceName,
+            description: ds.service.description,
+            durationMinutes: ds.service.durationMinutes,
+            serviceStatus: ds.service.serviceStatus,
+          }
+        : undefined,
+    }));
+
+    const services = (doctor.doctorServices ?? [])
+      .map((ds) => ds.service)
+      .filter(Boolean);
+
+    return {
+      doctorId: doctor.doctorId,
+      userId: doctor.userId,
+      email: doctor.user?.email,
+      fullName: doctor.fullName,
+      specialization: doctor.specialization,
+      professionalLicenseNumber: doctor.professionalLicenseNumber,
+      profileStatus: doctor.profileStatus,
+      accountStatus: doctor.user?.accountStatus,
+      role: doctor.user?.role,
+      createdAt: doctor.createdAt,
+      updatedAt: doctor.updatedAt,
+      user: doctor.user
+        ? {
+            userId: doctor.user.userId,
+            email: doctor.user.email,
+            role: doctor.user.role,
+            accountStatus: doctor.user.accountStatus,
+          }
+        : undefined,
+      doctorServices,
+      services,
+    };
+  }
+}
+
+export const doctorService = new DoctorService();
+

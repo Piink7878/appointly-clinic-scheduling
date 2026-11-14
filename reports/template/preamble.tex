@@ -1,0 +1,89 @@
+% ==============================================================================
+% Appointly — LaTeX Report Template Preamble
+% ==============================================================================
+% Configured for XeLaTeX with TH Sarabun New font for Thai language support,
+% professional tables (booktabs, tabularx, longtable), and syntax-highlighted
+% code blocks (listings / fancyvrb).
+% ==============================================================================
+
+\usepackage{fontspec}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+% --- Thai & English Typography Settings ---------------------------------------
+% Uses TH Sarabun New if available on system, with standard fallback
+\defaultfontfeatures{Mapping=tex-text}
+\IfFontExistsTF{TH Sarabun New}{
+  \setmainfont{TH Sarabun New}
+}{
+  \IfFontExistsTF{THSarabunNew}{
+    \setmainfont{THSarabunNew}
+  }{
+    % Fallback to standard serif / system font
+    \setmainfont{Times New Roman}
+  }
+}
+
+% --- Colors & Styling ---------------------------------------------------------
+\usepackage{xcolor}
+\definecolor{primary}{RGB}{37, 99, 235}     % Blue 600
+\definecolor{secondary}{RGB}{30, 41, 59}    % Slate 800
+\definecolor{codebg}{RGB}{248, 250, 252}    % Slate 50
+\definecolor{codeframe}{RGB}{226, 232, 240} % Slate 200
+\definecolor{keyword}{RGB}{124, 58, 237}   % Purple 600
+\definecolor{string}{RGB}{16, 185, 129}    % Emerald 500
+\definecolor{comment}{RGB}{100, 116, 139}  % Slate 500
+
+% --- Table Formatting Packages ------------------------------------------------
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+
+% --- Code Block Settings (listings) -------------------------------------------
+\usepackage{listings}
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  frame=single,
+  rulecolor=\color{codeframe},
+  numbers=left,
+  numberstyle=\tiny\color{comment},
+  stepnumber=1,
+  numbersep=8pt,
+  tabsize=2,
+  showstringspaces=false,
+  keywordstyle=\color{keyword}\bfseries,
+  stringstyle=\color{string},
+  commentstyle=\color{comment}\itshape,
+  captionpos=b,
+  keepspaces=true
+}
+
+% --- Links & Metadata ---------------------------------------------------------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=primary,
+  filecolor=primary,
+  urlcolor=primary,
+  citecolor=primary
+}
+
+% --- Header, Footer & Graphicx ------------------------------------------------
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{float}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\textsc{Appointly} — Clinic Scheduling System}
+\rhead{\leftmark}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+

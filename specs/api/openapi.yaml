@@ -1,0 +1,1325 @@
+openapi: 3.1.0
+info:
+  title: Appointly Clinic Appointment & Scheduling Management API
+  description: |
+    RESTful API specification for Appointly, a three-tier clinic appointment
+    and scheduling management system providing role-scoped capabilities for
+    Patients, Doctors, and Clinic Administrators.
+
+    **Sprint 1 scope** (this document): authentication, patient profiles, doctor
+    management, medical services, doctor-service assignment, doctor and administrator
+    schedule management, and clinic settings. Appointment, notification and report
+    endpoints are mounted but not implemented yet.
+
+    **Conventions**
+    - Every JSON response uses the envelope `{ success, data, message }` on success and
+      `{ success: false, error: { code, message } }` on failure (SDS 5.3).
+    - Authentication is a JWT access token in the `access_token` HttpOnly cookie
+      (or `Authorization: Bearer <token>`), refreshed through `POST /auth/refresh`.
+    - Timestamps are ISO-8601 UTC (TIMESTAMPTZ). Calendar dates (`exceptionDate`,
+      `dateOfBirth`) are `YYYY-MM-DD`; a date means the calendar day in the clinic's
+      timezone (default `Asia/Bangkok`).
+    - Every administrator mutation writes exactly one AuditLog row in the same transaction.
+    - The same routes are also mounted without the `/v1` prefix (`/api/*`) for the
+      deployment smoke test; clients must use `/api/v1`.
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local Development Server
+  - url: https://appointly-api-w34327vnaq-as.a.run.app/api/v1
+    description: GCP Cloud Run Staging/Production Server
+
+tags:
+  - name: System
+  - name: Auth
+  - name: Patients
+  - name: Doctors
+  - name: Services
+  - name: Schedules
+  - name: Settings
+  - name: Admin
+
+security:
+  - cookieAuth: []
+
+paths:
+  # ------------------------------------------------------------------ System
+  /health:
+    get:
+      summary: Liveness Health Probe
+      description: Returns 200 OK when the Express server process is running and responsive.
+      operationId: getHealth
+      tags: [System]
+      security: []
+      responses:
+        '200':
+          description: Server is live and healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required: [status]
+
+  /ready:
+    get:
+      summary: Readiness Database Probe
+      description: Verifies end-to-end database connectivity by executing a SELECT 1 query against PostgreSQL 16.
+      operationId: getReady
+      tags: [System]
+      security: []
+      responses:
+        '200':
+          description: Database connection is active and responsive.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  db:
+                    type: string
+                    example: connected
+                required: [db]
+        '503':
+          description: Database connection failed or unreachable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  db:
+                    type: string
+                    example: disconnected
+                required: [db]
+
+  # -------------------------------------------------------------------- Auth
+  /auth/login:
+    post:
+      summary: Sign in
+      description: |
+        Verifies the credentials and sets the `access_token` and `refresh_token` HttpOnly cookies.
+        Failed attempts (401) are counted per e-mail and per IP in a sliding window
+        (default 10 per account / 100 per IP per 15 minutes; `LOGIN_RATE_LIMIT_*`).
+        Once a limit is reached further attempts - even with the correct password - receive 429.
+        An unknown e-mail takes as long to answer as a wrong password.
+      operationId: login
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, maxLength: 255 }
+                password: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: Signed in. Cookies are set.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/AuthUser' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401':
+          description: Wrong e-mail or password (`INVALID_CREDENTIALS`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '403':
+          description: The password is right but the account is INACTIVE (`ACCOUNT_INACTIVE`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/refresh:
+    post:
+      summary: Rotate the session tokens
+      description: Uses the `refresh_token` cookie to issue a new access token and a new refresh token.
+      operationId: refreshSession
+      tags: [Auth]
+      security: []
+      responses:
+        '200':
+          description: New cookies are set.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/AuthUser' }
+        '401':
+          description: Missing, invalid, expired or revoked refresh token (`REFRESH_TOKEN_REQUIRED`, `INVALID_REFRESH_TOKEN`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /auth/logout:
+    post:
+      summary: Sign out
+      description: Revokes the refresh token and clears both cookies. Always succeeds.
+      operationId: logout
+      tags: [Auth]
+      security: []
+      responses:
+        '200':
+          description: Signed out.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+
+  /auth/me:
+    get:
+      summary: Current user
+      operationId: getCurrentUser
+      tags: [Auth]
+      responses:
+        '200':
+          description: The authenticated user.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/CurrentUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ---------------------------------------------------------------- Patients
+  /patients/me:
+    get:
+      summary: Own patient profile (PATIENT)
+      operationId: getMyPatientProfile
+      tags: [Patients]
+      responses:
+        '200':
+          description: The patient's profile.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/PatientProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      summary: Update own patient profile (PATIENT)
+      description: |
+        `dateOfBirth` must be strictly in the past (before today in both the clinic timezone and UTC);
+        send `null` to clear it - an empty string is rejected.
+      operationId: updateMyPatientProfile
+      tags: [Patients]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fullName, phoneNumber]
+              properties:
+                fullName: { type: string, minLength: 1, maxLength: 150 }
+                phoneNumber:
+                  type: string
+                  description: Thai mobile `0[689]xxxxxxxx` or E.164 `+<country><number>`; spaces and hyphens are tolerated and removed.
+                dateOfBirth:
+                  type: [string, 'null']
+                  format: date
+      responses:
+        '200':
+          description: Profile updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/PatientProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ----------------------------------------------------------------- Doctors
+  /doctors:
+    get:
+      summary: List doctors (PATIENT, DOCTOR, ADMIN)
+      description: |
+        PATIENT and DOCTOR callers see only ACTIVE doctors, a public projection (no e-mail, licence
+        number or account identifiers) and only ACTIVE services (BR-004). ADMIN sees every doctor with
+        the full record and may filter.
+      operationId: listDoctors
+      tags: [Doctors]
+      parameters:
+        - name: status
+          in: query
+          description: ADMIN only.
+          schema: { type: string, enum: [ACTIVE, INACTIVE, ALL] }
+        - name: search
+          in: query
+          description: ADMIN only. Matches name, specialization, licence number and e-mail (case-insensitive).
+          schema: { type: string }
+        - name: serviceId
+          in: query
+          description: Only doctors assigned to this service.
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Doctors.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Doctor' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /doctors/{doctorId}:
+    get:
+      summary: Doctor detail (PATIENT, DOCTOR, ADMIN)
+      operationId: getDoctor
+      tags: [Doctors]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      responses:
+        '200':
+          description: The doctor (public projection for non-admins; an INACTIVE doctor is 404 for them).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Doctor' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /doctors/me/schedule:
+    get:
+      summary: Own weekly schedule (DOCTOR)
+      operationId: getMySchedule
+      tags: [Schedules]
+      responses:
+        '200': { $ref: '#/components/responses/ScheduleView' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      summary: Replace own weekly schedule (DOCTOR)
+      description: |
+        Replaces the whole weekly schedule. Windows on the same day must not overlap and
+        `startTime` must be earlier than `endTime` (HH:mm). Appointments are not affected.
+      operationId: updateMySchedule
+      tags: [Schedules]
+      requestBody:
+        $ref: '#/components/requestBodies/ScheduleUpdate'
+      responses:
+        '200': { $ref: '#/components/responses/ScheduleUpdated' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/InvalidSchedule' }
+
+  /doctors/me/exceptions:
+    get:
+      summary: Own schedule exceptions (DOCTOR)
+      operationId: getMyExceptions
+      tags: [Schedules]
+      responses:
+        '200': { $ref: '#/components/responses/ExceptionList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Add an exception to own schedule (DOCTOR)
+      operationId: createMyException
+      tags: [Schedules]
+      requestBody:
+        $ref: '#/components/requestBodies/ScheduleException'
+      responses:
+        '201': { $ref: '#/components/responses/ExceptionCreated' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/InvalidSchedule' }
+
+  /doctors/me/exceptions/{exceptionId}:
+    delete:
+      summary: Delete own schedule exception (DOCTOR)
+      operationId: deleteMyException
+      tags: [Schedules]
+      parameters:
+        - $ref: '#/components/parameters/ExceptionId'
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Services
+  /services:
+    get:
+      summary: List medical services (PATIENT, DOCTOR, ADMIN)
+      description: PATIENT and DOCTOR callers see only ACTIVE services (BR-004). ADMIN may use the filters.
+      operationId: listServices
+      tags: [Services]
+      parameters:
+        - name: status
+          in: query
+          description: ADMIN only.
+          schema: { type: string, enum: [ACTIVE, INACTIVE, ALL] }
+        - name: search
+          in: query
+          description: ADMIN only.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Services.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/MedicalService' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /services/{serviceId}:
+    get:
+      summary: Service detail (PATIENT, DOCTOR, ADMIN)
+      operationId: getService
+      tags: [Services]
+      parameters:
+        - $ref: '#/components/parameters/ServiceId'
+      responses:
+        '200':
+          description: The service (an INACTIVE service is 404 for non-admins).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/MedicalService' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ------------------------------------------------------------------- Settings
+  /settings/public:
+    get:
+      summary: Public clinic information
+      description: Clinic name, timezone and the booking-grid / cancellation values the UI needs. No authentication.
+      operationId: getPublicSettings
+      tags: [Settings]
+      security: []
+      responses:
+        '200':
+          description: Public settings.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          clinicName: { type: string }
+                          timezone: { type: string, example: Asia/Bangkok }
+                          fixedStartIntervalMinutes: { type: integer }
+                          cancellationCutoffHours: { type: integer }
+
+  # -------------------------------------------------------------------- Admin
+  /admin/patients:
+    get:
+      summary: Patient directory (ADMIN)
+      operationId: adminListPatients
+      tags: [Admin, Patients]
+      parameters:
+        - name: search
+          in: query
+          description: Matches name, e-mail and phone number.
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: One page of patients.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items: { $ref: '#/components/schemas/PatientDirectoryItem' }
+                          total: { type: integer }
+                          page: { type: integer }
+                          limit: { type: integer }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/doctors:
+    get:
+      summary: List doctors, all statuses (ADMIN)
+      operationId: adminListDoctors
+      tags: [Admin, Doctors]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [ACTIVE, INACTIVE, ALL] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: serviceId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Doctors with their user and service assignments.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Doctor' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create a doctor account and profile (ADMIN)
+      description: Creates the DOCTOR user (Argon2id password hash) and the profile atomically. Audit action `DOCTOR_CREATED`.
+      operationId: adminCreateDoctor
+      tags: [Admin, Doctors]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, fullName, specialization]
+              properties:
+                email: { type: string, format: email, maxLength: 255 }
+                password: { type: string, minLength: 8, maxLength: 100 }
+                fullName: { type: string, minLength: 1, maxLength: 150 }
+                specialization: { type: string, minLength: 1, maxLength: 150 }
+                professionalLicenseNumber: { type: [string, 'null'], maxLength: 100 }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Doctor' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/doctors/{doctorId}:
+    put:
+      summary: Update a doctor profile (ADMIN)
+      description: Audit action `DOCTOR_PROFILE_UPDATED`.
+      operationId: adminUpdateDoctor
+      tags: [Admin, Doctors]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fullName, specialization]
+              properties:
+                fullName: { type: string, minLength: 1, maxLength: 150 }
+                specialization: { type: string, minLength: 1, maxLength: 150 }
+                professionalLicenseNumber: { type: [string, 'null'], maxLength: 100 }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Doctor' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/doctors/{doctorId}/status:
+    patch:
+      summary: Activate or deactivate a doctor (ADMIN)
+      description: |
+        Sets the profile status and the linked account status together. Audit action `DOCTOR_STATUS_UPDATED`.
+      operationId: adminSetDoctorStatus
+      tags: [Admin, Doctors]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileStatus]
+              properties:
+                profileStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Doctor' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/doctors/{doctorId}/services:
+    post:
+      summary: Assign services to a doctor (ADMIN)
+      description: |
+        Send exactly one of `serviceId` or `serviceIds` (at most 50). All-or-nothing: an unknown service
+        is 404 `SERVICE_NOT_FOUND`, an already-assigned pair is 409 `DUPLICATE_ASSIGNMENT`. One
+        `DOCTOR_SERVICE_ASSIGNED` audit row per new assignment, in the same transaction.
+      operationId: adminAssignServices
+      tags: [Admin, Doctors]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                serviceId: { type: string, format: uuid }
+                serviceIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Assigned.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/doctors/{doctorId}/services/{serviceId}:
+    delete:
+      summary: Remove a service from a doctor (ADMIN)
+      description: Audit action `DOCTOR_SERVICE_UNASSIGNED`.
+      operationId: adminUnassignService
+      tags: [Admin, Doctors]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+        - $ref: '#/components/parameters/ServiceId'
+      responses:
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/doctors/{doctorId}/schedule:
+    get:
+      summary: A doctor's weekly schedule (ADMIN)
+      operationId: adminGetDoctorSchedule
+      tags: [Admin, Schedules]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      responses:
+        '200': { $ref: '#/components/responses/ScheduleView' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      summary: Override a doctor's weekly schedule (ADMIN)
+      description: |
+        Same body as the doctor's own update **plus a mandatory `reason`** (alias `overrideReason`, 1-255
+        characters after trimming). Audit action `ADMIN_SCHEDULE_UPDATE` carries the reason.
+      operationId: adminUpdateDoctorSchedule
+      tags: [Admin, Schedules]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      requestBody:
+        $ref: '#/components/requestBodies/ScheduleUpdate'
+      responses:
+        '200': { $ref: '#/components/responses/ScheduleUpdated' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/InvalidSchedule' }
+
+  /admin/doctors/{doctorId}/exceptions:
+    get:
+      summary: A doctor's schedule exceptions (ADMIN)
+      operationId: adminListDoctorExceptions
+      tags: [Admin, Schedules]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      responses:
+        '200': { $ref: '#/components/responses/ExceptionList' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      summary: Add an exception to a doctor's schedule (ADMIN)
+      description: Same body as the doctor's own, but `reason` is **mandatory**. Audit action `ADMIN_SCHEDULE_EXCEPTION_CREATED`.
+      operationId: adminCreateDoctorException
+      tags: [Admin, Schedules]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+      requestBody:
+        $ref: '#/components/requestBodies/ScheduleException'
+      responses:
+        '201': { $ref: '#/components/responses/ExceptionCreated' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/InvalidSchedule' }
+
+  /admin/doctors/{doctorId}/exceptions/{exceptionId}:
+    delete:
+      summary: Delete a doctor's schedule exception (ADMIN)
+      description: Audit action `ADMIN_SCHEDULE_EXCEPTION_DELETED`.
+      operationId: adminDeleteDoctorException
+      tags: [Admin, Schedules]
+      parameters:
+        - $ref: '#/components/parameters/DoctorId'
+        - $ref: '#/components/parameters/ExceptionId'
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/services:
+    get:
+      summary: List medical services, all statuses (ADMIN)
+      operationId: adminListServices
+      tags: [Admin, Services]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [ACTIVE, INACTIVE, ALL] }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Services.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/MedicalService' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create a medical service (ADMIN)
+      description: Audit action `SERVICE_CREATED`. `durationMinutes` defaults to 30.
+      operationId: adminCreateService
+      tags: [Admin, Services]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceName]
+              properties:
+                serviceName: { type: string, minLength: 1, maxLength: 150 }
+                description: { type: [string, 'null'], maxLength: 5000 }
+                durationMinutes: { type: integer, minimum: 1, maximum: 480, default: 30 }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/MedicalService' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/services/{serviceId}:
+    get:
+      summary: Service detail (ADMIN)
+      operationId: adminGetService
+      tags: [Admin, Services]
+      parameters:
+        - $ref: '#/components/parameters/ServiceId'
+      responses:
+        '200':
+          description: The service.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/MedicalService' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      summary: Update a medical service (ADMIN)
+      description: Audit action `SERVICE_UPDATED`. A duration change does not alter existing appointments.
+      operationId: adminUpdateService
+      tags: [Admin, Services]
+      parameters:
+        - $ref: '#/components/parameters/ServiceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceName]
+              properties:
+                serviceName: { type: string, minLength: 1, maxLength: 150 }
+                description: { type: [string, 'null'], maxLength: 5000 }
+                durationMinutes: { type: integer, minimum: 1, maximum: 480 }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/MedicalService' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/services/{serviceId}/status:
+    patch:
+      summary: Activate or deactivate a service (ADMIN)
+      description: Audit action `SERVICE_STATUS_UPDATED`. Deactivating hides it from booking but keeps history.
+      operationId: adminSetServiceStatus
+      tags: [Admin, Services]
+      parameters:
+        - $ref: '#/components/parameters/ServiceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceStatus]
+              properties:
+                serviceStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/MedicalService' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/settings:
+    get:
+      summary: Clinic settings (ADMIN)
+      operationId: adminGetSettings
+      tags: [Admin, Settings]
+      responses:
+        '200':
+          description: Current settings.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ClinicSettings' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    patch:
+      summary: Update clinic settings (ADMIN)
+      description: Partial update. Audit action `CLINIC_SETTINGS_UPDATED` is written only when a value actually changed.
+      operationId: adminUpdateSettings
+      tags: [Admin, Settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clinicName: { type: string, minLength: 1, maxLength: 150 }
+                timezone: { type: string, description: IANA timezone identifier, example: Asia/Bangkok }
+                fixedStartIntervalMinutes: { type: integer, enum: [5, 10, 15, 20, 30, 60] }
+                cancellationCutoffHours: { type: integer, minimum: 0, maximum: 8760 }
+                reminderLeadHours: { type: integer, minimum: 1, maximum: 8760 }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ClinicSettings' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/dashboard:
+    get:
+      summary: Administrator dashboard placeholder
+      description: Returns a static readiness marker; real metrics arrive with the reporting sprint.
+      operationId: adminDashboard
+      tags: [Admin]
+      responses:
+        '200':
+          description: Placeholder.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: HttpOnly access-token cookie set by `POST /auth/login`. An `Authorization` header with a Bearer token is also accepted.
+
+  parameters:
+    DoctorId:
+      name: doctorId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ServiceId:
+      name: serviceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ExceptionId:
+      name: exceptionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  requestBodies:
+    ScheduleUpdate:
+      required: true
+      description: |
+        The complete weekly schedule. The array may be sent bare or under `shifts`, `schedules`
+        or `weeklySchedules`. An administrator override must also carry `reason`.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              shifts:
+                type: array
+                items: { $ref: '#/components/schemas/ScheduleShiftInput' }
+              reason: { type: string, minLength: 1, maxLength: 255, description: Mandatory for administrator overrides. }
+    ScheduleException:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [exceptionDate, exceptionType]
+            properties:
+              exceptionDate: { type: string, format: date, description: A real calendar date. }
+              exceptionType: { type: string, enum: [HOLIDAY, BREAK, UNAVAILABLE, CUSTOM_HOURS] }
+              startTime: { type: [string, 'null'], example: '12:00', description: Required for BREAK and CUSTOM_HOURS. }
+              endTime: { type: [string, 'null'], example: '13:00' }
+              reason: { type: [string, 'null'], maxLength: 255, description: Mandatory when an administrator creates the exception. }
+
+  responses:
+    ScheduleView:
+      description: The doctor's weekly windows (ordered by day then start time) and exceptions. `shifts` is an alias of `weeklySchedules`.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      doctorId: { type: string, format: uuid }
+                      weeklySchedules:
+                        type: array
+                        items: { $ref: '#/components/schemas/ScheduleShift' }
+                      shifts:
+                        type: array
+                        items: { $ref: '#/components/schemas/ScheduleShift' }
+                      exceptions:
+                        type: array
+                        items: { $ref: '#/components/schemas/ScheduleExceptionRecord' }
+    ScheduleUpdated:
+      description: The saved weekly schedule (`schedules`, `weeklySchedules` and `shifts` are aliases).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      doctorId: { type: string, format: uuid }
+                      schedules:
+                        type: array
+                        items: { $ref: '#/components/schemas/ScheduleShift' }
+                      weeklySchedules:
+                        type: array
+                        items: { $ref: '#/components/schemas/ScheduleShift' }
+                      shifts:
+                        type: array
+                        items: { $ref: '#/components/schemas/ScheduleShift' }
+    ExceptionList:
+      description: Schedule exceptions, ordered by date.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScheduleExceptionRecord' }
+    ExceptionCreated:
+      description: Created.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ScheduleExceptionRecord' }
+    ValidationError:
+      description: Malformed input (`VALIDATION_ERROR`, `INVALID_JSON`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    InvalidSchedule:
+      description: The request is well-formed but the schedule is not valid (`INVALID_SCHEDULE_WINDOW`, overlapping windows, end before start).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Unauthorized:
+      description: Missing, invalid or expired access token (`UNAUTHORIZED`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Forbidden:
+      description: The role is not allowed on this endpoint (`FORBIDDEN`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: The resource does not exist (or is hidden from this role).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Conflict:
+      description: A uniqueness or state conflict (for example a duplicate e-mail or service name).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    TooManyRequests:
+      description: Too many failed sign-in attempts (`TOO_MANY_REQUESTS`).
+      headers:
+        Retry-After:
+          description: Seconds until another attempt is allowed.
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      description: Standardized JSON success envelope.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          description: Payload data.
+        message:
+          type: string
+          example: Operation completed successfully.
+      required:
+        - success
+
+    ErrorEnvelope:
+      type: object
+      description: Standardized JSON error envelope.
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INVALID_SCHEDULE_WINDOW
+            message:
+              type: string
+              example: Schedule windows on the same day must not overlap.
+          required:
+            - code
+            - message
+      required:
+        - success
+        - error
+
+    AuthUser:
+      type: object
+      properties:
+        userId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { type: string, enum: [PATIENT, DOCTOR, ADMIN] }
+
+    CurrentUser:
+      allOf:
+        - $ref: '#/components/schemas/AuthUser'
+        - type: object
+          properties:
+            accountStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+            profileId: { type: string, format: uuid, description: patientId, doctorId, or the userId for an administrator. }
+            fullName: { type: string }
+
+    PatientProfile:
+      type: object
+      properties:
+        patientId: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phoneNumber: { type: string }
+        dateOfBirth: { type: [string, 'null'], format: date-time, description: Midnight UTC of the calendar date. }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PatientDirectoryItem:
+      type: object
+      properties:
+        patientId: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        phoneNumber: { type: string }
+        dateOfBirth: { type: [string, 'null'], format: date-time }
+        accountStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    MedicalService:
+      type: object
+      properties:
+        serviceId: { type: string, format: uuid }
+        serviceName: { type: string }
+        description: { type: [string, 'null'] }
+        durationMinutes: { type: integer, minimum: 1, maximum: 480 }
+        serviceStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Doctor:
+      type: object
+      description: |
+        The full record for ADMIN. PATIENT and DOCTOR callers receive only `doctorId`, `fullName`,
+        `specialization`, `profileStatus` and `services` (ACTIVE services, public fields).
+      properties:
+        doctorId: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        specialization: { type: string }
+        professionalLicenseNumber: { type: [string, 'null'] }
+        profileStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+        accountStatus: { type: string, enum: [ACTIVE, INACTIVE] }
+        role: { type: string, enum: [DOCTOR] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        doctorServices:
+          type: array
+          items:
+            type: object
+            properties:
+              doctorServiceId: { type: string, format: uuid }
+              doctorId: { type: string, format: uuid }
+              serviceId: { type: string, format: uuid }
+              createdAt: { type: string, format: date-time }
+              service: { $ref: '#/components/schemas/MedicalService' }
+        services:
+          type: array
+          items: { $ref: '#/components/schemas/MedicalService' }
+
+    ScheduleShiftInput:
+      type: object
+      required: [dayOfWeek, startTime, endTime]
+      properties:
+        scheduleId: { type: string, format: uuid }
+        dayOfWeek: { type: integer, minimum: 0, maximum: 6, description: 0 = Sunday ... 6 = Saturday. }
+        startTime: { type: string, example: '09:00' }
+        endTime: { type: string, example: '12:00' }
+        isActive: { type: boolean, default: true }
+
+    ScheduleShift:
+      type: object
+      properties:
+        scheduleId: { type: string, format: uuid }
+        doctorId: { type: string, format: uuid }
+        dayOfWeek: { type: integer, minimum: 0, maximum: 6 }
+        startTime: { type: string, example: '09:00:00' }
+        endTime: { type: string, example: '12:00:00' }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ScheduleExceptionRecord:
+      type: object
+      properties:
+        exceptionId: { type: string, format: uuid }
+        doctorId: { type: string, format: uuid }
+        exceptionDate: { type: string, format: date-time }
+        exceptionType: { type: string, enum: [HOLIDAY, BREAK, UNAVAILABLE, CUSTOM_HOURS] }
+        startTime: { type: [string, 'null'] }
+        endTime: { type: [string, 'null'] }
+        reason: { type: [string, 'null'] }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+
+    ClinicSettings:
+      type: object
+      properties:
+        settingId: { type: string, format: uuid }
+        clinicName: { type: string }
+        timezone: { type: string, example: Asia/Bangkok }
+        fixedStartIntervalMinutes: { type: integer, enum: [5, 10, 15, 20, 30, 60] }
+        cancellationCutoffHours: { type: integer, minimum: 0 }
+        reminderLeadHours: { type: integer, minimum: 1 }
+        updatedBy: { type: [string, 'null'], format: uuid }
+        updatedAt: { type: string, format: date-time }

@@ -5,7 +5,7 @@
 // Handles endpoints for medical service catalog listing, creation, updates, and status toggles.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { serviceService } from './service';
 import {
   createServiceSchema,

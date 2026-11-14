@@ -5,7 +5,7 @@
 // Verifies JWT signature and expiry from HttpOnly cookie and attaches req.user.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { verifyAccessToken, ACCESS_TOKEN_COOKIE } from '../utils/security';
 import { sendError } from '../utils/response';
 

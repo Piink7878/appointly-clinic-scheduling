@@ -14,8 +14,17 @@ import {
   hashRefreshToken,
   verifyRefreshToken,
 } from '../../shared/utils/security';
-import { LoginInput } from './validation';
+import { type LoginInput } from './validation';
 import { AccountStatus } from '@prisma/client';
+import { hashPassword } from '../../shared/utils/security';
+
+/**
+ * A real Argon2id hash nobody knows the password of. Verifying against it when the e-mail is
+ * unknown makes that path take as long as a wrong password, so response time does not reveal
+ * which accounts exist (AC-F001-02).
+ */
+let decoyHash: Promise<string> | undefined;
+const getDecoyHash = (): Promise<string> => (decoyHash ??= hashPassword(`decoy-${Math.random()}-${Date.now()}`));
 
 export class AuthService {
   /**
@@ -32,6 +41,7 @@ export class AuthService {
 
     // 2. Generic invalid credentials check (anti-enumeration)
     if (!user) {
+      await verifyPassword(await getDecoyHash(), input.password);
       throw AppError.unauthorized('Invalid email or password.', 'INVALID_CREDENTIALS');
     }
 

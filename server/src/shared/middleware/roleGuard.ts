@@ -5,8 +5,8 @@
 // Verifies that req.user.role matches the endpoint's allowed role set.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
-import { UserRole } from '../types';
+import { type Request, type Response, type NextFunction } from 'express';
+import { type UserRole } from '../types';
 import { sendError } from '../utils/response';
 
 /**

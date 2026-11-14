@@ -21,6 +21,12 @@ const envSchema = z.object({
   CLINIC_DEFAULT_TIMEZONE: z.string().optional(),
   SEED_ADMIN_EMAIL: z.string().email().default('admin@appointly.local'),
   SEED_DEFAULT_PASSWORD: z.string().default('ChangeMe123!'),
+  // Brute-force protection for POST /auth/login (SDS 7.1)
+  LOGIN_RATE_LIMIT_MAX_PER_ACCOUNT: z.coerce.number().int().min(1).default(10),
+  LOGIN_RATE_LIMIT_MAX_PER_IP: z.coerce.number().int().min(1).default(100),
+  LOGIN_RATE_LIMIT_WINDOW_MINUTES: z.coerce.number().int().min(1).default(15),
+  // Number of reverse proxies in front of the API (Cloud Run / nginx = 1). 0 = connect directly.
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
 });
 
 const isTestEnv = process.env.NODE_ENV === 'test';
@@ -48,6 +54,10 @@ const rawEnv = {
   CLINIC_DEFAULT_TIMEZONE: process.env.CLINIC_DEFAULT_TIMEZONE,
   SEED_ADMIN_EMAIL: process.env.SEED_ADMIN_EMAIL || 'admin@appointly.local',
   SEED_DEFAULT_PASSWORD: process.env.SEED_DEFAULT_PASSWORD || 'ChangeMe123!',
+  LOGIN_RATE_LIMIT_MAX_PER_ACCOUNT: process.env.LOGIN_RATE_LIMIT_MAX_PER_ACCOUNT,
+  LOGIN_RATE_LIMIT_MAX_PER_IP: process.env.LOGIN_RATE_LIMIT_MAX_PER_IP,
+  LOGIN_RATE_LIMIT_WINDOW_MINUTES: process.env.LOGIN_RATE_LIMIT_WINDOW_MINUTES,
+  TRUST_PROXY: process.env.TRUST_PROXY,
 };
 
 const parsed = envSchema.safeParse(rawEnv);
@@ -72,6 +82,12 @@ export const config = {
   clinicTimezone: env.CLINIC_TIMEZONE,
   seedAdminEmail: env.SEED_ADMIN_EMAIL,
   seedDefaultPassword: env.SEED_DEFAULT_PASSWORD,
+  trustProxy: env.TRUST_PROXY,
+  loginRateLimit: {
+    maxPerAccount: env.LOGIN_RATE_LIMIT_MAX_PER_ACCOUNT,
+    maxPerIp: env.LOGIN_RATE_LIMIT_MAX_PER_IP,
+    windowMinutes: env.LOGIN_RATE_LIMIT_WINDOW_MINUTES,
+  },
 };
 
 export type Config = typeof config;

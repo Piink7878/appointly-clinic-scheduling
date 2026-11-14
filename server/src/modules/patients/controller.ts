@@ -5,7 +5,7 @@
 // Handles endpoints for patient profile view/update and admin patient directory.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { patientService } from './service';
 import { updatePatientSchema, getPatientsQuerySchema } from './validation';
 import { AppError } from '../../shared/middleware/errorHandler';

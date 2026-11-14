@@ -4,7 +4,7 @@
 // Reference: System-Level SDS Section 5.2 & Sprint 1 Contracts (F-001)
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { authService } from './service';
 import { loginSchema } from './validation';
 import {

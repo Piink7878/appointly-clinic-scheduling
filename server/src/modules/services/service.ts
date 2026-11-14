@@ -6,15 +6,15 @@
 // service updates, and status toggles.
 // ==============================================================================
 
-import { Prisma, ServiceStatus } from '@prisma/client';
+import { type Prisma, ServiceStatus } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
 import { isValidUuid } from '../../shared/utils/uuid';
 import { isUniqueViolation } from '../../shared/utils/prismaErrors';
 import {
-  CreateServiceInput,
-  UpdateServiceInput,
-  GetServicesQueryInput,
+  type CreateServiceInput,
+  type UpdateServiceInput,
+  type GetServicesQueryInput,
 } from './validation';
 
 export class ServiceService {

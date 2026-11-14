@@ -9,7 +9,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
-import { UpdatePatientInput, GetPatientsQueryInput } from './validation';
+import { type UpdatePatientInput, type GetPatientsQueryInput } from './validation';
 
 export class PatientService {
   /**

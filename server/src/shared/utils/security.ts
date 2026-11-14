@@ -9,9 +9,9 @@
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { Response } from 'express';
+import { type Response } from 'express';
 import { config } from '../config';
-import { AuthUserPayload } from '../types';
+import { type AuthUserPayload } from '../types';
 
 export const ACCESS_TOKEN_COOKIE = 'access_token';
 export const REFRESH_TOKEN_COOKIE = 'refresh_token';

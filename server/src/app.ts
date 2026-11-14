@@ -19,6 +19,11 @@ import { apiRouter } from './routes';
 
 export const app = express();
 
+// Behind Cloud Run / nginx the client address is in X-Forwarded-For: only trust it when told how many proxies there are.
+if (config.trustProxy > 0) {
+  app.set('trust proxy', config.trustProxy);
+}
+
 // Global Middlewares
 app.use(
   cors({

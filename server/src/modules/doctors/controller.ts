@@ -5,7 +5,7 @@
 // Handles endpoints for doctor listing, creation, updates, and status toggles.
 // ==============================================================================
 
-import { Request, Response, NextFunction } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import { doctorService } from './service';
 import {
   createDoctorSchema,

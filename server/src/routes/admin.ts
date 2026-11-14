@@ -11,6 +11,7 @@ import { sendSuccess } from '../shared/utils/response';
 import { patientController } from '../modules/patients';
 import { doctorController } from '../modules/doctors';
 import { serviceController } from '../modules/services';
+import { scheduleController } from '../modules/schedules';
 
 export const adminRouter = Router();
 
@@ -41,6 +42,26 @@ adminRouter.post('/doctors/:doctorId/services', (req, res, next) =>
 );
 adminRouter.delete('/doctors/:doctorId/services/:serviceId', (req, res, next) =>
   doctorController.unassignService(req, res, next)
+);
+
+/**
+ * Doctor Schedule Governance Routes (F-006, F-007)
+ * Reference: System-Level SDS Section 3.2F, 3.2G, 5.2, 6 & Sprint 1 Contracts (F-006, F-007)
+ */
+adminRouter.get('/doctors/:doctorId/schedule', (req, res, next) =>
+  scheduleController.getDoctorScheduleAdmin(req, res, next)
+);
+adminRouter.put('/doctors/:doctorId/schedule', (req, res, next) =>
+  scheduleController.updateDoctorScheduleAdmin(req, res, next)
+);
+adminRouter.get('/doctors/:doctorId/exceptions', (req, res, next) =>
+  scheduleController.getDoctorExceptionsAdmin(req, res, next)
+);
+adminRouter.post('/doctors/:doctorId/exceptions', (req, res, next) =>
+  scheduleController.createDoctorExceptionAdmin(req, res, next)
+);
+adminRouter.delete('/doctors/:doctorId/exceptions/:exceptionId', (req, res, next) =>
+  scheduleController.deleteDoctorExceptionAdmin(req, res, next)
 );
 
 /**

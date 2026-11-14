@@ -14,21 +14,9 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ApiClientError } from '../../shared/api';
-import { Activity, Lock, Mail, AlertCircle, Eye, EyeOff, ShieldAlert, Sparkles } from 'lucide-react';
-import { UserRole } from '../../shared/types';
-
-export const getRoleLandingPath = (role: UserRole): string => {
-  switch (role) {
-    case 'PATIENT':
-      return '/patient/services';
-    case 'DOCTOR':
-      return '/doctor/schedule';
-    case 'ADMIN':
-      return '/admin/doctors';
-    default:
-      return '/';
-  }
-};
+import { Activity, Lock, Mail, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { AlertBanner } from '../../shared/components/AlertBanner';
+import { getRoleLandingPath } from '../../shared/utils';
 
 export const LoginPage: React.FC = () => {
   const { login, user, isAuthenticated, isLoading } = useAuth();
@@ -40,7 +28,6 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   // If already authenticated, redirect immediately to role-specific portal
   if (!isLoading && isAuthenticated && user) {
@@ -51,7 +38,6 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setErrorCode(null);
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
@@ -83,7 +69,6 @@ export const LoginPage: React.FC = () => {
       navigate(targetPath, { replace: true });
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorCode(err.code);
         if (err.code === 'ACCOUNT_INACTIVE') {
           setErrorMessage('Account Suspended: Your account is currently inactive. Please contact the clinic administrator.');
         } else if (err.code === 'INVALID_CREDENTIALS' || err.status === 401) {
@@ -105,7 +90,6 @@ export const LoginPage: React.FC = () => {
     setEmail(testEmail);
     setPassword(testPassword);
     setErrorMessage(null);
-    setErrorCode(null);
   };
 
   return (
@@ -127,22 +111,10 @@ export const LoginPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
         <div className="bg-white py-8 px-6 shadow-xl shadow-slate-200/50 rounded-2xl border border-slate-200/80 sm:px-10">
-          {/* Error Banner */}
+          {/* Error Banner (shared component: same look and live-region behaviour on every screen) */}
           {errorMessage && (
-            <div
-              role="alert"
-              className={`mb-6 p-4 rounded-xl border flex items-start space-x-3 ${
-                errorCode === 'ACCOUNT_INACTIVE'
-                  ? 'bg-rose-50 border-rose-200 text-rose-900'
-                  : 'bg-red-50 border-red-200 text-red-800'
-              }`}
-            >
-              {errorCode === 'ACCOUNT_INACTIVE' ? (
-                <ShieldAlert className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-              ) : (
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              )}
-              <div className="flex-1 text-sm leading-relaxed">{errorMessage}</div>
+            <div className="mb-6">
+              <AlertBanner variant="error" message={errorMessage} />
             </div>
           )}
 

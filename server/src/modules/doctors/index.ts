@@ -67,18 +67,6 @@ doctorsRouter.delete(
 );
 
 /**
- * GET /api/v1/doctors/:doctorId/schedule
- * Accessible by: ADMIN only. A schedule includes private exception reasons, so
- * patients and other doctors must not read it; a doctor reads their own via /me/schedule.
- */
-doctorsRouter.get(
-  '/:doctorId/schedule',
-  authGuard,
-  roleGuard('ADMIN'),
-  (req, res, next) => scheduleController.getDoctorScheduleAdmin(req, res, next)
-);
-
-/**
  * GET /api/v1/doctors/:doctorId
  * Accessible by: PATIENT, DOCTOR, ADMIN
  */

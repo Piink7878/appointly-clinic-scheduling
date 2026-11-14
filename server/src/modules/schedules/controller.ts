@@ -14,6 +14,7 @@ import {
 } from './validation';
 import { AppError } from '../../shared/middleware/errorHandler';
 
+import { sendSuccess } from '../../shared/utils/response';
 export class ScheduleController {
   /**
    * GET /api/v1/doctors/me/schedule
@@ -29,12 +30,7 @@ export class ScheduleController {
       const doctor = await scheduleService.getDoctorByUserId(req.user.userId);
       const scheduleData = await scheduleService.getDoctorSchedule(doctor.doctorId);
 
-      res.status(200).json({
-        success: true,
-        data: scheduleData,
-        ...scheduleData,
-        message: 'Doctor schedule retrieved successfully.',
-      });
+      sendSuccess(res, scheduleData, 'Doctor schedule retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -65,12 +61,7 @@ export class ScheduleController {
         shifts: updatedSchedules,
       };
 
-      res.status(200).json({
-        success: true,
-        data: result,
-        ...result,
-        message: 'Doctor schedule updated successfully.',
-      });
+      sendSuccess(res, result, 'Doctor schedule updated successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -90,13 +81,7 @@ export class ScheduleController {
       const doctor = await scheduleService.getDoctorByUserId(req.user.userId);
       const exceptions = await scheduleService.getDoctorExceptions(doctor.doctorId);
 
-      res.status(200).json({
-        success: true,
-        data: exceptions,
-        exceptions,
-        total: exceptions.length,
-        message: 'Schedule exceptions retrieved successfully.',
-      });
+      sendSuccess(res, exceptions, 'Schedule exceptions retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -122,12 +107,7 @@ export class ScheduleController {
         false
       );
 
-      res.status(201).json({
-        success: true,
-        data: exception,
-        ...exception,
-        message: 'Schedule exception created successfully.',
-      });
+      sendSuccess(res, exception, 'Schedule exception created successfully.', 201);
     } catch (error) {
       next(error);
     }
@@ -153,12 +133,7 @@ export class ScheduleController {
         false
       );
 
-      res.status(200).json({
-        success: true,
-        data: result,
-        ...result,
-        message: 'Schedule exception deleted successfully.',
-      });
+      sendSuccess(res, result, 'Schedule exception deleted successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -173,12 +148,7 @@ export class ScheduleController {
       const doctorId = req.params.doctorId || req.params.id;
       const scheduleData = await scheduleService.getDoctorSchedule(doctorId);
 
-      res.status(200).json({
-        success: true,
-        data: scheduleData,
-        ...scheduleData,
-        message: 'Doctor schedule retrieved successfully.',
-      });
+      sendSuccess(res, scheduleData, 'Doctor schedule retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -220,12 +190,7 @@ export class ScheduleController {
         shifts: updatedSchedules,
       };
 
-      res.status(200).json({
-        success: true,
-        data: result,
-        ...result,
-        message: 'Doctor schedule updated successfully by administrator.',
-      });
+      sendSuccess(res, result, 'Doctor schedule updated successfully by administrator.', 200);
     } catch (error) {
       next(error);
     }
@@ -240,13 +205,7 @@ export class ScheduleController {
       const doctorId = req.params.doctorId || req.params.id;
       const exceptions = await scheduleService.getDoctorExceptions(doctorId);
 
-      res.status(200).json({
-        success: true,
-        data: exceptions,
-        exceptions,
-        total: exceptions.length,
-        message: 'Doctor exceptions retrieved successfully.',
-      });
+      sendSuccess(res, exceptions, 'Doctor exceptions retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -272,12 +231,7 @@ export class ScheduleController {
         true
       );
 
-      res.status(201).json({
-        success: true,
-        data: exception,
-        ...exception,
-        message: 'Doctor schedule exception created successfully by administrator.',
-      });
+      sendSuccess(res, exception, 'Doctor schedule exception created successfully by administrator.', 201);
     } catch (error) {
       next(error);
     }
@@ -302,12 +256,7 @@ export class ScheduleController {
         true
       );
 
-      res.status(200).json({
-        success: true,
-        data: result,
-        ...result,
-        message: 'Doctor schedule exception deleted successfully by administrator.',
-      });
+      sendSuccess(res, result, 'Doctor schedule exception deleted successfully by administrator.', 200);
     } catch (error) {
       next(error);
     }

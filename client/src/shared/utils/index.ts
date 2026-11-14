@@ -1,3 +1,19 @@
+import { UserRole } from '../types';
+
+/** The page a user lands on after signing in, per role (SDS 4.2). */
+export const getRoleLandingPath = (role: UserRole): string => {
+  switch (role) {
+    case 'PATIENT':
+      return '/patient/services';
+    case 'DOCTOR':
+      return '/doctor/schedule';
+    case 'ADMIN':
+      return '/admin/doctors';
+    default:
+      return '/';
+  }
+};
+
 export const formatDate = (date: Date | string): string => {
   return new Date(date).toLocaleDateString('en-US', {
     timeZone: 'Asia/Bangkok',

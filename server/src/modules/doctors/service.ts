@@ -9,18 +9,14 @@
 import { Prisma, Role, AccountStatus, ProfileStatus, ServiceStatus } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
+import { isValidUuid } from '../../shared/utils/uuid';
+import { isUniqueViolation } from '../../shared/utils/prismaErrors';
 import { hashPassword } from '../../shared/utils/security';
 import {
   CreateDoctorInput,
   UpdateDoctorInput,
   GetDoctorsQueryInput,
 } from './validation';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isValidUuid(id: string): boolean {
-  return UUID_REGEX.test(id);
-}
 
 export class DoctorService {
   /**
@@ -291,6 +287,14 @@ export class DoctorService {
         doctorServices: [],
         services: [],
       };
+    }).catch((error: unknown) => {
+      if (isUniqueViolation(error)) {
+        throw AppError.conflict(
+          'An account with this email address already exists.',
+          'EMAIL_ALREADY_EXISTS'
+        );
+      }
+      throw error;
     });
   }
 
@@ -298,7 +302,7 @@ export class DoctorService {
    * Updates Doctor profile (fullName, specialization, professionalLicenseNumber).
    * Throws 404 Not Found if doctorId is not found.
    */
-  async updateDoctor(doctorId: string, input: UpdateDoctorInput) {
+  async updateDoctor(adminUserId: string, doctorId: string, input: UpdateDoctorInput) {
     if (!isValidUuid(doctorId)) {
       throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
     }
@@ -311,31 +315,60 @@ export class DoctorService {
       throw AppError.notFound('Doctor profile not found.', 'DOCTOR_NOT_FOUND');
     }
 
-    const updated = await prisma.doctor.update({
-      where: { doctorId },
-      data: {
-        fullName: input.fullName.trim(),
-        specialization: input.specialization.trim(),
-        professionalLicenseNumber:
-          input.professionalLicenseNumber !== undefined
-            ? input.professionalLicenseNumber?.trim() || null
-            : existingDoctor.professionalLicenseNumber,
-      },
-      include: {
-        user: {
-          select: {
-            userId: true,
-            email: true,
-            role: true,
-            accountStatus: true,
+    const next = {
+      fullName: input.fullName.trim(),
+      specialization: input.specialization.trim(),
+      professionalLicenseNumber:
+        input.professionalLicenseNumber !== undefined
+          ? input.professionalLicenseNumber?.trim() || null
+          : existingDoctor.professionalLicenseNumber,
+    };
+    const previous = {
+      fullName: existingDoctor.fullName,
+      specialization: existingDoctor.specialization,
+      professionalLicenseNumber: existingDoctor.professionalLicenseNumber,
+    };
+    const changed =
+      previous.fullName !== next.fullName ||
+      previous.specialization !== next.specialization ||
+      previous.professionalLicenseNumber !== next.professionalLicenseNumber;
+
+    // The change and its AuditLog entry (DOCTOR_PROFILE_UPDATED) are one atomic unit;
+    // an edit that changes nothing is not an event worth recording.
+    const updated = await prisma.$transaction(async (tx) => {
+      const row = await tx.doctor.update({
+        where: { doctorId },
+        data: next,
+        include: {
+          user: {
+            select: {
+              userId: true,
+              email: true,
+              role: true,
+              accountStatus: true,
+            },
+          },
+          doctorServices: {
+            include: {
+              service: true,
+            },
           },
         },
-        doctorServices: {
-          include: {
-            service: true,
+      });
+
+      if (changed) {
+        await tx.auditLog.create({
+          data: {
+            userId: adminUserId,
+            actionType: 'DOCTOR_PROFILE_UPDATED',
+            entityType: 'Doctor',
+            entityId: doctorId,
+            details: { previous, current: next },
           },
-        },
-      },
+        });
+      }
+
+      return row;
     });
 
     return this.formatDoctor(updated);

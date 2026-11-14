@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import { ExceptionType } from '@prisma/client';
+import { parseClinicCalendarDate } from '../../shared/utils/timezone';
 
 /**
  * Validates a single weekly shift window item.
@@ -89,10 +90,7 @@ export const createExceptionSchema = z.object({
     .union([z.string(), z.date()], {
       required_error: 'exceptionDate is required',
     })
-    .refine((val) => {
-      const d = val instanceof Date ? val : new Date(val);
-      return !isNaN(d.getTime());
-    }, 'exceptionDate must be a valid date'),
+    .refine((val) => parseClinicCalendarDate(val) !== null, 'exceptionDate must be a valid calendar date (YYYY-MM-DD)'),
   exceptionType: z.preprocess(
     (val) => (typeof val === 'string' ? val.toUpperCase().trim() : val),
     z.nativeEnum(ExceptionType, {

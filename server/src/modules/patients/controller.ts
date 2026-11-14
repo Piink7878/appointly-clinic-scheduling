@@ -10,6 +10,7 @@ import { patientService } from './service';
 import { updatePatientSchema, getPatientsQuerySchema } from './validation';
 import { AppError } from '../../shared/middleware/errorHandler';
 
+import { sendSuccess } from '../../shared/utils/response';
 export class PatientController {
   /**
    * GET /api/v1/patients/me
@@ -25,12 +26,7 @@ export class PatientController {
 
       const profile = await patientService.getPatientProfileByUserId(req.user.userId);
 
-      res.status(200).json({
-        success: true,
-        data: profile,
-        ...profile,
-        message: 'Patient profile retrieved successfully.',
-      });
+      sendSuccess(res, profile, 'Patient profile retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -60,12 +56,7 @@ export class PatientController {
         validatedInput
       );
 
-      res.status(200).json({
-        success: true,
-        data: updated,
-        ...updated,
-        message: 'Patient profile updated successfully.',
-      });
+      sendSuccess(res, updated, 'Patient profile updated successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -81,22 +72,11 @@ export class PatientController {
       const query = getPatientsQuerySchema.parse(req.query);
       const result = await patientService.getPatients(query);
 
-      res.status(200).json({
-        success: true,
-        data: {
-          items: result.items,
-          patients: result.items,
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-        },
-        items: result.items,
-        patients: result.items,
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        message: 'Patient directory retrieved successfully.',
-      });
+      sendSuccess(
+        res,
+        { items: result.items, total: result.total, page: result.page, limit: result.limit },
+        'Patient directory retrieved successfully.'
+      );
     } catch (error) {
       next(error);
     }

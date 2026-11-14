@@ -15,6 +15,7 @@ import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/shared/database';
 
+import { cookiesOf } from '../helpers';
 describe('Doctor-Service Assignment (F-005)', () => {
   const validPassword = 'ChangeMe123!';
   const stamp = Date.now();
@@ -89,10 +90,10 @@ describe('Doctor-Service Assignment (F-005)', () => {
     prisma.doctorService.count({ where: { doctorId, ...(serviceId ? { serviceId } : {}) } });
 
   beforeAll(async () => {
-    patientCookies = (await login('patient.arisa@appointly.local')).headers['set-cookie'];
-    doctorCookies = (await login('doctor@appointly.local')).headers['set-cookie'];
+    patientCookies = cookiesOf((await login('patient.arisa@appointly.local')));
+    doctorCookies = cookiesOf((await login('doctor@appointly.local')));
     const adminLogin = await login('admin@appointly.local');
-    adminCookies = adminLogin.headers['set-cookie'];
+    adminCookies = cookiesOf(adminLogin);
     adminUserId = adminLogin.body.data.userId;
 
     d1 = await createDoctor('d1');

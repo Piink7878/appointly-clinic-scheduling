@@ -11,6 +11,7 @@
 // ==============================================================================
 
 import { AppError } from '../../shared/middleware/errorHandler';
+import { parseClinicCalendarDate } from '../../shared/utils/timezone';
 
 /**
  * Standard Shift input interface.
@@ -201,12 +202,7 @@ export function validateException(exception: ExceptionInput): void {
     throw AppError.badRequest('exceptionDate is required.', 'INVALID_EXCEPTION_DATE');
   }
 
-  const dateVal =
-    exception.exceptionDate instanceof Date
-      ? exception.exceptionDate
-      : new Date(exception.exceptionDate);
-
-  if (isNaN(dateVal.getTime())) {
+  if (parseClinicCalendarDate(exception.exceptionDate) === null) {
     throw AppError.badRequest(
       `Invalid exceptionDate: "${String(exception.exceptionDate)}".`,
       'INVALID_EXCEPTION_DATE'

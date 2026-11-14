@@ -26,14 +26,7 @@ export class AuthController {
 
       setAuthCookies(res, result.accessToken, result.refreshToken);
 
-      res.status(200).json({
-        success: true,
-        data: result.user,
-        userId: result.user.userId,
-        email: result.user.email,
-        role: result.user.role,
-        message: 'Login successful.',
-      });
+      sendSuccess(res, result.user, 'Login successful.', 200);
     } catch (error) {
       next(error);
     }
@@ -53,14 +46,7 @@ export class AuthController {
 
       setAuthCookies(res, result.accessToken, result.refreshToken);
 
-      res.status(200).json({
-        success: true,
-        data: result.user,
-        userId: result.user.userId,
-        email: result.user.email,
-        role: result.user.role,
-        message: 'Tokens refreshed successfully.',
-      });
+      sendSuccess(res, result.user, 'Tokens refreshed successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -93,11 +79,7 @@ export class AuthController {
 
       const meData = await authService.getMe(req.user.userId);
 
-      res.status(200).json({
-        success: true,
-        data: meData,
-        ...meData,
-      });
+      sendSuccess(res, meData, 'Current user retrieved successfully.');
     } catch (error) {
       next(error);
     }

@@ -15,6 +15,7 @@ import {
 } from './validation';
 import { AppError } from '../../shared/middleware/errorHandler';
 
+import { sendSuccess } from '../../shared/utils/response';
 export class ServiceController {
   /**
    * GET /api/v1/services
@@ -28,13 +29,7 @@ export class ServiceController {
       const userRole = req.user?.role || 'PATIENT';
       const services = await serviceService.getServices(userRole, query);
 
-      res.status(200).json({
-        success: true,
-        data: services,
-        services,
-        total: services.length,
-        message: 'Medical services retrieved successfully.',
-      });
+      sendSuccess(res, services, 'Medical services retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -50,12 +45,7 @@ export class ServiceController {
       const userRole = req.user?.role || 'PATIENT';
       const service = await serviceService.getServiceById(serviceId, userRole);
 
-      res.status(200).json({
-        success: true,
-        data: service,
-        ...service,
-        message: 'Medical service retrieved successfully.',
-      });
+      sendSuccess(res, service, 'Medical service retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -77,12 +67,7 @@ export class ServiceController {
       const validatedInput = createServiceSchema.parse(req.body);
       const createdService = await serviceService.createService(req.user.userId, validatedInput);
 
-      res.status(201).json({
-        success: true,
-        data: createdService,
-        ...createdService,
-        message: 'Medical service created successfully.',
-      });
+      sendSuccess(res, createdService, 'Medical service created successfully.', 201);
     } catch (error) {
       next(error);
     }
@@ -96,16 +81,15 @@ export class ServiceController {
    */
   async updateService(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (!req.user?.userId) {
+        throw AppError.unauthorized('Authentication token is required.', 'UNAUTHORIZED');
+      }
+
       const serviceId = req.params.serviceId;
       const validatedInput = updateServiceSchema.parse(req.body);
-      const updatedService = await serviceService.updateService(serviceId, validatedInput);
+      const updatedService = await serviceService.updateService(req.user.userId, serviceId, validatedInput);
 
-      res.status(200).json({
-        success: true,
-        data: updatedService,
-        ...updatedService,
-        message: 'Medical service updated successfully.',
-      });
+      sendSuccess(res, updatedService, 'Medical service updated successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -133,12 +117,7 @@ export class ServiceController {
         validated.serviceStatus
       );
 
-      res.status(200).json({
-        success: true,
-        data: updatedService,
-        ...updatedService,
-        message: 'Medical service status updated successfully.',
-      });
+      sendSuccess(res, updatedService, 'Medical service status updated successfully.', 200);
     } catch (error) {
       next(error);
     }

@@ -8,7 +8,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldX, ArrowLeft, LogOut } from 'lucide-react';
-import { getRoleLandingPath } from '../../modules/auth/LoginPage';
+import { getRoleLandingPath } from '../utils';
 
 export const UnauthorizedPage: React.FC = () => {
   const { user, logout } = useAuth();

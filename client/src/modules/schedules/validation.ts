@@ -202,8 +202,15 @@ const isRealDate = (value: string): boolean => {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 };
 
-/** `today` is the clinic-local date (YYYY-MM-DD); past dates cannot be scheduled. */
-export function validateExceptionForm(values: ExceptionFormValues, today: string): ExceptionFormErrors {
+/**
+ * `today` is the clinic-local date (YYYY-MM-DD); past dates cannot be scheduled.
+ * `reasonRequired` is used for administrator overrides, which must carry an audit reason (SDS 6.1).
+ */
+export function validateExceptionForm(
+  values: ExceptionFormValues,
+  today: string,
+  options: { reasonRequired?: boolean } = {}
+): ExceptionFormErrors {
   const errors: ExceptionFormErrors = {};
 
   if (!values.exceptionDate) errors.exceptionDate = 'Date is required.';
@@ -221,7 +228,8 @@ export function validateExceptionForm(values: ExceptionFormValues, today: string
     if (!errors.startTime && !errors.endTime && start >= end) errors.endTime = 'End time must be after start time.';
   }
 
-  if (values.reason.trim().length > REASON_MAX_LENGTH)
+  if (options.reasonRequired && !values.reason.trim()) errors.reason = 'A reason is required for this change.';
+  else if (values.reason.trim().length > REASON_MAX_LENGTH)
     errors.reason = `Reason must not exceed ${REASON_MAX_LENGTH} characters.`;
 
   return errors;

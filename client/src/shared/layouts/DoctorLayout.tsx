@@ -66,7 +66,7 @@ export const DoctorLayout: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex flex-col text-right">
                 <span className="text-sm font-medium text-slate-800">
-                  {user?.fullName ? `Dr. ${user.fullName}` : 'Doctor'}
+                  {user?.fullName ? (/^dr\.?\s/i.test(user.fullName.trim()) ? user.fullName : `Dr. ${user.fullName}`) : 'Doctor'}
                 </span>
                 <span className="text-xs text-slate-500">{user?.email}</span>
               </div>

@@ -1,0 +1,18 @@
+$ npm run test:e2e   # Playwright: real Chromium + Express API + PostgreSQL 16.13
+
+Running 11 tests using 1 worker
+
+  ok  1 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:65:5 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › ADMIN signs in with the seeded account and lands in their own portal (751ms)
+  ok  2 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:65:5 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › DOCTOR signs in with the seeded account and lands in their own portal (657ms)
+  ok  3 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:65:5 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › PATIENT signs in with the seeded account and lands in their own portal (527ms)
+  ok  4 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:85:3 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › a wrong password is rejected with a clear message and no session (436ms)
+  ok  5 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:96:3 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › RBAC: an unauthenticated visitor opening /admin/doctors is sent to /login (301ms)
+  ok  6 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:102:3 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › RBAC: a PATIENT opening /admin/doctors is blocked and redirected away (611ms)
+  ok  7 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:122:3 › Journey 1 — Auth, RBAC & Patient Profile (F-001, F-002) › a PATIENT edits their own profile and the change is still there after a reload (PostgreSQL) (861ms)
+  ok  8 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:178:3 › Journey 2 — Admin Catalog & Doctor-Service Assignment (F-003, F-004, F-005) › ADMIN creates a service and assigns it to an ACTIVE doctor; a PATIENT sees only that doctor for it (1.6s)
+  ok  9 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:301:3 › Journey 3 — Doctor Self-Schedule, Overlap Rejection & Clinic Settings (F-006, F-007) › DOCTOR saves 09:00–12:00 and 13:00–17:00 and the shifts survive a reload (770ms)
+  ok 10 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:339:3 › Journey 3 — Doctor Self-Schedule, Overlap Rejection & Clinic Settings (F-006, F-007) › DOCTOR entering overlapping windows (09:00–13:00 + 12:00–16:00) is told so and nothing is saved (779ms)
+  ok 11 [chromium] › tests\sprint-1\e2e\sprint-1.spec.ts:383:3 › Journey 3 — Doctor Self-Schedule, Overlap Rejection & Clinic Settings (F-006, F-007) › ADMIN checks and updates the clinic settings (Asia/Bangkok) and they persist (680ms)
+
+  11 passed (11.9s)
+e2e exit=0

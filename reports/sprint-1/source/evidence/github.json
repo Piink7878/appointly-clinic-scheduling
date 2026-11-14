@@ -1,0 +1,293 @@
+{
+  "generatedAt": "2026-11-14T23:13:53.846Z",
+  "repo": "Piink7878/appointly-clinic-scheduling",
+  "repoUrl": "https://github.com/Piink7878/appointly-clinic-scheduling",
+  "issues": [
+    {
+      "number": 1,
+      "title": "Project Foundation & Monorepo Setup",
+      "state": "open",
+      "closed": null,
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/1"
+    },
+    {
+      "number": 2,
+      "title": "F-001 Authentication, Session & RBAC",
+      "state": "open",
+      "closed": null,
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/2"
+    },
+    {
+      "number": 3,
+      "title": "F-002 Patient Profile Management",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [
+        "sprint-1",
+        "feature",
+        "F-002"
+      ],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/3"
+    },
+    {
+      "number": 4,
+      "title": "F-003 Doctor Profile & Active Status Management",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/4"
+    },
+    {
+      "number": 5,
+      "title": "F-004 Medical Service Catalog Management",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/5"
+    },
+    {
+      "number": 6,
+      "title": "F-005 Doctor-Service Assignment (Core Journey A)",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/6"
+    },
+    {
+      "number": 7,
+      "title": "F-006 Doctor Self-Schedule Management (Core Journey B)",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/7"
+    },
+    {
+      "number": 8,
+      "title": "F-007 Admin Schedule Governance & Clinic Configuration",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/8"
+    },
+    {
+      "number": 9,
+      "title": "Sprint 1 Integration, E2E Verification & Release",
+      "state": "closed",
+      "closed": "2026-11-15",
+      "labels": [],
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/9"
+    }
+  ],
+  "prs": [
+    {
+      "number": 10,
+      "title": "[Sprint 1] [Setup] Issue #1 Project Foundation, Database & Health Endpoints",
+      "head": "chore/1-project-foundation",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-14",
+      "mergeCommit": "5e7f4a8e2bb541a18989a964f3959efbe222362b",
+      "files": 73,
+      "additions": 15615,
+      "deletions": 73,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/10"
+    },
+    {
+      "number": 11,
+      "title": "[Sprint 1] [F-001] Issue #2 Authentication, Session & RBAC",
+      "head": "feat/2-f001-auth-rbac",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-14",
+      "mergeCommit": "750e19d215a461fff488a4112a6432265526529c",
+      "files": 38,
+      "additions": 2689,
+      "deletions": 88,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/11"
+    },
+    {
+      "number": 12,
+      "title": "[Sprint 1] [F-002] Issue #3 Patient Profile Management",
+      "head": "feat/3-f002-patient-profile",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-14",
+      "mergeCommit": "1d6d81ff8f1b2e819b3a1ec07376b1c9a6caa114",
+      "files": 24,
+      "additions": 2412,
+      "deletions": 41,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/12"
+    },
+    {
+      "number": 13,
+      "title": "[Sprint 1] [F-003] Issue #4 Doctor Profile Management",
+      "head": "feat/4-f003-doctor-management",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-14",
+      "mergeCommit": "1ffd8bb2106b3fc808461774ecf6fe383304e610",
+      "files": 23,
+      "additions": 7924,
+      "deletions": 2985,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/13"
+    },
+    {
+      "number": 14,
+      "title": "[Sprint 1] [F-004] Issue #5 Medical Service Catalog Management",
+      "head": "feat/5-f004-service-catalog",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-14",
+      "mergeCommit": "2bca5c63234d56f7f3949c233bc51218a659e616",
+      "files": 21,
+      "additions": 3023,
+      "deletions": 53,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/14"
+    },
+    {
+      "number": 15,
+      "title": "[Sprint 1] [F-005] Issue #6 Doctor-Service Assignment",
+      "head": "feat/6-f005-doctor-service-assignment",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-14",
+      "mergeCommit": "8eb9de9109aa8a31a3fc454c8961fad754605dba",
+      "files": 12,
+      "additions": 1388,
+      "deletions": 120,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/15"
+    },
+    {
+      "number": 16,
+      "title": "[Sprint 1] [F-006] Issue #7 Doctor Self-Schedule Management",
+      "head": "feat/7-f006-doctor-schedule",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-15",
+      "mergeCommit": "9cb5160a98398dc386710e931e7cca466733df5f",
+      "files": 20,
+      "additions": 3827,
+      "deletions": 12,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/16"
+    },
+    {
+      "number": 17,
+      "title": "[Sprint 1] [F-007] Issue #8 Admin Schedule Governance & Clinic Configuration (+ full-project audit)",
+      "head": "feat/8-f007-admin-schedule-settings",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-15",
+      "mergeCommit": "7f3be8dbbc4542cb9cbb7aa4f3b8fb953723b4ae",
+      "files": 70,
+      "additions": 4452,
+      "deletions": 956,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/17"
+    },
+    {
+      "number": 18,
+      "title": "test(sprint-1): E2E verification, unit/integration split, lint and audit fixes (Refs #9)",
+      "head": "test/9-sprint1-e2e-verification",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-15",
+      "mergeCommit": "1cc1858701548674035747ec4bd63a63bf00f148",
+      "files": 102,
+      "additions": 4764,
+      "deletions": 513,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/18"
+    },
+    {
+      "number": 19,
+      "title": "fix(client): doctor header title duplication and clipped schedule time inputs (Refs #9)",
+      "head": "fix/9-ui-display-defects",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-15",
+      "mergeCommit": "dfbe752cda0374cd8d6c3f61eb682b413516e55e",
+      "files": 3,
+      "additions": 23,
+      "deletions": 3,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/19"
+    },
+    {
+      "number": 20,
+      "title": "release: Sprint 1 (v0.1.0-sprint1)",
+      "head": "sprint-1-staging",
+      "base": "main",
+      "merged": "2026-11-15",
+      "mergeCommit": "9808f9657a4200f5dddf49412a276fc874ff4175",
+      "files": 185,
+      "additions": 41412,
+      "deletions": 73,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/20"
+    },
+    {
+      "number": 21,
+      "title": "fix(client): sync client lockfile and declare @types/node so the Docker build passes (Refs #9)",
+      "head": "fix/9-client-lockfile-docker",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-15",
+      "mergeCommit": "09abe147a99782170ae6db183aa56f94eab78093",
+      "files": 3,
+      "additions": 66,
+      "deletions": 0,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/21"
+    }
+  ],
+  "ciRuns": [
+    {
+      "id": 43650900383,
+      "event": "pull_request",
+      "branch": "sprint-1-staging",
+      "sha": "09abe14",
+      "conclusion": "success",
+      "status": "completed",
+      "started": "2026-11-14T22:59:16Z",
+      "finished": "2026-11-14T23:00:38Z",
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43650900383"
+    },
+    {
+      "id": 43650477768,
+      "event": "pull_request",
+      "branch": "sprint-1-staging",
+      "sha": "dfbe752",
+      "conclusion": "failure",
+      "status": "completed",
+      "started": "2026-11-14T22:54:05Z",
+      "finished": "2026-11-14T22:55:26Z",
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43650477768"
+    },
+    {
+      "id": 43600187816,
+      "event": "pull_request",
+      "branch": "feat/4-f003-doctor-management",
+      "sha": "4b24afd",
+      "conclusion": "success",
+      "status": "completed",
+      "started": "2026-11-14T13:31:27Z",
+      "finished": "2026-11-14T13:33:06Z",
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43600187816"
+    },
+    {
+      "id": 43598734138,
+      "event": "pull_request",
+      "branch": "feat/4-f003-doctor-management",
+      "sha": "175971b",
+      "conclusion": "failure",
+      "status": "completed",
+      "started": "2026-11-14T13:14:07Z",
+      "finished": "2026-11-14T13:14:36Z",
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43598734138"
+    },
+    {
+      "id": 43598249295,
+      "event": "pull_request",
+      "branch": "feat/4-f003-doctor-management",
+      "sha": "11d35c4",
+      "conclusion": "failure",
+      "status": "completed",
+      "started": "2026-11-14T13:08:26Z",
+      "finished": "2026-11-14T13:08:58Z",
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43598249295"
+    }
+  ],
+  "release": {
+    "tag": "v0.1.0-sprint1",
+    "commit": "9808f9657a4200f5dddf49412a276fc874ff4175",
+    "shortCommit": "9808f96",
+    "date": "2026-11-15",
+    "message": "Merge pull request #20 from Piink7878/sprint-1-staging"
+  }
+}

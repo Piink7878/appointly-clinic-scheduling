@@ -1,0 +1,121 @@
+[
+  {
+    "file": "ui-01-login.png",
+    "url": "/login",
+    "caption": "Sign-in page (F-001)"
+  },
+  {
+    "file": "ui-02-login-wrong-password.png",
+    "url": "/login",
+    "caption": "Wrong password rejected with a clear message and no session (AC-F001-02)"
+  },
+  {
+    "file": "ui-03-patient-service-catalogue.png",
+    "url": "/patient/services",
+    "caption": "Patient service catalogue (F-004): only active services are listed"
+  },
+  {
+    "file": "ui-04-rbac-patient-blocked-admin.png",
+    "url": "/unauthorized",
+    "caption": "A PATIENT opening /admin/doctors is redirected to the 403 page (AC-F001-03)"
+  },
+  {
+    "file": "ui-05-patient-profile-saved.png",
+    "url": "/patient/profile",
+    "caption": "Patient edits their own profile and it is saved (AC-F002-01)"
+  },
+  {
+    "file": "ui-06-patient-profile-after-reload.png",
+    "url": "/patient/profile",
+    "caption": "After a page reload the profile is loaded again from PostgreSQL (AC-F002-01)"
+  },
+  {
+    "file": "ui-07-admin-patients.png",
+    "url": "/admin/patients",
+    "caption": "Administrator patient directory (F-002, administrator access only)"
+  },
+  {
+    "file": "ui-08-admin-doctors.png",
+    "url": "/admin/doctors",
+    "caption": "Administrator doctor management list with account status (F-003)"
+  },
+  {
+    "file": "ui-09-admin-service-create-form.png",
+    "url": "/admin/services",
+    "caption": "Administrator creates a medical service with a 30-minute duration (AC-F004-01)"
+  },
+  {
+    "file": "ui-10-admin-service-created.png",
+    "url": "/admin/services",
+    "caption": "The new service appears in the catalogue as Active (AC-F004-01)"
+  },
+  {
+    "file": "ui-11-admin-assign-service-to-doctor.png",
+    "url": "/admin/doctors",
+    "caption": "Administrator assigns the service to an active doctor (AC-F005-01)"
+  },
+  {
+    "file": "ui-12-patient-doctors-filtered-by-service.png",
+    "url": "/patient/doctors?serviceId=a5d1a97b-6114-4166-aad7-bc1ff6b0d7a8",
+    "caption": "A patient filtering by the new service sees only the doctor assigned to it (AC-F005-03)"
+  },
+  {
+    "file": "ui-13a-doctor-schedule-overlap-top.png",
+    "url": "/doctor/schedule",
+    "caption": "Top of the page: the error banner after pressing Save (AC-F006-02)",
+    "crop": "page y 0–314 of 2431 px"
+  },
+  {
+    "file": "ui-13b-doctor-schedule-overlap-saturday.png",
+    "url": "/doctor/schedule",
+    "caption": "Saturday: windows 09:00–13:00 and 12:00–16:00 are refused, the second window is marked, and nothing is saved (AC-F006-02)",
+    "crop": "page y 1518–1756 of 2431 px"
+  },
+  {
+    "file": "ui-14a-doctor-schedule-saved-top.png",
+    "url": "/doctor/schedule",
+    "caption": "Top of the page: confirmation after pressing Save (AC-F006-01)",
+    "crop": "page y 0–314 of 2411 px"
+  },
+  {
+    "file": "ui-14b-doctor-schedule-saved-saturday.png",
+    "url": "/doctor/schedule",
+    "caption": "Saturday: split shifts 09:00–12:00 and 13:00–17:00 are saved (AC-F006-01)",
+    "crop": "page y 1518–1736 of 2411 px"
+  },
+  {
+    "file": "ui-15-doctor-schedule-after-reload-saturday.png",
+    "url": "/doctor/schedule",
+    "caption": "After a page reload the Saturday shifts are loaded again from PostgreSQL (AC-F006-01)",
+    "crop": "page y 1445–1663 of 2339 px"
+  },
+  {
+    "file": "ui-16-doctor-holiday-exception.png",
+    "url": "/doctor/schedule",
+    "caption": "A full-day HOLIDAY exception (31 Dec 2026) is added to the doctor’s schedule (AC-F006-03)",
+    "crop": "page y 1681–2239 of 2299 px"
+  },
+  {
+    "file": "ui-17a-admin-doctor-schedules-top.png",
+    "url": "/admin/schedules",
+    "caption": "Administrator selects a doctor to view and override the schedule (AC-F007-03)",
+    "crop": "page y 0–376 of 2362 px"
+  },
+  {
+    "file": "ui-17b-admin-doctor-schedules-saturday.png",
+    "url": "/admin/schedules",
+    "caption": "The doctor’s Saturday shifts, saved earlier by the doctor, as the administrator sees them (AC-F007-03)",
+    "crop": "page y 1580–1798 of 2362 px"
+  },
+  {
+    "file": "ui-17c-admin-doctor-schedules-holiday.png",
+    "url": "/admin/schedules",
+    "caption": "The doctor’s holiday exception, also saved earlier by the doctor (AC-F007-03)",
+    "crop": "page y 2187–2297 of 2362 px"
+  },
+  {
+    "file": "ui-18-admin-settings-saved.png",
+    "url": "/admin/settings",
+    "caption": "Administrator updates the clinic settings (start interval 30 min, cancellation cutoff 12 h) (AC-F007-01)"
+  }
+]

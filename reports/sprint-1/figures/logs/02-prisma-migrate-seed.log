@@ -1,0 +1,30 @@
+$ npx prisma migrate reset --force   # fresh PostgreSQL 16.13 (postgres:16-alpine), migrations + seed
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "appointly_test", schema "public" at "localhost:5433"
+Applying migration `20261113172926_init_sprint1`
+Database reset successful
+The following migration(s) have been applied:
+migrations/
+  └─ 20261113172926_init_sprint1/
+    └─ migration.sql
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v5.22.0) to .\..\node_modules\@prisma\client in 93ms
+Running seed command `tsx prisma/seed.ts` ...
+Appointly database seed: Starting seeding process...
+Appointly database seed: Argon2 password hash generated.
+Appointly database seed: Seeded Admin user -> admin@appointly.local
+Appointly database seed: Seeded Doctor user & profile -> doctor@appointly.local (Dr. Somchai Prasert)
+Appointly database seed: Seeded secondary Doctor -> doctor.somchai@appointly.local
+Appointly database seed: Seeded Patient user & profile -> patient@appointly.local (Arisa Wongsuwan)
+Appointly database seed: Seeded secondary Patient -> patient.arisa@appointly.local
+Appointly database seed: Seeded Inactive user -> inactive@appointly.local
+Appointly database seed: Default ClinicSetting created.
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+Appointly database seed: Seeded Service -> Flu Vaccination (15m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Seeded 10 baseline weekly shifts for doctor.
+Appointly database seed: Successfully completed all seeding tasks! 🎉
+The seed command has been executed.

@@ -64,3 +64,9 @@ Thumbs.db
 *.run.xml
 *.synctex.gz
 *.toc
+
+# Report build output (generated) and test-runner caches
+reports/sprint-1/source/*.html
+.vite/
+!reports/sprint-1/figures/logs/
+!reports/sprint-1/figures/logs/*.log

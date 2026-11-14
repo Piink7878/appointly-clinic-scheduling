@@ -1,7 +1,7 @@
 // ==============================================================================
 // Appointly Server — Administrator Route Handler (RBAC Protected)
 // ==============================================================================
-// Reference: System-Level SDS Section 5.2, 6.2 & Sprint 1 Contracts (F-001)
+// Reference: System-Level SDS Section 5.2, 6.2 & Sprint 1 Contracts (F-001, F-003, F-005)
 // Enforces authGuard + roleGuard('ADMIN') across all /api/v1/admin/* routes.
 // ==============================================================================
 
@@ -9,6 +9,7 @@ import { Router } from 'express';
 import { authGuard, roleGuard } from '../shared/middleware';
 import { sendSuccess } from '../shared/utils/response';
 import { patientController } from '../modules/patients';
+import { doctorController } from '../modules/doctors';
 
 export const adminRouter = Router();
 
@@ -24,6 +25,23 @@ adminRouter.get('/patients', authGuard, roleGuard('ADMIN'), (req, res, next) =>
   patientController.getPatients(req, res, next)
 );
 
+/**
+ * Doctor Management Routes (F-003, F-005)
+ * Reference: System-Level SDS Section 3.2C, 3.2L, 5.2, 6 & Sprint 1 Contracts (F-003, F-005)
+ */
+adminRouter.get('/doctors', (req, res, next) => doctorController.getDoctors(req, res, next));
+adminRouter.post('/doctors', (req, res, next) => doctorController.createDoctor(req, res, next));
+adminRouter.put('/doctors/:doctorId', (req, res, next) => doctorController.updateDoctor(req, res, next));
+adminRouter.patch('/doctors/:doctorId/status', (req, res, next) =>
+  doctorController.updateDoctorStatus(req, res, next)
+);
+adminRouter.post('/doctors/:doctorId/services', (req, res, next) =>
+  doctorController.assignService(req, res, next)
+);
+adminRouter.delete('/doctors/:doctorId/services/:serviceId', (req, res, next) =>
+  doctorController.unassignService(req, res, next)
+);
+
 adminRouter.post('/services', (_req, res) => {
   sendSuccess(res, { service: {} }, 'Admin create service placeholder', 201);
 });
@@ -37,4 +55,3 @@ adminRouter.get('/dashboard', (_req, res) => {
 });
 
 export default adminRouter;
-

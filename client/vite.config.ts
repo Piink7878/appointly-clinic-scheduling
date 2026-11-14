@@ -16,6 +16,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // Playwright specs (tests/sprint-1/e2e/) have their own runner: `npm run test:e2e`.
+    exclude: ['tests/sprint-1/e2e/**', 'node_modules/**', 'dist/**'],
   },
 });
 

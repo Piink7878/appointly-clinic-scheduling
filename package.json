@@ -17,10 +17,17 @@
     "test:server": "npm run test --workspace=server",
     "test:client": "npm run test --workspace=client",
     "test": "npm run test --workspaces",
+    "test:e2e": "npm run test:e2e --workspace=client",
     "lint": "npm run lint --workspaces",
     "prisma:generate": "npm run prisma:generate --workspace=server",
     "prisma:migrate": "npm run prisma:migrate --workspace=server",
     "prisma:seed": "npm run prisma:seed --workspace=server"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.72.2"
   }
 }
-

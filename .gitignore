@@ -15,6 +15,10 @@ node_modules/
 # Production & Build outputs
 dist/
 build/
+
+# Playwright E2E output
+client/test-results/
+client/playwright-report/
 *.tsbuildinfo
 
 # Python bytecode & cache

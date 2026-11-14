@@ -1,0 +1,16 @@
+{
+  "name": "appointly-deliverable-1-draft",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Builds the CPE 334 Deliverable 1 draft PDF (HTML -> PDF through Playwright's Chromium). Not part of the npm workspaces.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans-thai": "5.3.0",
+    "highlight.js": "11.10.0",
+    "marked": "14.1.2"
+  }
+}

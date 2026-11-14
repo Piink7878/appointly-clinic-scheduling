@@ -1,0 +1,29 @@
+// server/src/shared/utils/security.ts, lines 110–137
+/**
+ * Attaches Access and Refresh tokens to HTTP response as secure cookies.
+ * Cookies use HttpOnly and SameSite=Strict.
+ * Secure flag is enabled only in production (or when explicitly configured).
+ */
+export function setAuthCookies(
+  res: Response,
+  accessToken: string,
+  refreshToken: string
+): void {
+  const isSecure = config.cookieSecure || config.nodeEnv === 'production';
+
+  res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: isSecure,
+    maxAge: ACCESS_TOKEN_TTL_MS,
+    path: '/',
+  });
+
+  res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: isSecure,
+    maxAge: REFRESH_TOKEN_TTL_MS,
+    path: '/',
+  });
+}

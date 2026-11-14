@@ -1,0 +1,128 @@
+$ npx vitest run   # server: unit + integration (real PostgreSQL 16.13)
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 <repo>/server
+
+stdout | tests/sprint-1/integration/doctors.test.ts > Doctor Management System (F-003, F-005) > 5. F-005 Doctor-Service Assignment & Filtered Retrieval > should reject duplicate assignment with 409 Conflict (DUPLICATE_ASSIGNMENT) (AC-F005-02)
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+<repo>\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+→ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+ ✓ tests/sprint-1/integration/doctors.test.ts (27 tests) 1414ms
+ ✓ tests/sprint-1/integration/services.test.ts (41 tests) 934ms
+ ✓ tests/sprint-1/integration/schedules.test.ts (22 tests) 676ms
+stdout | tests/sprint-1/integration/doctor-services.test.ts > Doctor-Service Assignment (F-005) > 2. AC-F005-02 (Negative — Duplicate Assignment, Missing Resources & RBAC) > re-submitting an existing (doctor, service) pair returns 409 DUPLICATE_ASSIGNMENT without a second row or audit entry
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+<repo>\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+→ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+stdout | tests/sprint-1/integration/doctor-services.test.ts > Doctor-Service Assignment (F-005) > 2. AC-F005-02 (Negative — Duplicate Assignment, Missing Resources & RBAC) > two concurrent identical requests: exactly one 201 and one 409 (database UNIQUE constraint / P2002)
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+<repo>\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+→ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+stdout | tests/sprint-1/integration/doctor-services.test.ts > Doctor-Service Assignment (F-005) > 2. AC-F005-02 (Negative — Duplicate Assignment, Missing Resources & RBAC) > a batch containing an already-assigned service fails with 409 and assigns nothing (atomic)
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+<repo>\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+→ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+ ✓ tests/sprint-1/integration/doctor-services.test.ts (30 tests) 1149ms
+ ✓ tests/sprint-1/integration/api-robustness.test.ts (91 tests) 1695ms
+ ✓ tests/sprint-1/integration/patients.test.ts (19 tests) 649ms
+ ✓ tests/sprint-1/integration/auth.test.ts (20 tests) 1310ms
+ ✓ tests/sprint-1/integration/admin-settings.test.ts (13 tests) 504ms
+ ✓ tests/sprint-1/integration/schedule-audit.test.ts (13 tests) 476ms
+stdout | tests/sprint-1/integration/audit-coverage.test.ts > AuditLog coverage for administrative actions > F-005 doctor-service assignment > assign writes DOCTOR_SERVICE_ASSIGNED once and unassign writes DOCTOR_SERVICE_UNASSIGNED once
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+<repo>\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+→ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+ ✓ tests/sprint-1/integration/audit-coverage.test.ts (11 tests) 558ms
+ ✓ tests/sprint-1/unit/scheduleValidator.test.ts (17 tests) 6ms
+stderr | tests/sprint-1/integration/health.test.ts > Server Foundation & Health Checks > GET /api/v1/ready should return 503 and db disconnected when DB query fails
+[ERROR] 2026-11-14T23:00:27.438Z - PostgreSQL database readiness check failed: {
+  name: 'Error',
+  message: 'Connection lost',
+  stack: 'Error: Connection lost\n' +
+    '    at <repo>\\server\\tests\\sprint-1\\integration\\health.test.ts:52:75\n' +
+    '    at file:///<repo>/node_modules/@vitest/runner/dist/index.js:146:14\n' +
+    '    at file:///<repo>/node_modules/@vitest/runner/dist/index.js:533:11\n' +
+    '    at runWithTimeout (file:///<repo>/node_modules/@vitest/runner/dist/index.js:39:7)\n' +
+    '    at runTest (file:///<repo>/node_modules/@vitest/runner/dist/index.js:1056:17)\n' +
+    '    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at runSuite (file:///<repo>/node_modules/@vitest/runner/dist/index.js:1205:15)\n' +
+    '    at runSuite (file:///<repo>/node_modules/@vitest/runner/dist/index.js:1205:15)\n' +
+    '    at runFiles (file:///<repo>/node_modules/@vitest/runner/dist/index.js:1262:5)\n' +
+    '    at startTests (file:///<repo>/node_modules/@vitest/runner/dist/index.js:1271:3)'
+}
+
+stderr | tests/sprint-1/integration/health.test.ts > Shared Middleware: Error Handling & Envelope > should format unexpected errors into 500 standardized error envelope without leaking stack
+[ERROR] 2026-11-14T23:00:27.457Z - Unhandled internal server error: {
+  name: 'Error',
+  message: 'Unexpected disk failure',
+  stack: 'Error: Unexpected disk failure\n' +
+    '    at <repo>\\server\\tests\\sprint-1\\integration\\health.test.ts:94:13\n' +
+    '    at Layer.handle [as handle_request] (<repo>\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (<repo>\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (<repo>\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (<repo>\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at <repo>\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at router.process_params (<repo>\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (<repo>\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (<repo>\\node_modules\\body-parser\\lib\\types\\json.js:117:7)\n' +
+    '    at Layer.handle [as handle_request] (<repo>\\node_modules\\express\\lib\\router\\layer.js:95:5)'
+}
+
+ ✓ tests/sprint-1/integration/health.test.ts (15 tests) 144ms
+ ✓ tests/sprint-1/integration/schedule-privacy.test.ts (9 tests) 646ms
+ ✓ tests/sprint-1/unit/security.test.ts (14 tests) 444ms
+ ✓ tests/sprint-1/integration/route-guards.test.ts (67 tests) 855ms
+ ✓ tests/sprint-1/integration/login-rate-limit.test.ts (7 tests) 3810ms
+   ✓ Login brute-force protection > locks an account with 429 TOO_MANY_REQUESTS after 10 failed attempts, with Retry-After 725ms
+   ✓ Login brute-force protection > keeps a locked account locked even for the CORRECT password (otherwise guessing could simply continue) 516ms
+   ✓ Login brute-force protection > a successful sign-in resets the count, so ordinary typos never accumulate 1057ms
+   ✓ Login brute-force protection > is case- and whitespace-insensitive about the e-mail (no bypass by changing the spelling) 567ms
+   ✓ Login brute-force protection > answers a locked-out attempt in the standard error envelope, and does not extend the lock by itself 561ms
+   ✓ Login brute-force protection > an unknown e-mail takes about as long as a wrong password (no account enumeration by timing) 303ms
+ ✓ tests/sprint-1/unit/shared-utils.test.ts (19 tests) 13ms
+ ✓ tests/sprint-1/integration/timezone-handling.test.ts (12 tests) 320ms
+ ✓ tests/sprint-1/unit/loginRateLimiter.test.ts (18 tests) 11ms
+ ✓ tests/sprint-1/unit/timezone.test.ts (35 tests) 25ms
+ ✓ tests/sprint-1/integration/settings-bounds.test.ts (4 tests) 237ms
+
+ Test Files  21 passed (21)
+      Tests  504 passed (504)
+   Start at  06:00:09
+   Duration  29.12s (transform 598ms, setup 0ms, collect 7.49s, tests 15.88s, environment 4ms, prepare 1.92s)
+
+server tests exit=0

@@ -1,0 +1,14 @@
+$ npm run lint
+
+> appointly-monorepo@1.0.0 lint
+> npm run lint --workspaces
+
+
+> appointly-client@1.0.0 lint
+> eslint . && tsc --noEmit
+
+
+> appointly-server@1.0.0 lint
+> eslint . && tsc -p tsconfig.lint.json
+
+lint exit=0

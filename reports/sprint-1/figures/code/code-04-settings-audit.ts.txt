@@ -1,0 +1,58 @@
+// server/src/modules/settings/service.ts, lines 65–121
+  /**
+   * Updates the ClinicSetting singleton and writes an AuditLog entry.
+   */
+  async updateSettings(input: UpdateSettingsInput, adminUserId?: string) {
+    return prisma.$transaction(async (tx) => {
+      const current = await this.getOrCreateSingleton(tx);
+
+      // Only fields that actually change are written. A PATCH that changes nothing
+      // (including 0 -> 0: zero is a real value, never "unset") neither writes nor audits.
+      const changedFields = SETTING_FIELDS.filter((f) => input[f] !== undefined && input[f] !== current[f]);
+      if (changedFields.length === 0) {
+        return current;
+      }
+
+      const updateData: Prisma.ClinicSettingUpdateInput = Object.fromEntries(
+        changedFields.map((f) => [f, input[f]])
+      );
+      if (adminUserId) {
+        updateData.updater = { connect: { userId: adminUserId } };
+      }
+
+      const updated = await tx.clinicSetting.update({
+        where: { settingId: current.settingId },
+        data: updateData,
+      });
+
+      if (adminUserId) {
+        await tx.auditLog.create({
+          data: {
+            userId: adminUserId,
+            actionType: 'CLINIC_SETTINGS_UPDATED',
+            entityType: 'ClinicSetting',
+            entityId: updated.settingId,
+            details: {
+              updatedFields: changedFields,
+              previous: {
+                clinicName: current.clinicName,
+                timezone: current.timezone,
+                fixedStartIntervalMinutes: current.fixedStartIntervalMinutes,
+                cancellationCutoffHours: current.cancellationCutoffHours,
+                reminderLeadHours: current.reminderLeadHours,
+              },
+              current: {
+                clinicName: updated.clinicName,
+                timezone: updated.timezone,
+                fixedStartIntervalMinutes: updated.fixedStartIntervalMinutes,
+                cancellationCutoffHours: updated.cancellationCutoffHours,
+                reminderLeadHours: updated.reminderLeadHours,
+              },
+            },
+          },
+        });
+      }
+
+      return updated;
+    });
+  }

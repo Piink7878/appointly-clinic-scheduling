@@ -1,0 +1,19 @@
+// server/src/modules/schedules/scheduleValidator.ts, lines 111–128
+/**
+ * Checks whether two shifts overlap strictly.
+ * Overlap condition:
+ *   existing.startTime < new.endTime && new.startTime < existing.endTime
+ * Back-to-back shifts (e.g. 09:00–12:00 and 12:00–15:00) share an endpoint and do NOT overlap.
+ */
+export function doShiftsOverlap(
+  shift1: { startTime: string; endTime: string },
+  shift2: { startTime: string; endTime: string }
+): boolean {
+  const s1 = parseTimeToSeconds(shift1.startTime);
+  const e1 = parseTimeToSeconds(shift1.endTime);
+  const s2 = parseTimeToSeconds(shift2.startTime);
+  const e2 = parseTimeToSeconds(shift2.endTime);
+
+  // Strict overlap condition: s1 < e2 && s2 < e1
+  return s1 < e2 && s2 < e1;
+}

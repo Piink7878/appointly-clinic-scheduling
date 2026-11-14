@@ -1,0 +1,6 @@
+$ # GREEN: rule restored (git checkout of the file)
+$ npx vitest run tests/sprint-1/unit/scheduleValidator.test.ts
+ ✓ tests/sprint-1/unit/scheduleValidator.test.ts (17 tests) 6ms
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Duration  393ms (transform 85ms, setup 0ms, collect 127ms, tests 6ms, environment 0ms, prepare 88ms)

@@ -12,6 +12,7 @@ import { patientController } from '../modules/patients';
 import { doctorController } from '../modules/doctors';
 import { serviceController } from '../modules/services';
 import { scheduleController } from '../modules/schedules';
+import { settingsController } from '../modules/settings';
 
 export const adminRouter = Router();
 
@@ -76,9 +77,12 @@ adminRouter.patch('/services/:serviceId/status', (req, res, next) =>
   serviceController.updateServiceStatus(req, res, next)
 );
 
-adminRouter.patch('/settings', (_req, res) => {
-  sendSuccess(res, { updated: true }, 'Admin settings update placeholder');
-});
+/**
+ * Clinic Settings Management Routes (F-007)
+ * Reference: System-Level SDS Section 3.2K, 3.2L, 5.2, 6 & Sprint 1 Contracts (F-007)
+ */
+adminRouter.get('/settings', (req, res, next) => settingsController.getSettings(req, res, next));
+adminRouter.patch('/settings', (req, res, next) => settingsController.updateSettings(req, res, next));
 
 adminRouter.get('/dashboard', (_req, res) => {
   sendSuccess(res, { status: 'admin_dashboard_ready' }, 'Admin dashboard placeholder');

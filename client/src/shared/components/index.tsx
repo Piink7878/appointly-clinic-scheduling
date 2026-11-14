@@ -8,3 +8,4 @@ export * from './Skeleton';
 export * from './StatusBadge';
 export * from './Modal';
 export * from './FormField';
+export * from './ComingSoonPage';

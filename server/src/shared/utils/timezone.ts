@@ -75,6 +75,33 @@ export function toBangkokDateString(utcDate: Date | string): string {
 }
 
 /**
+ * Resolves user input to the clinic-local CALENDAR date (YYYY-MM-DD), or null when invalid.
+ *  - "YYYY-MM-DD" is taken as that calendar date. It must be a real date: "2026-02-30"
+ *    is rejected instead of silently rolling over to 2026-03-02.
+ *  - A full timestamp (or Date) is converted to the Asia/Bangkok date it falls on, so
+ *    "2026-12-25T01:00:00+07:00" is 25 December, not the UTC date 24 December.
+ */
+export function parseClinicCalendarDate(input: string | Date): string | null {
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+    if (plain) {
+      const [year, month, day] = [Number(plain[1]), Number(plain[2]), Number(plain[3])];
+      const probe = new Date(Date.UTC(year, month - 1, day));
+      const isRealDate =
+        probe.getUTCFullYear() === year && probe.getUTCMonth() === month - 1 && probe.getUTCDate() === day;
+      return isRealDate ? trimmed : null;
+    }
+  }
+
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return null;
+  const year = date.getUTCFullYear();
+  if (year < 1900 || year > 9999) return null;
+  return toBangkokDateString(date);
+}
+
+/**
  * Returns formatted Time string (HH:mm:ss) in Bangkok local time.
  */
 export function toBangkokTimeString(utcDate: Date | string): string {

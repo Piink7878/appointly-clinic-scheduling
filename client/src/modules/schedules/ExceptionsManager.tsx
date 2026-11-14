@@ -13,8 +13,7 @@ import { CalendarOff, CalendarPlus, Trash2 } from 'lucide-react';
 import { ApiClientError } from '../../shared/api';
 import { AlertBanner, FormField, Modal } from '../../shared/components';
 import { getBangkokToday, toDateInputValue } from '../../shared/utils';
-import { createException, deleteException } from './api';
-import { ScheduleException } from './types';
+import { CreateExceptionInput, ScheduleException } from './types';
 import {
   EXCEPTION_TYPES,
   EXCEPTION_TYPE_LABELS,
@@ -30,8 +29,14 @@ import {
 
 export interface ExceptionsManagerProps {
   exceptions: ScheduleException[];
+  /** Performs the POST (own schedule for a doctor, or a chosen doctor's for an admin). */
+  createException: (input: CreateExceptionInput) => Promise<ScheduleException>;
+  /** Performs the DELETE. */
+  deleteException: (exceptionId: string) => Promise<void>;
   onCreated: (created: ScheduleException) => void;
   onDeleted: (exceptionId: string) => void;
+  /** Administrator overrides must carry an audit reason (SDS 6.1). */
+  reasonRequired?: boolean;
 }
 
 interface Feedback {
@@ -60,7 +65,14 @@ export const formatExceptionDate = (iso: string): string => {
   });
 };
 
-export const ExceptionsManager: React.FC<ExceptionsManagerProps> = ({ exceptions, onCreated, onDeleted }) => {
+export const ExceptionsManager: React.FC<ExceptionsManagerProps> = ({
+  exceptions,
+  createException,
+  deleteException,
+  onCreated,
+  onDeleted,
+  reasonRequired = false,
+}) => {
   const [values, setValues] = useState<ExceptionFormValues>(emptyExceptionForm);
   const [errors, setErrors] = useState<ExceptionFormErrors>({});
   const [saving, setSaving] = useState(false);
@@ -85,7 +97,7 @@ export const ExceptionsManager: React.FC<ExceptionsManagerProps> = ({ exceptions
     e.preventDefault();
     if (saving) return;
 
-    const found = validateExceptionForm(values, today);
+    const found = validateExceptionForm(values, today, { reasonRequired });
     if (Object.keys(found).length > 0) {
       setErrors(found);
       return;
@@ -249,7 +261,13 @@ export const ExceptionsManager: React.FC<ExceptionsManagerProps> = ({ exceptions
           </div>
         )}
 
-        <FormField id="exception-reason" label="Reason" error={errors.reason} hint="Optional.">
+        <FormField
+          id="exception-reason"
+          label="Reason"
+          required={reasonRequired}
+          error={errors.reason}
+          hint={reasonRequired ? 'Recorded in the audit log.' : 'Optional.'}
+        >
           {(describedBy) => (
             <input
               id="exception-reason"
@@ -259,6 +277,7 @@ export const ExceptionsManager: React.FC<ExceptionsManagerProps> = ({ exceptions
               onChange={(e) => setField('reason', e.target.value)}
               maxLength={REASON_MAX_LENGTH + 50}
               aria-invalid={Boolean(errors.reason)}
+              aria-required={reasonRequired ? 'true' : undefined}
               aria-describedby={describedBy}
               placeholder="e.g. National holiday, conference"
               className={inputClass(Boolean(errors.reason))}

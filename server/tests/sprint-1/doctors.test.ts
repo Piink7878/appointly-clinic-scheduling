@@ -17,6 +17,7 @@ import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/shared/database';
 
+import { cookiesOf } from '../helpers';
 describe('Doctor Management System (F-003, F-005)', () => {
   const validPassword = 'ChangeMe123!';
   const patientEmail = 'patient.arisa@appointly.local';
@@ -37,21 +38,21 @@ describe('Doctor Management System (F-003, F-005)', () => {
       .post('/api/v1/auth/login')
       .send({ email: patientEmail, password: validPassword });
     expect(patientLogin.status).toBe(200);
-    patientCookies = patientLogin.headers['set-cookie'];
+    patientCookies = cookiesOf(patientLogin);
 
     // 2. Authenticate doctor (doctor@appointly.local)
     const doctorLogin = await request(app)
       .post('/api/v1/auth/login')
       .send({ email: doctorEmail, password: validPassword });
     expect(doctorLogin.status).toBe(200);
-    doctorCookies = doctorLogin.headers['set-cookie'];
+    doctorCookies = cookiesOf(doctorLogin);
 
     // 3. Authenticate admin (admin@appointly.local)
     const adminLogin = await request(app)
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: validPassword });
     expect(adminLogin.status).toBe(200);
-    adminCookies = adminLogin.headers['set-cookie'];
+    adminCookies = cookiesOf(adminLogin);
     adminUserId = adminLogin.body.data.userId;
   });
 

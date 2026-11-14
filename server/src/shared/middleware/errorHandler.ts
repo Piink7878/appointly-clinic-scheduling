@@ -59,6 +59,15 @@ export class AppError extends Error {
   }
 }
 
+/** body-parser / http-errors `type` -> standard envelope (never leak parser internals). */
+const FRAMEWORK_ERRORS: Record<string, { status: number; code: string; message: string }> = {
+  'entity.too.large': { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'The request body is too large.' },
+  'entity.parse.failed': { status: 400, code: 'INVALID_JSON', message: 'Malformed JSON payload in request body.' },
+  'charset.unsupported': { status: 415, code: 'UNSUPPORTED_MEDIA_TYPE', message: 'Unsupported request charset.' },
+  'encoding.unsupported': { status: 415, code: 'UNSUPPORTED_MEDIA_TYPE', message: 'Unsupported request encoding.' },
+  'request.aborted': { status: 400, code: 'BAD_REQUEST', message: 'The request was aborted before it completed.' },
+  'request.size.invalid': { status: 400, code: 'BAD_REQUEST', message: 'The request body size is invalid.' },
+};
 /**
  * Global Express error handling middleware.
  */
@@ -99,6 +108,11 @@ export const errorHandler = (
       return;
     }
     // P2003: Foreign key constraint failed
+    if (err.code === 'P2023' || err.code === 'P2000' || err.code === 'P2020') {
+      // Malformed / out-of-range value reached the database (bad UUID text, string too long, number out of range).
+      sendError(res, 400, 'BAD_REQUEST', 'A supplied value has an invalid format or is out of range.');
+      return;
+    }
     if (err.code === 'P2003') {
       sendError(res, 400, 'BAD_REQUEST', 'Foreign key constraint violated on referenced entity.');
       return;
@@ -112,6 +126,20 @@ export const errorHandler = (
   }
 
   // 5. Unhandled Internal Server Errors
+  // 4xx errors raised by Express/body-parser (http-errors): payload too large, unsupported charset, aborted body…
+  const framework = err as { status?: unknown; statusCode?: unknown; type?: unknown };
+  const frameworkStatus = typeof framework.status === 'number' ? framework.status : framework.statusCode;
+  if (err instanceof Error && typeof frameworkStatus === 'number' && frameworkStatus >= 400 && frameworkStatus < 500) {
+    const known = FRAMEWORK_ERRORS[String(framework.type)];
+    sendError(
+      res,
+      known?.status ?? frameworkStatus,
+      known?.code ?? 'BAD_REQUEST',
+      known?.message ?? 'The request could not be processed.'
+    );
+    return;
+  }
+
   logger.error('Unhandled internal server error:', err);
   sendError(res, 500, 'INTERNAL_SERVER_ERROR', 'An unexpected internal error occurred.');
 };

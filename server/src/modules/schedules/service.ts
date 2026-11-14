@@ -8,15 +8,10 @@
 import { ExceptionType } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
+import { isValidUuid } from '../../shared/utils/uuid';
+import { parseClinicCalendarDate } from '../../shared/utils/timezone';
 import { scheduleValidator, ShiftInput, ExceptionInput } from './scheduleValidator';
 import { CreateExceptionInput } from './validation';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isValidUuid(id: string): boolean {
-  if (typeof id !== 'string') return false;
-  return UUID_REGEX.test(id.trim());
-}
 
 export class ScheduleService {
   /**
@@ -122,8 +117,8 @@ export class ScheduleService {
         });
       }
 
-      // Record AuditLog if action was performed by an Administrator
-      if (authorUserId && adminOverrideReason) {
+      // Record AuditLog if action was performed by an Administrator (Contract §1.7: ADMIN_SCHEDULE_UPDATE)
+      if (authorUserId) {
         await tx.auditLog.create({
           data: {
             userId: authorUserId,
@@ -131,7 +126,7 @@ export class ScheduleService {
             entityType: 'DoctorSchedule',
             entityId: doctorId,
             details: {
-              reason: adminOverrideReason,
+              reason: adminOverrideReason || 'ADMIN_SCHEDULE_UPDATE',
               shiftsCount: shifts.length,
             },
           },
@@ -178,50 +173,46 @@ export class ScheduleService {
     // 2. Validate exception window and types
     scheduleValidator.validateException(input as ExceptionInput);
 
-    // 3. Parse date
-    const dateStr =
-      input.exceptionDate instanceof Date
-        ? input.exceptionDate.toISOString().slice(0, 10)
-        : String(input.exceptionDate);
-
-    const parsedDate = new Date(
-      dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00.000Z`
-    );
-
-    if (isNaN(parsedDate.getTime())) {
-      throw AppError.badRequest('Invalid exceptionDate format.', 'INVALID_EXCEPTION_DATE');
+    // 3. Resolve the clinic-local calendar date (stored in a DATE column as that day at 00:00 UTC)
+    const dateStr = parseClinicCalendarDate(input.exceptionDate);
+    if (!dateStr) {
+      throw AppError.badRequest('Invalid exceptionDate: expected a real calendar date (YYYY-MM-DD).', 'INVALID_EXCEPTION_DATE');
     }
+    const parsedDate = new Date(`${dateStr}T00:00:00.000Z`);
 
-    // 4. Create ScheduleException
-    const createdException = await prisma.scheduleException.create({
-      data: {
-        doctorId,
-        exceptionDate: parsedDate,
-        startTime: input.startTime ? input.startTime.trim() : null,
-        endTime: input.endTime ? input.endTime.trim() : null,
-        exceptionType: input.exceptionType as ExceptionType,
-        reason: input.reason ? input.reason.trim() : null,
-        createdBy: authorUserId,
-      },
-    });
-
-    // 5. Audit logging for administrative exceptions
-    if (isAdmin) {
-      await prisma.auditLog.create({
+    // 4. Create the ScheduleException; an administrator's override is audited in the same transaction
+    const createdException = await prisma.$transaction(async (tx) => {
+      const created = await tx.scheduleException.create({
         data: {
-          userId: authorUserId,
-          actionType: 'ADMIN_SCHEDULE_EXCEPTION_CREATED',
-          entityType: 'ScheduleException',
-          entityId: createdException.exceptionId,
-          details: {
-            doctorId,
-            exceptionDate: dateStr,
-            exceptionType: input.exceptionType,
-            reason: input.reason || null,
-          },
+          doctorId,
+          exceptionDate: parsedDate,
+          startTime: input.startTime ? input.startTime.trim() : null,
+          endTime: input.endTime ? input.endTime.trim() : null,
+          exceptionType: input.exceptionType as ExceptionType,
+          reason: input.reason ? input.reason.trim() : null,
+          createdBy: authorUserId,
         },
       });
-    }
+
+      if (isAdmin) {
+        await tx.auditLog.create({
+          data: {
+            userId: authorUserId,
+            actionType: 'ADMIN_SCHEDULE_EXCEPTION_CREATED',
+            entityType: 'ScheduleException',
+            entityId: created.exceptionId,
+            details: {
+              doctorId,
+              exceptionDate: dateStr,
+              exceptionType: input.exceptionType,
+              reason: input.reason || null,
+            },
+          },
+        });
+      }
+
+      return created;
+    });
 
     return createdException;
   }
@@ -255,21 +246,23 @@ export class ScheduleService {
       throw AppError.notFound('Schedule exception not found.', 'EXCEPTION_NOT_FOUND');
     }
 
-    await prisma.scheduleException.delete({
-      where: { exceptionId },
-    });
-
-    if (isAdmin && authorUserId) {
-      await prisma.auditLog.create({
-        data: {
-          userId: authorUserId,
-          actionType: 'ADMIN_SCHEDULE_EXCEPTION_DELETED',
-          entityType: 'ScheduleException',
-          entityId: exceptionId,
-          details: { doctorId: exception.doctorId },
-        },
+    await prisma.$transaction(async (tx) => {
+      await tx.scheduleException.delete({
+        where: { exceptionId },
       });
-    }
+
+      if (isAdmin && authorUserId) {
+        await tx.auditLog.create({
+          data: {
+            userId: authorUserId,
+            actionType: 'ADMIN_SCHEDULE_EXCEPTION_DELETED',
+            entityType: 'ScheduleException',
+            entityId: exceptionId,
+            details: { doctorId: exception.doctorId },
+          },
+        });
+      }
+    });
 
     return {
       deleted: true,

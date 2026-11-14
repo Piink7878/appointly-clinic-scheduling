@@ -15,7 +15,6 @@ import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/shared/database';
 import {
-  scheduleValidator,
   isValidTimeFormat,
   parseTimeToSeconds,
   validateTimeWindow,
@@ -25,6 +24,7 @@ import {
 } from '../../src/modules/schedules/scheduleValidator';
 import { AppError } from '../../src/shared/middleware/errorHandler';
 
+import { cookiesOf } from '../helpers';
 describe('Doctor Schedule Management System (F-006, F-007)', () => {
   const validPassword = 'ChangeMe123!';
   const doctorEmail = 'doctor@appointly.local';
@@ -38,9 +38,7 @@ describe('Doctor Schedule Management System (F-006, F-007)', () => {
   let adminCookies: string[];
 
   let doctorUser: { userId: string; email: string };
-  let secondDoctorUser: { userId: string; email: string };
   let primaryDoctorId: string;
-  let secondDoctorId: string;
   let adminUserId: string;
 
   // Track created exceptions for cleanup
@@ -52,7 +50,7 @@ describe('Doctor Schedule Management System (F-006, F-007)', () => {
       .post('/api/v1/auth/login')
       .send({ email: doctorEmail, password: validPassword });
     expect(doctorLogin.status).toBe(200);
-    doctorCookies = doctorLogin.headers['set-cookie'];
+    doctorCookies = cookiesOf(doctorLogin);
     doctorUser = doctorLogin.body.data;
 
     // Resolve primary doctorId from database
@@ -67,28 +65,21 @@ describe('Doctor Schedule Management System (F-006, F-007)', () => {
       .post('/api/v1/auth/login')
       .send({ email: secondDoctorEmail, password: validPassword });
     expect(secondDoctorLogin.status).toBe(200);
-    secondDoctorCookies = secondDoctorLogin.headers['set-cookie'];
-    secondDoctorUser = secondDoctorLogin.body.data;
-
-    const secondDocProfile = await prisma.doctor.findUnique({
-      where: { userId: secondDoctorUser.userId },
-    });
-    expect(secondDocProfile).toBeDefined();
-    secondDoctorId = secondDocProfile!.doctorId;
+    secondDoctorCookies = cookiesOf(secondDoctorLogin);
 
     // 3. Authenticate patient (patient.arisa@appointly.local)
     const patientLogin = await request(app)
       .post('/api/v1/auth/login')
       .send({ email: patientEmail, password: validPassword });
     expect(patientLogin.status).toBe(200);
-    patientCookies = patientLogin.headers['set-cookie'];
+    patientCookies = cookiesOf(patientLogin);
 
     // 4. Authenticate admin (admin@appointly.local)
     const adminLogin = await request(app)
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: validPassword });
     expect(adminLogin.status).toBe(200);
-    adminCookies = adminLogin.headers['set-cookie'];
+    adminCookies = cookiesOf(adminLogin);
     adminUserId = adminLogin.body.data.userId;
   });
 
@@ -654,6 +645,102 @@ describe('Doctor Schedule Management System (F-006, F-007)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.doctorId).toBe(primaryDoctorId);
       expect(res.body.data.weeklySchedules).toBeDefined();
+      expect(res.body.data.exceptions).toBeDefined();
+    });
+
+    it('GET /api/v1/admin/doctors/:doctorId/schedule returns 404 Not Found if doctorId is not found', async () => {
+      const nonExistentUuid = '00000000-0000-0000-0000-000000000000';
+      const res = await request(app)
+        .get(`/api/v1/admin/doctors/${nonExistentUuid}/schedule`)
+        .set('Cookie', adminCookies);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+
+      const invalidIdRes = await request(app)
+        .get('/api/v1/admin/doctors/invalid-not-uuid/schedule')
+        .set('Cookie', adminCookies);
+
+      expect(invalidIdRes.status).toBe(404);
+      expect(invalidIdRes.body.success).toBe(false);
+    });
+
+    it('Admin updates schedule via PUT /api/v1/admin/doctors/:doctorId/schedule with { schedules } and records an ADMIN_SCHEDULE_UPDATE AuditLog', async () => {
+      const payload = {
+        schedules: [
+          { dayOfWeek: 2, startTime: '09:00', endTime: '12:00' },
+          { dayOfWeek: 2, startTime: '13:00', endTime: '17:00' },
+        ],
+      };
+
+      const res = await request(app)
+        .put(`/api/v1/admin/doctors/${primaryDoctorId}/schedule`)
+        .set('Cookie', adminCookies)
+        .send(payload);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.weeklySchedules).toHaveLength(2);
+
+      // Verify AuditLog record with actionType ADMIN_SCHEDULE_UPDATE
+      const auditLog = await prisma.auditLog.findFirst({
+        where: {
+          actionType: 'ADMIN_SCHEDULE_UPDATE',
+          entityId: primaryDoctorId,
+          userId: adminUserId,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(auditLog).not.toBeNull();
+      expect(auditLog?.actionType).toBe('ADMIN_SCHEDULE_UPDATE');
+    });
+
+    it('PUT /api/v1/admin/doctors/:doctorId/schedule rejects overlapping shifts with 422 INVALID_SCHEDULE_WINDOW', async () => {
+      const payload = {
+        schedules: [
+          { dayOfWeek: 1, startTime: '09:00', endTime: '13:00' },
+          { dayOfWeek: 1, startTime: '12:00', endTime: '16:00' },
+        ],
+      };
+
+      const res = await request(app)
+        .put(`/api/v1/admin/doctors/${primaryDoctorId}/schedule`)
+        .set('Cookie', adminCookies)
+        .send(payload);
+
+      expect(res.status).toBe(422);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('INVALID_SCHEDULE_WINDOW');
+    });
+
+    it('PUT /api/v1/admin/doctors/:doctorId/schedule rejects inverted window (startTime >= endTime) with 422 INVALID_SCHEDULE_WINDOW', async () => {
+      const payload = {
+        schedules: [
+          { dayOfWeek: 1, startTime: '15:00', endTime: '10:00' },
+        ],
+      };
+
+      const res = await request(app)
+        .put(`/api/v1/admin/doctors/${primaryDoctorId}/schedule`)
+        .set('Cookie', adminCookies)
+        .send(payload);
+
+      expect(res.status).toBe(422);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('INVALID_SCHEDULE_WINDOW');
+    });
+
+    it('PUT /api/v1/admin/doctors/:doctorId/schedule returns 404 Not Found if doctorId is not found', async () => {
+      const nonExistentUuid = '00000000-0000-0000-0000-000000000000';
+      const res = await request(app)
+        .put(`/api/v1/admin/doctors/${nonExistentUuid}/schedule`)
+        .set('Cookie', adminCookies)
+        .send({
+          schedules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '12:00' }],
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
     });
 
     it('Admin overrides doctor schedule via PUT /api/v1/admin/doctors/:doctorId/schedule and records an AuditLog entry', async () => {
@@ -706,15 +793,45 @@ describe('Doctor Schedule Management System (F-006, F-007)', () => {
       expect(res.body.data.exceptionId).toBeDefined();
       createdExceptionIds.push(res.body.data.exceptionId);
 
-      // Verify AuditLog record
-      const auditLog = await prisma.auditLog.findFirst({
-        where: {
-          actionType: 'ADMIN_SCHEDULE_EXCEPTION_CREATED',
-          entityId: res.body.data.exceptionId,
-          userId: adminUserId,
-        },
+      // Verify exactly one AuditLog record with ADMIN_SCHEDULE_EXCEPTION_CREATED
+      const auditRows = await prisma.auditLog.findMany({
+        where: { entityId: res.body.data.exceptionId, userId: adminUserId },
       });
-      expect(auditLog).toBeDefined();
+      expect(auditRows.map((r) => r.actionType)).toEqual(['ADMIN_SCHEDULE_EXCEPTION_CREATED']);
+    });
+
+    it('Admin creates a full-day HOLIDAY exception for a doctor via POST /api/v1/admin/doctors/:doctorId/exceptions', async () => {
+      const payload = {
+        exceptionDate: '2026-12-31',
+        exceptionType: 'HOLIDAY',
+        reason: "New Year's Eve Clinic Closure",
+      };
+
+      const res = await request(app)
+        .post(`/api/v1/admin/doctors/${primaryDoctorId}/exceptions`)
+        .set('Cookie', adminCookies)
+        .send(payload);
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.exceptionId).toBeDefined();
+      expect(res.body.data.startTime).toBeNull();
+      expect(res.body.data.endTime).toBeNull();
+      createdExceptionIds.push(res.body.data.exceptionId);
+    });
+
+    it('POST /api/v1/admin/doctors/:doctorId/exceptions returns 404 Not Found if doctorId is not found', async () => {
+      const nonExistentUuid = '00000000-0000-0000-0000-000000000000';
+      const res = await request(app)
+        .post(`/api/v1/admin/doctors/${nonExistentUuid}/exceptions`)
+        .set('Cookie', adminCookies)
+        .send({
+          exceptionDate: '2026-12-25',
+          exceptionType: 'HOLIDAY',
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
     });
 
     it('Doctor calling PUT /api/v1/admin/doctors/:doctorId/schedule receives 403 Forbidden', async () => {

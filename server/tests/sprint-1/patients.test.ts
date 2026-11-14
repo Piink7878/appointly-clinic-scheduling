@@ -14,6 +14,7 @@ import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/shared/database';
 
+import { cookiesOf } from '../helpers';
 describe('Patient Management System (F-002)', () => {
   const validPassword = 'ChangeMe123!';
   const patientEmail = 'patient.arisa@appointly.local';
@@ -22,7 +23,6 @@ describe('Patient Management System (F-002)', () => {
   const adminEmail = 'admin@appointly.local';
 
   let patientCookies: string[];
-  let secondPatientCookies: string[];
   let doctorCookies: string[];
   let adminCookies: string[];
 
@@ -35,7 +35,7 @@ describe('Patient Management System (F-002)', () => {
       .post('/api/v1/auth/login')
       .send({ email: patientEmail, password: validPassword });
     expect(patientLogin.status).toBe(200);
-    patientCookies = patientLogin.headers['set-cookie'];
+    patientCookies = cookiesOf(patientLogin);
     patientUser = patientLogin.body.data;
 
     // 2. Authenticate second patient (patient@appointly.local)
@@ -43,7 +43,6 @@ describe('Patient Management System (F-002)', () => {
       .post('/api/v1/auth/login')
       .send({ email: secondPatientEmail, password: validPassword });
     expect(secondLogin.status).toBe(200);
-    secondPatientCookies = secondLogin.headers['set-cookie'];
     secondPatientUser = secondLogin.body.data;
 
     // 3. Authenticate doctor (doctor@appointly.local)
@@ -51,14 +50,14 @@ describe('Patient Management System (F-002)', () => {
       .post('/api/v1/auth/login')
       .send({ email: doctorEmail, password: validPassword });
     expect(doctorLogin.status).toBe(200);
-    doctorCookies = doctorLogin.headers['set-cookie'];
+    doctorCookies = cookiesOf(doctorLogin);
 
     // 4. Authenticate admin (admin@appointly.local)
     const adminLogin = await request(app)
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: validPassword });
     expect(adminLogin.status).toBe(200);
-    adminCookies = adminLogin.headers['set-cookie'];
+    adminCookies = cookiesOf(adminLogin);
   });
 
   // ============================================================================

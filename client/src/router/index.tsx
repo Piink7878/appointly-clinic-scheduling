@@ -11,17 +11,16 @@ import { MainLayout, PatientLayout, DoctorLayout, AdminLayout } from '../shared/
 import { ProtectedRoute } from '../shared/components/ProtectedRoute';
 import { LoginPage } from '../modules/auth/LoginPage';
 import { UnauthorizedPage } from '../shared/components/UnauthorizedPage';
-import { PatientServicesPage } from '../modules/patients/PatientServicesPage';
+import { ComingSoonPage } from '../shared/components/ComingSoonPage';
 import { PatientProfilePage } from '../modules/patients/PatientProfilePage';
 import { AdminPatientsPage } from '../modules/patients/AdminPatientsPage';
-import { DoctorSchedulePage } from '../modules/doctors/DoctorSchedulePage';
 import { DoctorScheduleManagerPage } from '../modules/schedules/DoctorScheduleManagerPage';
 import { AdminDoctorsPage } from '../modules/doctors/AdminDoctorsPage';
 import { PatientDoctorsPage } from '../modules/doctors/PatientDoctorsPage';
 import { AdminServicesPage } from '../modules/services/AdminServicesPage';
 import { PatientServiceCatalogPage } from '../modules/services/PatientServiceCatalogPage';
-// Placeholder landing page still used by admin sections that are not built yet.
-import { AdminDoctorsPage as AdminPlaceholderPage } from '../modules/admin/AdminDoctorsPage';
+import { AdminSchedulesPage } from '../modules/schedules/AdminSchedulesPage';
+import { AdminSettingsPage } from '../modules/settings/AdminSettingsPage';
 
 export const AppRouter: React.FC = () => {
   return (
@@ -69,7 +68,17 @@ export const AppRouter: React.FC = () => {
             <Route index element={<Navigate to="/patient/services" replace />} />
             <Route path="services" element={<PatientServiceCatalogPage />} />
             <Route path="doctors" element={<PatientDoctorsPage />} />
-            <Route path="appointments" element={<PatientServicesPage />} />
+            <Route
+              path="appointments"
+              element={
+                <ComingSoonPage
+                  title="My Appointments"
+                  description="Booking, rescheduling and cancelling appointments arrives in the next release."
+                  backTo="/patient/doctors"
+                  backLabel="Browse doctors"
+                />
+              }
+            />
             <Route path="profile" element={<PatientProfilePage />} />
           </Route>
         </Route>
@@ -81,7 +90,17 @@ export const AppRouter: React.FC = () => {
           <Route path="/doctor" element={<DoctorLayout />}>
             <Route index element={<Navigate to="/doctor/schedule" replace />} />
             <Route path="schedule" element={<DoctorScheduleManagerPage />} />
-            <Route path="appointments" element={<DoctorSchedulePage />} />
+            <Route
+              path="appointments"
+              element={
+                <ComingSoonPage
+                  title="My Appointments"
+                  description="Your daily and weekly appointment dashboard arrives in the next release."
+                  backTo="/doctor/schedule"
+                  backLabel="Open my schedule"
+                />
+              }
+            />
           </Route>
         </Route>
 
@@ -93,8 +112,8 @@ export const AppRouter: React.FC = () => {
             <Route index element={<Navigate to="/admin/doctors" replace />} />
             <Route path="doctors" element={<AdminDoctorsPage />} />
             <Route path="services" element={<AdminServicesPage />} />
-            <Route path="schedules" element={<AdminPlaceholderPage />} />
-            <Route path="settings" element={<AdminPlaceholderPage />} />
+            <Route path="schedules" element={<AdminSchedulesPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="patients" element={<AdminPatientsPage />} />
           </Route>
         </Route>

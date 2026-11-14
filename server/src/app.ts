@@ -13,6 +13,7 @@ import fs from 'fs';
 import { config } from './shared/config';
 import { prisma } from './shared/database';
 import { logger } from './shared/utils/logger';
+import { sendError } from './shared/utils/response';
 import { errorHandler } from './shared/middleware';
 import { apiRouter } from './routes';
 
@@ -48,6 +49,10 @@ app.get('/api/ready', async (_req, res) => {
 });
 
 // Production SPA Static File Serving (from /app/client/dist or local client/dist)
+// Any other /api path is an unknown endpoint: answer with the standard error envelope, not an HTML page.
+app.use('/api', (_req, res) => {
+  sendError(res, 404, 'NOT_FOUND', 'The requested API endpoint does not exist.');
+});
 const clientDistPath = path.resolve(__dirname, '../../client/dist');
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));

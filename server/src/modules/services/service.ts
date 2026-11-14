@@ -9,17 +9,13 @@
 import { Prisma, ServiceStatus } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
+import { isValidUuid } from '../../shared/utils/uuid';
+import { isUniqueViolation } from '../../shared/utils/prismaErrors';
 import {
   CreateServiceInput,
   UpdateServiceInput,
   GetServicesQueryInput,
 } from './validation';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isValidUuid(id: string): boolean {
-  return UUID_REGEX.test(id);
-}
 
 export class ServiceService {
   /**
@@ -146,6 +142,14 @@ export class ServiceService {
       });
 
       return service;
+    }).catch((error: unknown) => {
+      if (isUniqueViolation(error)) {
+        throw AppError.conflict(
+          `A medical service with name '${trimmedName}' already exists.`,
+          'SERVICE_NAME_EXISTS'
+        );
+      }
+      throw error;
     });
   }
 
@@ -153,7 +157,7 @@ export class ServiceService {
    * Updates an existing medical service (serviceName, description, durationMinutes).
    * Requires: roleGuard('ADMIN')
    */
-  async updateService(serviceId: string, input: UpdateServiceInput) {
+  async updateService(adminUserId: string, serviceId: string, input: UpdateServiceInput) {
     if (!isValidUuid(serviceId)) {
       throw AppError.notFound('Medical service not found.', 'SERVICE_NOT_FOUND');
     }
@@ -188,16 +192,50 @@ export class ServiceService {
       );
     }
 
-    const updated = await prisma.medicalService.update({
-      where: { serviceId },
-      data: {
-        serviceName: trimmedName,
-        description: input.description !== undefined ? input.description : existing.description,
-        durationMinutes: input.durationMinutes !== undefined ? input.durationMinutes : existing.durationMinutes,
-      },
-    });
+    const next = {
+      serviceName: trimmedName,
+      description: input.description !== undefined ? input.description : existing.description,
+      durationMinutes: input.durationMinutes !== undefined ? input.durationMinutes : existing.durationMinutes,
+    };
+    const previous = {
+      serviceName: existing.serviceName,
+      description: existing.description,
+      durationMinutes: existing.durationMinutes,
+    };
+    const changed =
+      previous.serviceName !== next.serviceName ||
+      previous.description !== next.description ||
+      previous.durationMinutes !== next.durationMinutes;
 
-    return updated;
+    // The change and its AuditLog entry (SERVICE_UPDATED) are one atomic unit.
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const row = await tx.medicalService.update({ where: { serviceId }, data: next });
+
+        if (changed) {
+          await tx.auditLog.create({
+            data: {
+              userId: adminUserId,
+              actionType: 'SERVICE_UPDATED',
+              entityType: 'MedicalService',
+              entityId: serviceId,
+              details: { previous, current: next },
+            },
+          });
+        }
+
+        return row;
+      });
+    } catch (error) {
+      // A concurrent rename won the UNIQUE(service_name) race.
+      if (isUniqueViolation(error)) {
+        throw AppError.conflict(
+          `A medical service with name '${trimmedName}' already exists.`,
+          'SERVICE_NAME_EXISTS'
+        );
+      }
+      throw error;
+    }
   }
 
   /**

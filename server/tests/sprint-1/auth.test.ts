@@ -11,6 +11,7 @@ import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/shared/database';
 
+import { cookiesOf } from '../helpers';
 describe('Auth & RBAC System (F-001)', () => {
   const validPassword = 'ChangeMe123!';
   const adminEmail = 'admin@appointly.local';
@@ -56,7 +57,7 @@ describe('Auth & RBAC System (F-001)', () => {
         expect(loginRes.body.data.userId).toBeDefined();
 
         // 2. Validate HttpOnly and SameSite=Strict cookies
-        const cookies = loginRes.headers['set-cookie'];
+        const cookies = cookiesOf(loginRes);
         expect(cookies).toBeDefined();
         const cookieStr = cookies.join(';');
         expect(cookieStr).toContain('access_token=');
@@ -91,7 +92,7 @@ describe('Auth & RBAC System (F-001)', () => {
         expect(logoutRes.body.success).toBe(true);
 
         // Verify cookies are expired in the response
-        const clearCookies = logoutRes.headers['set-cookie'];
+        const clearCookies = cookiesOf(logoutRes);
         expect(clearCookies).toBeDefined();
         const clearCookieStr = clearCookies.join(';');
         expect(clearCookieStr).toMatch(/access_token=;.*expires=/i);
@@ -193,17 +194,17 @@ describe('Auth & RBAC System (F-001)', () => {
       const pLogin = await request(app)
         .post('/api/v1/auth/login')
         .send({ email: patientEmail, password: validPassword });
-      patientCookies = pLogin.headers['set-cookie'];
+      patientCookies = cookiesOf(pLogin);
 
       const dLogin = await request(app)
         .post('/api/v1/auth/login')
         .send({ email: doctorEmail, password: validPassword });
-      doctorCookies = dLogin.headers['set-cookie'];
+      doctorCookies = cookiesOf(dLogin);
 
       const aLogin = await request(app)
         .post('/api/v1/auth/login')
         .send({ email: adminEmail, password: validPassword });
-      adminCookies = aLogin.headers['set-cookie'];
+      adminCookies = cookiesOf(aLogin);
     });
 
     it('should return 401 Unauthorized when requesting GET /api/v1/auth/me without cookies', async () => {
@@ -363,19 +364,19 @@ describe('Auth & RBAC System (F-001)', () => {
         .post('/api/v1/auth/login')
         .send({ email: patientEmail, password: validPassword });
 
-      const initialCookies = loginRes.headers['set-cookie'];
+      const initialCookies = cookiesOf(loginRes);
       const refreshCookie = initialCookies.find((c: string) => c.startsWith('refresh_token='));
       expect(refreshCookie).toBeDefined();
 
       const refreshRes = await request(app)
         .post('/api/v1/auth/refresh')
-        .set('Cookie', [refreshCookie]);
+        .set('Cookie', [refreshCookie as string]);
 
       expect(refreshRes.status).toBe(200);
       expect(refreshRes.body.success).toBe(true);
       expect(refreshRes.body.data.email).toBe(patientEmail);
 
-      const newCookies = refreshRes.headers['set-cookie'];
+      const newCookies = cookiesOf(refreshRes);
       expect(newCookies).toBeDefined();
       const newCookieStr = newCookies.join(';');
       expect(newCookieStr).toContain('access_token=');

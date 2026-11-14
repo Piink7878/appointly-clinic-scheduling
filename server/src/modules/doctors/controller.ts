@@ -16,6 +16,7 @@ import {
 } from './validation';
 import { AppError } from '../../shared/middleware/errorHandler';
 
+import { sendSuccess } from '../../shared/utils/response';
 export class DoctorController {
   /**
    * GET /api/v1/doctors
@@ -29,13 +30,7 @@ export class DoctorController {
       const userRole = req.user?.role || 'PATIENT';
       const doctors = await doctorService.getDoctors(userRole, query);
 
-      res.status(200).json({
-        success: true,
-        data: doctors,
-        doctors,
-        total: doctors.length,
-        message: 'Doctors retrieved successfully.',
-      });
+      sendSuccess(res, doctors, 'Doctors retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -51,12 +46,7 @@ export class DoctorController {
       const userRole = req.user?.role || 'PATIENT';
       const doctor = await doctorService.getDoctorById(doctorId, userRole);
 
-      res.status(200).json({
-        success: true,
-        data: doctor,
-        ...doctor,
-        message: 'Doctor profile retrieved successfully.',
-      });
+      sendSuccess(res, doctor, 'Doctor profile retrieved successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -77,12 +67,7 @@ export class DoctorController {
       const validatedInput = createDoctorSchema.parse(req.body);
       const createdDoctor = await doctorService.createDoctor(req.user.userId, validatedInput);
 
-      res.status(201).json({
-        success: true,
-        data: createdDoctor,
-        ...createdDoctor,
-        message: 'Doctor profile created successfully.',
-      });
+      sendSuccess(res, createdDoctor, 'Doctor profile created successfully.', 201);
     } catch (error) {
       next(error);
     }
@@ -95,16 +80,15 @@ export class DoctorController {
    */
   async updateDoctor(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (!req.user?.userId) {
+        throw AppError.unauthorized('Authentication token is required.', 'UNAUTHORIZED');
+      }
+
       const doctorId = req.params.doctorId;
       const validatedInput = updateDoctorSchema.parse(req.body);
-      const updatedDoctor = await doctorService.updateDoctor(doctorId, validatedInput);
+      const updatedDoctor = await doctorService.updateDoctor(req.user.userId, doctorId, validatedInput);
 
-      res.status(200).json({
-        success: true,
-        data: updatedDoctor,
-        ...updatedDoctor,
-        message: 'Doctor profile updated successfully.',
-      });
+      sendSuccess(res, updatedDoctor, 'Doctor profile updated successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -131,12 +115,7 @@ export class DoctorController {
         validated.profileStatus
       );
 
-      res.status(200).json({
-        success: true,
-        data: updatedDoctor,
-        ...updatedDoctor,
-        message: 'Doctor status updated successfully.',
-      });
+      sendSuccess(res, updatedDoctor, 'Doctor status updated successfully.', 200);
     } catch (error) {
       next(error);
     }
@@ -161,22 +140,12 @@ export class DoctorController {
 
       if (validated.batch) {
         const result = { doctorId, assignments, total: assignments.length };
-        res.status(201).json({
-          success: true,
-          data: result,
-          ...result,
-          message: 'Medical services assigned to doctor successfully.',
-        });
+        sendSuccess(res, result, 'Medical services assigned to doctor successfully.', 201);
         return;
       }
 
       const result = assignments[0];
-      res.status(201).json({
-        success: true,
-        data: result,
-        ...result,
-        message: 'Medical service assigned to doctor successfully.',
-      });
+      sendSuccess(res, result, 'Medical service assigned to doctor successfully.', 201);
     } catch (error) {
       next(error);
     }
@@ -195,12 +164,7 @@ export class DoctorController {
       const { doctorId, serviceId } = req.params;
       const result = await doctorService.unassignService(req.user.userId, doctorId, serviceId);
 
-      res.status(200).json({
-        success: true,
-        data: result,
-        ...result,
-        message: 'Medical service unassigned from doctor successfully.',
-      });
+      sendSuccess(res, result, 'Medical service unassigned from doctor successfully.', 200);
     } catch (error) {
       next(error);
     }

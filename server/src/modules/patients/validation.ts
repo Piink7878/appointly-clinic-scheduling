@@ -133,6 +133,9 @@ export type UpdatePatientInput = z.infer<typeof updatePatientSchema>;
  * Validation schema for querying patient directory: GET /api/v1/admin/patients
  * Supports ?search=&page=1&limit=20
  */
+/** Highest accepted page number (with the 100-row page cap, OFFSET stays far below 2^31). */
+const MAX_PAGE = 1_000_000;
+
 export const getPatientsQuerySchema = z.object({
   search: z.string().optional(),
   page: z
@@ -141,7 +144,8 @@ export const getPatientsQuerySchema = z.object({
     .transform((val) => {
       if (val === undefined || val === null || val === '') return 1;
       const parsed = typeof val === 'number' ? val : parseInt(val, 10);
-      return isNaN(parsed) || parsed < 1 ? 1 : parsed;
+      // Clamp: an absurd page number would overflow the 32-bit OFFSET and surface as a 500.
+      return isNaN(parsed) || parsed < 1 ? 1 : Math.min(MAX_PAGE, parsed);
     }),
   limit: z
     .union([z.string(), z.number()])

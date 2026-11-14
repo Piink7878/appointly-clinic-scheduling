@@ -28,8 +28,9 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-// API v1 Base Route
+// API Routes (v1 and compatibility alias)
 app.use('/api/v1', apiRouter);
+app.use('/api', apiRouter);
 
 // Compatibility aliases for health & smoke checks
 app.get('/api/health', (_req, res) => {

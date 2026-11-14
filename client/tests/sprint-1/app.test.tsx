@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from '../../src/App';
 
 describe('Client Foundation & App Rendering', () => {
-  it('renders welcome heading', () => {
+  it('renders welcome heading', async () => {
     render(<App />);
-    expect(screen.getByText(/Welcome to Appointly/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/Welcome to Appointly/i)).toBeDefined();
+    });
   });
 });

@@ -9,6 +9,7 @@ import { Router } from 'express';
 import { prisma } from '../shared/database';
 import { logger } from '../shared/utils/logger';
 import { authRouter } from '../modules/auth';
+import { adminRouter } from './admin';
 import { patientsRouter } from '../modules/patients';
 import { doctorsRouter } from '../modules/doctors';
 import { servicesRouter } from '../modules/services';
@@ -44,6 +45,7 @@ apiRouter.get('/ready', async (_req, res) => {
 
 // Domain Feature Module Routes
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/admin', adminRouter);
 apiRouter.use('/patients', patientsRouter);
 apiRouter.use('/doctors', doctorsRouter);
 apiRouter.use('/services', servicesRouter);

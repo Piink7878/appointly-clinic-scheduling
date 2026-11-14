@@ -59,3 +59,10 @@ export interface UpdateDoctorInput {
   /** `null` clears the stored value; omitting it leaves it unchanged. */
   professionalLicenseNumber: string | null;
 }
+
+/** Row created by POST /admin/doctors/:doctorId/services. */
+export interface DoctorAssignment {
+  doctorServiceId: string;
+  doctorId: string;
+  serviceId: string;
+}

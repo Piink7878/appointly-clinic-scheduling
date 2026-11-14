@@ -32,6 +32,14 @@ vi.mock('../../src/modules/doctors/api', () => ({
   createDoctor: vi.fn(),
   updateDoctor: vi.fn(),
   updateDoctorStatus: vi.fn(),
+  getDoctor: vi.fn(),
+  assignService: vi.fn(),
+  unassignService: vi.fn(),
+}));
+
+// The patient directory loads the service list for its filter dropdown.
+vi.mock('../../src/modules/services/api', () => ({
+  listServices: vi.fn(),
 }));
 
 import {
@@ -40,6 +48,7 @@ import {
   updateDoctor,
   updateDoctorStatus,
 } from '../../src/modules/doctors/api';
+import { listServices } from '../../src/modules/services/api';
 
 const service = (overrides: Partial<DoctorServiceSummary> = {}): DoctorServiceSummary => ({
   serviceId: 's-1',
@@ -92,6 +101,7 @@ const type = (label: string | RegExp, value: string) =>
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(listServices).mockResolvedValue([]);
 });
 
 afterEach(() => {
@@ -681,7 +691,7 @@ describe('PatientDoctorsPage (/patient/doctors)', () => {
     vi.mocked(listDoctors).mockResolvedValue([]);
     renderPatient('/patient/doctors?serviceId=svc-empty');
 
-    expect(await screen.findByText('No doctors available for this service')).toBeDefined();
+    expect(await screen.findByText('No doctors are currently available for this service')).toBeDefined();
     expect(lastCallArgs<{ serviceId: string }>(listDoctors).serviceId).toBe('svc-empty');
 
     vi.mocked(listDoctors).mockResolvedValue([cardio]);
@@ -690,12 +700,18 @@ describe('PatientDoctorsPage (/patient/doctors)', () => {
     expect(lastCallArgs<{ serviceId?: string }>(listDoctors).serviceId).toBeUndefined();
   });
 
-  it('names the service in the filter chip when doctors are returned', async () => {
+  it('pre-selects a deep-linked service in the filter dropdown', async () => {
+    vi.mocked(listServices).mockResolvedValue([
+      { serviceId: 's-1', serviceName: 'General Consultation', description: null, durationMinutes: 30, serviceStatus: 'ACTIVE' },
+      { serviceId: 's-2', serviceName: 'ECG Screening', description: null, durationMinutes: 45, serviceStatus: 'ACTIVE' },
+    ]);
     vi.mocked(listDoctors).mockResolvedValue([cardio]);
     renderPatient('/patient/doctors?serviceId=s-2');
     await screen.findByText('Dr. Somchai Jaidee');
-    const chip = screen.getByRole('button', { name: 'Remove service filter' }).parentElement as HTMLElement;
-    expect(chip.textContent).toContain('ECG Screening');
+
+    const select = screen.getByLabelText('Filter by service') as HTMLSelectElement;
+    await waitFor(() => expect(select.value).toBe('s-2'));
+    expect(within(select).getByRole('option', { name: 'ECG Screening (45 mins)' })).toBeDefined();
   });
 
   it('shows an error banner with Retry', async () => {

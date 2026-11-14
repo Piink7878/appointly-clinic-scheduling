@@ -145,7 +145,9 @@ export class DoctorController {
   /**
    * POST /api/v1/admin/doctors/:doctorId/services
    * Requires: authGuard + roleGuard('ADMIN')
-   * Accepts: { serviceId }
+   * Accepts: { serviceId } or { serviceIds: [] }
+   * - single form: responds 201 with the created assignment (and its service)
+   * - batch form:  responds 201 with { doctorId, assignments: [...] } (all-or-nothing)
    */
   async assignService(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -155,8 +157,20 @@ export class DoctorController {
 
       const doctorId = req.params.doctorId;
       const validated = assignServiceSchema.parse(req.body);
-      const result = await doctorService.assignService(req.user.userId, doctorId, validated.serviceId);
+      const assignments = await doctorService.assignServices(req.user.userId, doctorId, validated.serviceIds);
 
+      if (validated.batch) {
+        const result = { doctorId, assignments, total: assignments.length };
+        res.status(201).json({
+          success: true,
+          data: result,
+          ...result,
+          message: 'Medical services assigned to doctor successfully.',
+        });
+        return;
+      }
+
+      const result = assignments[0];
       res.status(201).json({
         success: true,
         data: result,

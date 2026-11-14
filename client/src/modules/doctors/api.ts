@@ -6,6 +6,9 @@
 //   POST  /api/v1/admin/doctors                    (ADMIN)
 //   PUT   /api/v1/admin/doctors/:doctorId          (ADMIN)
 //   PATCH /api/v1/admin/doctors/:doctorId/status   (ADMIN)
+//   GET   /api/v1/doctors/:doctorId                (ADMIN: full record incl. every assigned service)
+//   POST  /api/v1/admin/doctors/:doctorId/services (ADMIN)  F-005 assign
+//   DELETE /api/v1/admin/doctors/:doctorId/services/:serviceId (ADMIN)  F-005 unassign
 // The backend wraps payloads as { success, data, message }; we read `data`.
 // ==============================================================================
 
@@ -14,6 +17,7 @@ import { ApiResponse } from '../../shared/types';
 import {
   CreateDoctorInput,
   Doctor,
+  DoctorAssignment,
   ListDoctorsParams,
   ProfileStatus,
   UpdateDoctorInput,
@@ -61,4 +65,25 @@ export async function updateDoctorStatus(
     { profileStatus }
   );
   return unwrapData(res);
+}
+
+export async function getDoctor(doctorId: string, signal?: AbortSignal): Promise<Doctor> {
+  const res = await apiClient.get<ApiResponse<Doctor>>(`/doctors/${encodeURIComponent(doctorId)}`, { signal });
+  return unwrapData(res);
+}
+
+/** Assigns one service (F-005). 409 DUPLICATE_ASSIGNMENT when it is already assigned. */
+export async function assignService(doctorId: string, serviceId: string): Promise<DoctorAssignment> {
+  const res = await apiClient.post<ApiResponse<DoctorAssignment>>(
+    `/admin/doctors/${encodeURIComponent(doctorId)}/services`,
+    { serviceId }
+  );
+  return unwrapData(res);
+}
+
+/** Removes one assignment (F-005). 404 ASSIGNMENT_NOT_FOUND when it does not exist. */
+export async function unassignService(doctorId: string, serviceId: string): Promise<void> {
+  await apiClient.delete<ApiResponse<unknown>>(
+    `/admin/doctors/${encodeURIComponent(doctorId)}/services/${encodeURIComponent(serviceId)}`
+  );
 }

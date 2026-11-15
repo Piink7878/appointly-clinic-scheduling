@@ -59,6 +59,7 @@ const runs = (await api('/actions/workflows/ci-docker.yml/runs?per_page=50')).wo
   id: r.id,
   event: r.event,
   branch: r.head_branch,
+  title: r.display_title, // for pull_request events this is the pull request title
   sha: r.head_sha.slice(0, 7),
   conclusion: r.conclusion,
   status: r.status,
@@ -66,6 +67,12 @@ const runs = (await api('/actions/workflows/ci-docker.yml/runs?per_page=50')).wo
   finished: r.updated_at,
   url: r.html_url,
 }));
+
+// the API leaves a run's "pull_requests" empty here, so a run is matched to its pull request by title
+for (const r of runs) {
+  const matches = prs.filter((p) => p.title === r.title);
+  r.pr = matches.length === 1 ? matches[0].number : null;
+}
 
 const ref = await api(`/git/ref/tags/${TAG}`);
 const tagObj = ref.object.type === 'tag' ? await api(`/git/tags/${ref.object.sha}`) : null;

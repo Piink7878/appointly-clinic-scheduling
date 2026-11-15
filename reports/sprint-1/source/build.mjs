@@ -212,7 +212,9 @@ function partF() {
   const pgVersion = (logText('12-db-evidence.log').match(/PostgreSQL (\d+\.\d+)/) || [])[1] || '16';
   const playwrightVersion = (JSON.parse(readFileSync(join(repo, 'client/package-lock.json'), 'utf8')).packages['node_modules/@playwright/test'] || {}).version || '';
   const release = gh.release;
-  const successRun = gh.ciRuns.find((r) => r.conclusion === 'success' && r.branch === 'sprint-1-staging');
+  // the release pull request is the one whose merge commit carries the tag; its last successful CI run is the release evidence
+  const releasePr = gh.prs.find((p) => p.mergeCommit === release.commit);
+  const successRun = gh.ciRuns.find((r) => r.conclusion === 'success' && r.pr === releasePr.number);
 
   const acRows = ev.acs
     .map((a) => {
@@ -254,8 +256,8 @@ function partF() {
   const ciRows = [...gh.ciRuns]
     .reverse()
     .map((r) => {
-      const pr = prByHead(r.branch);
-      return `<tr><td class="nw"><code>${r.id}</code></td><td class="nw">${pr ? '#' + pr.number : '–'}</td><td><code>${esc(r.branch)}</code></td><td class="nw"><code>${r.sha}</code></td><td class="nw">${r.conclusion === 'success' ? 'Success' : 'Failure'}</td><td class="num nw">${minutes(r.started, r.finished)}</td></tr>`;
+      const prNo = r.pr ?? prByHead(r.branch)?.number;
+      return `<tr><td class="nw"><code>${r.id}</code></td><td class="nw">${prNo ? '#' + prNo : '–'}</td><td><code>${esc(r.branch)}</code></td><td class="nw"><code>${r.sha}</code></td><td class="nw">${r.conclusion === 'success' ? 'Success' : 'Failure'}</td><td class="num nw">${minutes(r.started, r.finished)}</td></tr>`;
     })
     .join('');
 
@@ -404,7 +406,8 @@ ${tcap('GitHub Issues of Sprint 1')}
 <table class="md"><thead><tr><th class="nw">Issue</th><th>Title</th><th class="nw">State</th><th class="nw">Closed</th></tr></thead><tbody>${issueRows}</tbody></table>
 ${tcap('Merged pull requests and merge commits')}
 <table class="md dense"><thead><tr><th class="nw">PR</th><th>Title</th><th>Branch</th><th class="nw">Merged</th><th class="nw">Merge commit</th></tr></thead><tbody>${prRows}</tbody></table>
-<p>The release pull request #${gh.prs.find((p) => p.head === 'sprint-1-staging').number} merged <code>sprint-1-staging</code> into <code>main</code>; its merge commit <code>${release.shortCommit}</code> carries the tag <code>${esc(release.tag)}</code>.</p>
+<p>The release pull request #${releasePr.number} merged <code>sprint-1-staging</code> into <code>main</code>; its merge commit <code>${release.shortCommit}</code> carries the tag <code>${esc(release.tag)}</code>.
+ Pull requests merged after the release pull request only change documentation (this report, its figures and specification text), with no code changes; the tag stays on commit <code>${release.shortCommit}</code>.</p>
 ${tcap('Runs of the GitHub Actions workflow “CI & Docker Build” on pull requests')}
 <table class="md dense"><thead><tr><th class="nw">Run</th><th class="nw">PR</th><th>Branch</th><th class="nw">Commit</th><th class="nw">Result</th><th class="num nw">Duration</th></tr></thead><tbody>${ciRows}</tbody></table>
 <p>The workflow runs the backend tests against a PostgreSQL 16 service, the frontend tests and build, and the production Docker build. A failed run was followed by a

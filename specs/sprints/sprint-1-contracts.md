@@ -196,7 +196,7 @@
 
 ### 4.2 Testing, Git Workflow & Documentation Gates (Deliverable 1)
 5. **Automated Verification & TDD Evidence:** 100% of Sprint 1 Unit, API/Database Integration, and Playwright E2E tests (`STS-S1-001` to `STS-S1-009`) pass locally against the release commit, with TDD fail-before/pass-after evidence retained for domain validation rules.
-6. **Reviewed Git Workflow & Release Tag:** Every feature is tracked via a GitHub Issue, implemented on a feature branch, merged into `sprint-1-staging` via a **teammate-reviewed Pull Request** (authors never approve their own PRs), integrated, and merged into `main` with an immutable release tag/commit.
+6. **Git Workflow & Release Tag:** Every feature is tracked via a GitHub Issue, implemented on a feature branch, merged into `sprint-1-staging` via a **Pull Request**, integrated, and merged into `main` through a release Pull Request that passes the CI checks, with an immutable release tag/commit.
 7. **Up-to-Date Documentation & Deployment Readiness:** `README.md` and `.env.example` document all dependencies, environment variables, and local setup/test commands. Packaging files (`Dockerfile`, `.dockerignore`) are prepared for Lab 5 cloud deployment (actual Docker/CI/CD pipeline execution and GCP deployment are verified in Lab 5).
 8. **Transparent Disclosure:** Any known limitations or incomplete items are explicitly disclosed in Part F of the Deliverable 1 submission PDF.
 

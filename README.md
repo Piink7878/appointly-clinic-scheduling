@@ -59,11 +59,14 @@ appointly-monorepo/
 │   └── labs/
 │       └── lab-05/
 │           └── deployment.md            # [Lab 5] Cloud architecture, env vars & release runbook
-├── reports/                             # LaTeX Academic Deliverable Reports
-│   ├── template/
-│   │   ├── preamble.tex                 # XeLaTeX preamble (TH Sarabun New font, code blocks, tables)
-│   │   └── main.tex                     # Report template document
-│   └── sprint-1/                        # Sprint 1 report deliverables
+├── reports/                             # Deliverable reports, built with Node scripts (not LaTeX, see 1.2)
+│   ├── template/                        # Unused LaTeX stub, kept for reference (not part of the build)
+│   │   ├── preamble.tex
+│   │   └── main.tex
+│   └── sprint-1/                        # Sprint 1 / Project Deliverable 1
+│       ├── Appointly-Deliverable-1.pdf  # The final report (Parts A–F)
+│       ├── source/                      # Node scripts, stylesheet and collected evidence data
+│       └── figures/                     # Screenshots, terminal figures, logs and code excerpts
 └── specs/                               # Engineering Baseline Specifications
     ├── 01-srs-and-product-scope.md      # Part A: Software Requirements Specification (v1.0)
     ├── 02-feature-inventory-traceability.md # Part B: Feature Inventory & Traceability Matrix (v1.0)
@@ -72,8 +75,47 @@ appointly-monorepo/
     ├── api/
     │   └── openapi.yaml                 # OpenAPI 3.1 REST API specification
     └── sprints/
-        └── sprint-1-contracts.md        # Part E: Sprint 1 Engineering Contracts (v1.0)
+        └── sprint-1-contracts.md        # Part E: Sprint 1 requirements (contracts, acceptance criteria, tests, DoD) (v1.0)
 ```
+
+### 1.1 Where the Specifications and Sprint Requirements Are
+
+The project specifications are stored in the **[`specs/`](specs/)** folder:
+
+| File | Report part | What it contains |
+| :--- | :---: | :--- |
+| [`specs/01-srs-and-product-scope.md`](specs/01-srs-and-product-scope.md) | A | Software Requirements Specification: actors, scope, functional (`FR`), business (`BR`) and non-functional (`NFR`) requirements, decisions |
+| [`specs/02-feature-inventory-traceability.md`](specs/02-feature-inventory-traceability.md) | B | The 19 features (`F-001` to `F-019`), traceability matrices, approved baseline changes |
+| [`specs/03-system-level-sds.md`](specs/03-system-level-sds.md) | C | System design: architecture, data model, API/UI conventions, RBAC, security, environments |
+| [`specs/04-three-sprint-plan.md`](specs/04-three-sprint-plan.md) | D | Roadmap of the three sprints, dependencies and the deliverable checklist |
+| [`specs/sprints/sprint-1-contracts.md`](specs/sprints/sprint-1-contracts.md) | E | **The Sprint 1 requirements** (see below) |
+| [`specs/api/openapi.yaml`](specs/api/openapi.yaml) | – | OpenAPI 3.1 specification of the REST API |
+
+**The sprint requirements are in `specs/sprints/sprint-1-contracts.md`.** For Sprint 1 (`F-001` to `F-007`) it defines:
+
+1. the feature contracts (what each feature must do),
+2. the measurable acceptance criteria (`AC-F001-*` to `AC-F007-*`, with positive, negative and boundary cases),
+3. the software test specification (`STS-S1-001` to `STS-S1-009`), which maps every test case to its criteria,
+4. the Definition of Done for Sprint 1.
+
+The contracts of the later sprints are planned to be added to the same `specs/sprints/` folder. Which features belong to which sprint is described in `specs/04-three-sprint-plan.md`.
+
+### 1.2 How the Deliverable Report Is Produced (No LaTeX)
+
+The Project Deliverable 1 report is **not** written in LaTeX. The files in `reports/template/` are an unused stub. The report is produced by Node scripts in `reports/sprint-1/source/`:
+
+1. **Collect the data.** Scripts read the test results and the AC/STS traceability (`collect-evidence.mjs`), the GitHub issues, pull requests, CI runs and release tag (`collect-github.mjs`), and capture the screenshots, API calls, database output and terminal figures from the running system. The results are stored under `reports/sprint-1/source/evidence/` and `reports/sprint-1/figures/`.
+2. **Convert HTML to PDF.** `build.mjs` turns Parts A–E (the Markdown files in `specs/`) and Part F (the collected evidence) into one HTML page with a stylesheet, then prints that page to PDF with Chromium through Playwright. The result is `reports/sprint-1/Appointly-Deliverable-1.pdf`.
+3. **Merge to GitHub.** The scripts, figures and the PDF are committed on a docs branch and merged by pull requests (docs branch → `sprint-1-staging` → `main`). The release tag `v0.1.0-sprint1` stays on the code release commit.
+
+```bash
+cd reports/sprint-1/source
+npm install                    # once: marked, highlight.js and the IBM Plex fonts
+node collect-github.mjs        # refresh the GitHub data
+node build.mjs                 # writes ../Appointly-Deliverable-1.pdf
+```
+
+See [`reports/sprint-1/source/README.md`](reports/sprint-1/source/README.md) for all collection and capture scripts.
 
 ---
 

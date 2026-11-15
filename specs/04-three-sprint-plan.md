@@ -90,7 +90,7 @@ Selecting `F-001` through `F-007` (with seeded test accounts per `DEC-017`) for 
 
 | Checkpoint | Due Date | Required Engineering Artifacts | Verification Scope |
 | :--- | :--- | :--- | :--- |
-| **Project Deliverable 1** | 8 Nov 2026 | Self-contained PDF containing Parts A–E (Baseline Specs & Sprint 1 Contracts) + Part F (Working Sprint 1 local release on `main`, test results, GitHub Issues/PRs, contribution table). | Local build, Prisma migrations/seed, automated Unit/API/E2E tests, and local UI walkthrough. |
+| **Project Deliverable 1** | 8 Nov 2026 | Self-contained PDF containing Parts A–E (Baseline Specs & Sprint 1 Contracts) + Part F (Working Sprint 1 local release on `main`, test results, GitHub Issues/PRs, CI checks). | Local build, Prisma migrations/seed, automated Unit/API/E2E tests, and local UI walkthrough. |
 | **Lab 5: Cloud Deployment & CI/CD** | 15 Nov 2026 | Public GitHub repository with `Dockerfile`, `.dockerignore`, `.env.example`, `.github/workflows/ci-docker.yml`, `deploy.yml`, and `docs/labs/lab-05/deployment.md` + Lab 5 Evidence PDF. | Container build from clean clone, PR CI required check blocking failing merges, live GCP Cloud Run + Cloud SQL persistence across restart/redeploy (`C-01` to `C-06`). |
 | **Project Deliverable 2** | 29 Nov 2026 | Sprint 2 Engineering Contracts + Working Sprint 2 Increment (`F-008` to `F-015` + `F-001`/`F-002` extensions) deployed through CI/CD pipeline. | Hybrid Time Slot engine, atomic booking, PostgreSQL GiST double-booking prevention, 24h cutoff rescheduling/cancellation, and audit history. |
 | **Final Project Release** | 13 Dec 2026 | Sprint 3 Engineering Contracts + Complete MVP (`F-001` to `F-019`) + Final Demonstration Video & Project Report. | Dual In-App & Email notifications, async retry worker, clinic dashboard, date-range reports, and full system regression. |
@@ -102,7 +102,7 @@ Selecting `F-001` through `F-007` (with seeded test accounts per `DEC-017`) for 
 * **Part C (`specs/03-system-level-sds.md`):** Complete System-Level SDS with three-tier architecture, 12 relational entities, UI/API conventions, 4-gate RBAC matrix, Argon2id/HttpOnly JWT security, environment variables, and planned GCP components.
 * **Part D (`specs/04-three-sprint-plan.md`):** Three-sprint roadmap, cross-feature dependencies, Sprint 1 scope rationale, and checkpoint alignment.
 * **Part E (`specs/sprints/sprint-1-contracts.md`):** Versioned Sprint 1 feature contracts (`F-001`–`F-007`), measurable Acceptance Criteria (`AC-F001-*` to `AC-F007-*`), Software Test Specification (`STS-S1-001` to `STS-S1-009`), and Sprint 1 Definition of Done.
-* **Part F (Working Release & Execution Evidence):** Tagged release commit on `main`, local setup summary, labeled UI/API/DB demonstration screenshots, automated test execution logs/excerpts, and GitHub Issue/PR/review/contribution records.
+* **Part F (Working Release & Execution Evidence):** Tagged release commit on `main`, local setup summary, labeled UI/API/DB demonstration screenshots, automated test execution logs/excerpts, and GitHub Issue/PR/merge-commit/CI-check records.
 
 ---
 *End of Appointly Three-Sprint Implementation Plan — Version 1.0*

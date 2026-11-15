@@ -21,10 +21,12 @@ const { chromium } = createRequire(join(repo, 'package.json'))('playwright-core'
 
 const gh = JSON.parse(readFileSync(join(here, 'evidence/github.json'), 'utf8'));
 const base = gh.repoUrl;
-const release = gh.ciRuns.find((r) => r.conclusion === 'success' && r.branch === 'sprint-1-staging');
+// the successful CI run of the release pull request (the pull request whose merge commit carries the tag)
+const releasePr = gh.prs.find((p) => p.mergeCommit === gh.release.commit);
+const release = gh.ciRuns.find((r) => r.conclusion === 'success' && r.pr === releasePr.number);
 
 const pages = [
-  { file: 'gh-01-merged-pull-requests.png', url: `${base}/pulls?q=is%3Apr+is%3Amerged`, wait: '[data-testid="list-view-items"], .js-issue-row', height: 1230 },
+  { file: 'gh-01-merged-pull-requests.png', url: `${base}/pulls?q=is%3Apr+is%3Amerged`, wait: '[data-testid="list-view-items"], .js-issue-row', height: 1420 },
   { file: 'gh-02-issues.png', url: `${base}/issues?q=is%3Aissue`, wait: '[data-testid="list-view-items"], .js-issue-row', height: 1000 },
   { file: 'gh-03-ci-run-release-pr.png', url: release.url, wait: 'text=test-and-docker', height: 900 },
   { file: 'gh-04-release-tag.png', url: `${base}/releases/tag/${gh.release.tag}`, wait: 'text=' + gh.release.tag, height: 700 },

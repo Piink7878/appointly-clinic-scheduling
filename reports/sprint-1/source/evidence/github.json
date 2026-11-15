@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-11-14T23:13:53.846Z",
+  "generatedAt": "2026-11-15T11:38:17.698Z",
   "repo": "Piink7878/appointly-clinic-scheduling",
   "repoUrl": "https://github.com/Piink7878/appointly-clinic-scheduling",
   "issues": [
     {
       "number": 1,
       "title": "Project Foundation & Monorepo Setup",
-      "state": "open",
-      "closed": null,
+      "state": "closed",
+      "closed": "2026-11-15",
       "labels": [],
       "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/1"
     },
     {
       "number": 2,
       "title": "F-001 Authentication, Session & RBAC",
-      "state": "open",
-      "closed": null,
+      "state": "closed",
+      "closed": "2026-11-15",
       "labels": [],
       "url": "https://github.com/Piink7878/appointly-clinic-scheduling/issues/2"
     },
@@ -224,63 +224,110 @@
       "additions": 66,
       "deletions": 0,
       "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/21"
+    },
+    {
+      "number": 22,
+      "title": "docs(report): Project Deliverable 1 PDF, report sources and Part F figures (Refs #9)",
+      "head": "docs/9-deliverable-1-report",
+      "base": "sprint-1-staging",
+      "merged": "2026-11-15",
+      "mergeCommit": "683ca7e321098f4d926429d62724c6d469d0546d",
+      "files": 70,
+      "additions": 3890,
+      "deletions": 0,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/22"
+    },
+    {
+      "number": 23,
+      "title": "docs(report): add Deliverable 1 report to main (Refs #9)",
+      "head": "sprint-1-staging",
+      "base": "main",
+      "merged": "2026-11-15",
+      "mergeCommit": "0922081f8615ebc173cc9c46e5ad232750fa060a",
+      "files": 70,
+      "additions": 3890,
+      "deletions": 0,
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/pull/23"
     }
   ],
   "ciRuns": [
     {
+      "id": 43652676170,
+      "event": "pull_request",
+      "branch": "sprint-1-staging",
+      "title": "docs(report): add Deliverable 1 report to main (Refs #9)",
+      "sha": "683ca7e",
+      "conclusion": "success",
+      "status": "completed",
+      "started": "2026-11-14T23:19:43Z",
+      "finished": "2026-11-14T23:21:21Z",
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43652676170",
+      "pr": 23
+    },
+    {
       "id": 43650900383,
       "event": "pull_request",
       "branch": "sprint-1-staging",
+      "title": "release: Sprint 1 (v0.1.0-sprint1)",
       "sha": "09abe14",
       "conclusion": "success",
       "status": "completed",
       "started": "2026-11-14T22:59:16Z",
       "finished": "2026-11-14T23:00:38Z",
-      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43650900383"
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43650900383",
+      "pr": 20
     },
     {
       "id": 43650477768,
       "event": "pull_request",
       "branch": "sprint-1-staging",
+      "title": "release: Sprint 1 (v0.1.0-sprint1)",
       "sha": "dfbe752",
       "conclusion": "failure",
       "status": "completed",
       "started": "2026-11-14T22:54:05Z",
       "finished": "2026-11-14T22:55:26Z",
-      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43650477768"
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43650477768",
+      "pr": 20
     },
     {
       "id": 43600187816,
       "event": "pull_request",
       "branch": "feat/4-f003-doctor-management",
+      "title": "[Sprint 1] [F-003] Issue #4 Doctor Profile Management",
       "sha": "4b24afd",
       "conclusion": "success",
       "status": "completed",
       "started": "2026-11-14T13:31:27Z",
       "finished": "2026-11-14T13:33:06Z",
-      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43600187816"
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43600187816",
+      "pr": 13
     },
     {
       "id": 43598734138,
       "event": "pull_request",
       "branch": "feat/4-f003-doctor-management",
+      "title": "[Sprint 1] [F-003] Issue #4 Doctor Profile Management",
       "sha": "175971b",
       "conclusion": "failure",
       "status": "completed",
       "started": "2026-11-14T13:14:07Z",
       "finished": "2026-11-14T13:14:36Z",
-      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43598734138"
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43598734138",
+      "pr": 13
     },
     {
       "id": 43598249295,
       "event": "pull_request",
       "branch": "feat/4-f003-doctor-management",
+      "title": "[Sprint 1] [F-003] Issue #4 Doctor Profile Management",
       "sha": "11d35c4",
       "conclusion": "failure",
       "status": "completed",
       "started": "2026-11-14T13:08:26Z",
       "finished": "2026-11-14T13:08:58Z",
-      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43598249295"
+      "url": "https://github.com/Piink7878/appointly-clinic-scheduling/actions/runs/43598249295",
+      "pr": 13
     }
   ],
   "release": {

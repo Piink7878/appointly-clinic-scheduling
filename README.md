@@ -1,6 +1,8 @@
 # Appointly — Clinic Appointment & Scheduling Management System
 
-Appointly is a comprehensive, three-tier responsive web application designed for single-clinic operations. It provides role-scoped portals for **Patients**, **Doctors**, and **Clinic Administrators**, supporting end-to-end appointment scheduling, conflict-free doctor working hours management, and clinic configuration.
+Appointly is a three-tier responsive web application designed for single-clinic operations. It provides role-scoped portals for **Patients**, **Doctors**, and **Clinic Administrators**.
+
+**Current state: Sprint 1 (release `v0.1.0-sprint1`).** Sprint 1 implements the foundation: authentication with role-based access control, patient profiles, doctor profiles, the medical service catalog, doctor–service assignment, doctor self-schedule management with overlap validation, and clinic settings. Appointment availability and booking (Sprint 2) and notifications and reports (Sprint 3) are planned, not yet built; the portals only show placeholder entries for them. See [`specs/04-three-sprint-plan.md`](specs/04-three-sprint-plan.md) for the roadmap.
 
 ---
 
@@ -16,6 +18,7 @@ appointly-monorepo/
 ├── Dockerfile                           # 3-stage unified production container (Cloud Run target)
 ├── docker-compose.yml                   # Local containerized orchestration (DB, migrate, server, client)
 ├── package.json                         # Root monorepo workspace configuration & runner scripts
+├── eslint.config.mjs                    # Shared ESLint (flat config) for client and server
 ├── README.md                            # Primary project documentation & runbook
 ├── .github/
 │   ├── dependabot.yml                   # Automated GitHub Actions dependency version updates
@@ -28,17 +31,21 @@ appointly-monorepo/
 │   ├── nginx.conf                       # Production Nginx reverse proxy configuration
 │   ├── package.json                     # Client dependencies & scripts
 │   ├── tsconfig.json                    # Client TypeScript configuration
+│   ├── vite.config.ts                   # Vite build and dev-server configuration (dev proxy to the API)
+│   ├── playwright.config.ts             # Playwright end-to-end test configuration
 │   ├── src/                             # Domain-partitioned frontend source tree
 │   │   ├── shared/                      # Shared API client, UI components, context & utils
 │   │   ├── modules/                     # S1–S3 domain modules (auth, patients, doctors, etc.)
 │   │   └── router/                      # Role-protected route definitions
-│   └── tests/                           # Sprint-partitioned test suite (sprint-1, sprint-2, sprint-3)
+│   └── tests/                           # Sprint-partitioned tests: sprint-1 holds the component tests and e2e/ (Playwright); later sprints add their own folder
 ├── server/                              # Application Layer (Node.js + Express + TypeScript + Prisma)
 │   ├── .env.example                     # Backend runtime environment variables
 │   ├── Dockerfile                       # Backend container definition
 │   ├── docker-entrypoint.sh             # Graceful SIGTERM container entrypoint
 │   ├── package.json                     # Server dependencies & scripts
 │   ├── tsconfig.json                    # Server TypeScript configuration
+│   ├── tsconfig.lint.json               # TypeScript configuration used by `npm run lint` (includes the tests)
+│   ├── vitest.config.ts                 # Vitest configuration (test files run one after another on the shared database)
 │   ├── prisma/
 │   │   ├── schema.prisma                # Relational data model & PostgreSQL constraints
 │   │   └── seed.ts                      # Idempotent synthetic database seed script
@@ -48,7 +55,7 @@ appointly-monorepo/
 │   │   ├── routes/                      # REST API routing (/api/v1)
 │   │   ├── app.ts                       # Express application configuration
 │   │   └── server.ts                    # HTTP server entrypoint & graceful shutdown
-│   └── tests/                           # Sprint-partitioned test suite (sprint-1, sprint-2, sprint-3)
+│   └── tests/                           # Sprint-partitioned tests: sprint-1/unit and sprint-1/integration; later sprints add their own folder
 ├── deploy/                              # Lab 5 Cloud Deployment & CI/CD Automation
 │   ├── deploy.sh                        # GCP Cloud Run & Cloud SQL infrastructure setup script
 │   ├── release.sh                       # Cloud Run revision deployment by commit SHA digest
@@ -56,6 +63,9 @@ appointly-monorepo/
 │   ├── teardown.sh                      # Cloud resource cleanup script
 │   └── tests/                           # Offline deployment script test suite
 ├── docs/                                # Technical Documentation & Lab Runbooks
+│   ├── auto-deploy.md                   # Auto deploy and rollback guide
+│   ├── gcp-cicd-guide.md                # GCP and CI/CD guide
+│   ├── gcp-first-lab.md                 # First practice: GCP CLI and Console
 │   └── labs/
 │       └── lab-05/
 │           └── deployment.md            # [Lab 5] Cloud architecture, env vars & release runbook
@@ -162,7 +172,8 @@ Appointly strictly adheres to the Twelve-Factor App methodology. All configurati
 | `JWT_REFRESH_SECRET` | Backend | **Yes** | `your_super_secret_refresh_jwt_key_...` | Cryptographic secret for signing 7-day refresh tokens |
 | `CORS_ORIGIN` | Backend | No | `http://localhost:5173` | Allowed frontend origin for CORS credentials |
 | `COOKIE_SECURE` | Backend | No | `false` | `false` on HTTP localhost, `true` in HTTPS production |
-| `CLINIC_DEFAULT_TIMEZONE` | Backend | No | `Asia/Bangkok` | Default clinic timezone for slot calculation & display |
+| `CLINIC_TIMEZONE` | Backend | No | `Asia/Bangkok` | Clinic IANA timezone read by the server configuration; takes precedence over `CLINIC_DEFAULT_TIMEZONE` |
+| `CLINIC_DEFAULT_TIMEZONE` | Backend | No | `Asia/Bangkok` | Fallback used when `CLINIC_TIMEZONE` is not set |
 | `LOGIN_RATE_LIMIT_MAX_PER_ACCOUNT` | Backend | No | `10` | Failed sign-ins per e-mail per window before `429 TOO_MANY_REQUESTS` (SDS 7.1) |
 | `LOGIN_RATE_LIMIT_MAX_PER_IP` | Backend | No | `100` | Failed sign-ins per client IP per window |
 | `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Backend | No | `15` | Length of the sliding window |
@@ -171,6 +182,9 @@ Appointly strictly adheres to the Twelve-Factor App methodology. All configurati
 | `SEED_DEFAULT_PASSWORD` | Backend | **Yes** | `ChangeMe123!` | Seed test account initial password |
 | `VITE_API_BASE_URL` | Frontend | No | `http://localhost:4000/api/v1` | Base REST API URL consumed by Vite frontend |
 | `VITE_API_URL` | Frontend | No | `http://localhost:4000` | API base URL for Nginx proxy |
+
+> [!NOTE]
+> **Timezone in Sprint 1:** the application logic uses the fixed clinic timezone `Asia/Bangkok` (decision `DEC-016`; all timestamps are stored in UTC). The two timezone variables above are read into the configuration but do not change behaviour yet.
 
 > [!NOTE]
 > In production (GCP Cloud Run), sensitive secrets (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SEED_DEFAULT_PASSWORD`) are loaded securely via **GCP Secret Manager** and mounted into the container at runtime.
@@ -337,6 +351,6 @@ python -m unittest discover -s deploy/tests -p 'test_smoke.py'
 
 For Google Cloud Platform deployment instructions, Cloud Run topologies, and CI/CD workflow configurations, refer to:
 
-* [Lab 5 Deployment Runbook](file:///d:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/docs/labs/lab-05/deployment.md)
-* [System-Level SDS Section 8](file:///d:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/specs/03-system-level-sds.md#L627)
-* [Sprint 1 Engineering Contracts](file:///d:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/specs/sprints/sprint-1-contracts.md)
+* [Lab 5 Deployment Runbook](docs/labs/lab-05/deployment.md)
+* [System-Level SDS Section 8](specs/03-system-level-sds.md#L627)
+* [Sprint 1 Engineering Contracts](specs/sprints/sprint-1-contracts.md)

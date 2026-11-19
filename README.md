@@ -179,7 +179,10 @@ Appointly strictly adheres to the Twelve-Factor App methodology. All configurati
 | `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Backend | No | `15` | Length of the sliding window |
 | `TRUST_PROXY` | Backend | No | `0` | Reverse proxies in front of the API (`1` on Cloud Run / nginx) so the limiter sees the real client IP |
 | `SEED_ADMIN_EMAIL` | Backend | No | `admin@appointly.local` | Seed administrator account email |
-| `SEED_DEFAULT_PASSWORD` | Backend | **Yes** | `ChangeMe123!` | Seed test account initial password |
+| `SEED_DEFAULT_PASSWORD` | Backend | **Yes** (dev/CI) | `ChangeMe123!` | Shared password for the seeded admin and demo/test accounts outside production |
+| `ADMIN_PASSWORD` | Backend | **Yes** (production) | — | Production admin password. Used **only** for the admin account, never for demo/test accounts |
+| `SEED_DEMO_DATA` | Backend | No | off in production | Set `true` to seed demo doctors/patients in production (always seeded outside production) |
+| `DEMO_USER_PASSWORD` | Backend | When `SEED_DEMO_DATA=true` in production | — | Dedicated password for demo/test accounts; must differ from `ADMIN_PASSWORD` |
 | `VITE_API_BASE_URL` | Frontend | No | `http://localhost:4000/api/v1` | Base REST API URL consumed by Vite frontend |
 | `VITE_API_URL` | Frontend | No | `http://localhost:4000` | API base URL for Nginx proxy |
 

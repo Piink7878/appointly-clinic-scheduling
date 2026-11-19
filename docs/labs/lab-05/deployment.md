@@ -59,7 +59,10 @@ Runtime configuration is strictly separated between public variables and encrypt
 | `COOKIE_SECURE` | Variable | Boolean flag (`true` for HTTPS in production) | Cloud Run Environment |
 | `CLINIC_DEFAULT_TIMEZONE` | Variable | Default clinic timezone (`Asia/Bangkok`) | Cloud Run Environment |
 | `SEED_ADMIN_EMAIL` | Variable | Administrator account seed identifier | Cloud Run Environment |
-| `SEED_DEFAULT_PASSWORD` | **Secret** | Seed account temporary password | GCP Secret Manager |
+| `SEED_DEFAULT_PASSWORD` | **Secret** | Shared dev/CI seed password (not used for the production admin) | GCP Secret Manager |
+| `ADMIN_PASSWORD` | **Secret** | Production admin password; used only for the admin account | GCP Secret Manager |
+| `SEED_DEMO_DATA` | Variable | `true` seeds demo doctors/patients in production (default off) | Cloud Run Job Environment |
+| `DEMO_USER_PASSWORD` | **Secret** | Dedicated demo/test account password (required when `SEED_DEMO_DATA=true`) | GCP Secret Manager |
 
 ### 2.2 Frontend Environment Variables
 

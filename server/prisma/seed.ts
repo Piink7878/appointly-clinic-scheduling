@@ -2,7 +2,8 @@
 // Appointly — Database Seed Script
 // ==============================================================================
 // Reference: System-Level SDS Section 3.4 & Sprint 1 Engineering Contracts
-// Populates idempotent synthetic seed data for local development and CI testing.
+// Populates idempotent synthetic seed data. Admin is always seeded; demo/test accounts
+// only outside production or when SEED_DEMO_DATA=true (see seed-config.ts).
 // ==============================================================================
 
 import {
@@ -11,45 +12,19 @@ import {
   AccountStatus,
   ProfileStatus,
   ServiceStatus,
+  type Doctor,
 } from '@prisma/client';
 import argon2 from 'argon2';
+import { resolveSeedConfig } from './seed-config';
 
 const prisma = new PrismaClient();
 
-const DEFAULT_PASSWORD =
-  process.env.SEED_DEFAULT_PASSWORD ||
-  process.env.ADMIN_PASSWORD ||
-  (process.env.NODE_ENV === 'production' ? '' : 'ChangeMe123!');
+const config = resolveSeedConfig(process.env);
 
-if (!DEFAULT_PASSWORD) {
-  throw new Error('SEED_DEFAULT_PASSWORD or ADMIN_PASSWORD must be set in production.');
-}
-
-async function main() {
-  console.log('Appointly database seed: Starting seeding process...');
-
-  // 1. Hash default password using Argon2id
-  const passwordHash = await argon2.hash(DEFAULT_PASSWORD);
-  console.log('Appointly database seed: Argon2 password hash generated.');
-
-  // 2. Seed Administrator Account (admin@appointly.local)
-  const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@appointly.local').toLowerCase().trim();
-  const adminUser = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {
-      passwordHash,
-      role: Role.ADMIN,
-      accountStatus: AccountStatus.ACTIVE,
-    },
-    create: {
-      email: adminEmail,
-      passwordHash,
-      role: Role.ADMIN,
-      accountStatus: AccountStatus.ACTIVE,
-    },
-  });
-  console.log(`Appointly database seed: Seeded Admin user -> ${adminUser.email}`);
-
+// Demo/test accounts: doctors, patients and an inactive user, all sharing the demo password.
+async function seedDemoAccounts(
+  passwordHash: string,
+): Promise<{ doctorProfile: Doctor; somchaiProfile: Doctor }> {
   // 3. Seed Doctor Account & Profile (doctor@appointly.local)
   const doctorEmail = 'doctor@appointly.local';
   const doctorUser = await prisma.user.upsert({
@@ -203,6 +178,49 @@ async function main() {
     },
   });
   console.log(`Appointly database seed: Seeded Inactive user -> ${inactiveEmail}`);
+  return { doctorProfile, somchaiProfile };
+}
+
+async function main() {
+  console.log('Appointly database seed: Starting seeding process...');
+
+  // 1. Hash the Administrator password using Argon2id.
+  //    Production: ADMIN_PASSWORD only. Demo accounts get their own password below.
+  const adminPasswordHash = await argon2.hash(config.adminPassword);
+  console.log('Appointly database seed: Argon2 admin password hash generated.');
+
+  // 2. Seed Administrator Account (admin@appointly.local)
+  const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@appointly.local').toLowerCase().trim();
+  const adminUser = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      passwordHash: adminPasswordHash,
+      role: Role.ADMIN,
+      accountStatus: AccountStatus.ACTIVE,
+    },
+    create: {
+      email: adminEmail,
+      passwordHash: adminPasswordHash,
+      role: Role.ADMIN,
+      accountStatus: AccountStatus.ACTIVE,
+    },
+  });
+  console.log(`Appointly database seed: Seeded Admin user -> ${adminUser.email}`);
+
+  // 3-5. Demo/test accounts (doctors, patients, inactive user).
+  //      Only in non-production, or when SEED_DEMO_DATA=true. They use a dedicated
+  //      demo password and are NEVER given the production admin password.
+  let demoDoctors: Doctor[] = [];
+  let doctorProfile: Doctor | null = null;
+  if (config.seedDemoData) {
+    const demoPasswordHash = await argon2.hash(config.demoPassword as string);
+    const demo = await seedDemoAccounts(demoPasswordHash);
+    doctorProfile = demo.doctorProfile;
+    demoDoctors = [demo.doctorProfile, demo.somchaiProfile];
+  } else {
+    console.log('Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).');
+  }
+
 
   // 5. Seed Singleton ClinicSetting
   // Values according to Contract & Request:
@@ -275,8 +293,8 @@ async function main() {
     console.log(`Appointly database seed: Seeded Service -> ${service.serviceName} (${service.durationMinutes}m)`);
   }
 
-  // 7. Seed Doctor-Service Assignments (F-005)
-  for (const doc of [doctorProfile, somchaiProfile]) {
+  // 7. Seed Doctor-Service Assignments (F-005) — demo doctors only
+  for (const doc of demoDoctors) {
     for (const service of seededServices) {
       await prisma.doctorService.upsert({
         where: {
@@ -297,11 +315,11 @@ async function main() {
 
   // 8. Seed Baseline Weekly Schedules for Doctor (F-006)
   // Monday (1) to Friday (5): Morning (09:00:00-12:00:00), Afternoon (13:00:00-17:00:00)
-  const existingSchedules = await prisma.doctorSchedule.count({
-    where: { doctorId: doctorProfile.doctorId },
-  });
+  const existingSchedules = doctorProfile
+    ? await prisma.doctorSchedule.count({ where: { doctorId: doctorProfile.doctorId } })
+    : 0;
 
-  if (existingSchedules === 0) {
+  if (doctorProfile && existingSchedules === 0) {
     const shiftsToCreate = [];
     for (let day = 1; day <= 5; day++) {
       shiftsToCreate.push(

@@ -57,7 +57,7 @@ def check(base):
         ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
         ('/api/ready', lambda b: json.loads(b).get('db') == 'connected'),
         ('/', lambda b: b'<html' in b.lower()),
-        ('/api/categories', lambda b: isinstance(json.loads(b), list) and len(json.loads(b)) > 0),
+        ('/api/v1/settings/public', lambda b: json.loads(b).get('success') is True),
     ):
         # Retry: a cold Cloud Run instance may need a few seconds to start.
         for attempt in range(5):

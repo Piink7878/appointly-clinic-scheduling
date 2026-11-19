@@ -43,6 +43,19 @@ describe('resolveSeedConfig — production admin vs demo accounts', () => {
     ).toThrow(/DEMO_USER_PASSWORD/);
   });
 
+  it('production does not fall back to SEED_DEFAULT_PASSWORD for demo accounts', () => {
+    expect(() =>
+      resolveSeedConfig(
+        env({
+          NODE_ENV: 'production',
+          ADMIN_PASSWORD: 'prod-admin-pw',
+          SEED_DEMO_DATA: 'true',
+          SEED_DEFAULT_PASSWORD: 'shared',
+        }),
+      ),
+    ).toThrow(/DEMO_USER_PASSWORD/);
+  });
+
   it('production rejects a demo password identical to the admin password', () => {
     expect(() =>
       resolveSeedConfig(

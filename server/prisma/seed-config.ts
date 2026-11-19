@@ -11,6 +11,7 @@
 //       - SEED_DEMO_DATA=true        (explicit opt-in, e.g. `deploy.sh --demo`).
 //   * Demo accounts NEVER use ADMIN_PASSWORD. In production they require their
 //     own DEMO_USER_PASSWORD; otherwise the seed fails instead of falling back.
+//     (SEED_DEFAULT_PASSWORD is a dev/CI convenience and is ignored in production.)
 // ==============================================================================
 
 export const DEV_DEFAULT_PASSWORD = 'ChangeMe123!';
@@ -45,11 +46,11 @@ export function resolveSeedConfig(env: NodeJS.ProcessEnv): SeedConfig {
   let demoPassword: string | null = null;
   if (seedDemoData) {
     if (isProduction) {
-      demoPassword = env.DEMO_USER_PASSWORD || env.SEED_DEFAULT_PASSWORD || '';
+      demoPassword = env.DEMO_USER_PASSWORD || '';
       if (!demoPassword) {
         throw new Error(
-          'SEED_DEMO_DATA=true in production requires DEMO_USER_PASSWORD (or SEED_DEFAULT_PASSWORD); ' +
-            'ADMIN_PASSWORD is never used for demo accounts.',
+          'SEED_DEMO_DATA=true in production requires DEMO_USER_PASSWORD; ' +
+            'ADMIN_PASSWORD and SEED_DEFAULT_PASSWORD are never used for demo accounts in production.',
         );
       }
       if (demoPassword === adminPassword) {

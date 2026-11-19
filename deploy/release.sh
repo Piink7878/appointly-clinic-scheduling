@@ -12,6 +12,8 @@
 #   PROJECT_ID, REGION, IMAGE_TAG   required (IMAGE_TAG = full 40-char commit SHA)
 #   SERVICE_NAME, MIGRATE_JOB_NAME  optional (default: toktickit, toktickit-migrate)
 #   ROLLBACK                        true | false (default false)
+#   RESET_ADMIN_PASSWORD            true | false (default false). ONE-SHOT admin password
+#                                   rotation for this release only (see below)
 #   GITHUB_ENV                      when set, SERVICE_URL / DEPLOYED_IMAGE are
 #                                   appended so later workflow steps can use them
 #
@@ -20,6 +22,10 @@
 #     updated, so a broken migration never reaches users.
 #   - The image is resolved to an immutable @sha256 digest so the job and the
 #     service run exactly the same image.
+#   - Production seeding is create-if-missing (Admin, Clinic Settings, Services).
+#     ADMIN_PASSWORD_RESET is therefore forced to false on the job before every
+#     run and only set to true as a per-execution override when RESET_ADMIN_PASSWORD
+#     =true. It is never persisted, so it cannot stay enabled for later releases.
 #   - Offline test: deploy/tests/test_release_stub.sh
 #
 # REFERENCES
@@ -44,8 +50,10 @@ set -euo pipefail
 SERVICE_NAME="${SERVICE_NAME:-toktickit}"
 MIGRATE_JOB_NAME="${MIGRATE_JOB_NAME:-toktickit-migrate}"
 ROLLBACK="${ROLLBACK:-false}"
+RESET_ADMIN_PASSWORD="${RESET_ADMIN_PASSWORD:-false}"
 [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid image tag.' >&2; exit 1; }
 [[ "$ROLLBACK" == true || "$ROLLBACK" == false ]] || { echo 'Invalid rollback mode.' >&2; exit 1; }
+[[ "$RESET_ADMIN_PASSWORD" == true || "$RESET_ADMIN_PASSWORD" == false ]] || { echo 'Invalid RESET_ADMIN_PASSWORD (use true or false).' >&2; exit 1; }
 
 # ------------------------------------------------------------------------------
 # 2. Find the image and pin it by digest
@@ -61,8 +69,10 @@ DIGEST_IMAGE="$(gcloud artifacts docker images describe "$IMAGE" --project="$PRO
 #    ⭐ IMPORTANT: a failure here aborts the release (set -e) — service untouched.
 # ------------------------------------------------------------------------------
 if [[ "$ROLLBACK" == false ]]; then
-  gcloud run jobs update "$MIGRATE_JOB_NAME" --image="$DIGEST_IMAGE" --project="$PROJECT_ID" --region="$REGION" --quiet
-  gcloud run jobs execute "$MIGRATE_JOB_NAME" --wait --project="$PROJECT_ID" --region="$REGION" --quiet
+  # Always clear ADMIN_PASSWORD_RESET on the job (scrubs a value left by hand), then
+  # enable it for this single execution only when a rotation was requested.
+  gcloud run jobs update "$MIGRATE_JOB_NAME" --image="$DIGEST_IMAGE" --update-env-vars="ADMIN_PASSWORD_RESET=false" --project="$PROJECT_ID" --region="$REGION" --quiet
+  gcloud run jobs execute "$MIGRATE_JOB_NAME" --wait --update-env-vars="ADMIN_PASSWORD_RESET=${RESET_ADMIN_PASSWORD}" --project="$PROJECT_ID" --region="$REGION" --quiet
 else
   echo 'Rollback: reuse existing image; skip tests, build, migration and seed.'
 fi

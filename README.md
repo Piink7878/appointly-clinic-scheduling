@@ -179,7 +179,11 @@ Appointly strictly adheres to the Twelve-Factor App methodology. All configurati
 | `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Backend | No | `15` | Length of the sliding window |
 | `TRUST_PROXY` | Backend | No | `0` | Reverse proxies in front of the API (`1` on Cloud Run / nginx) so the limiter sees the real client IP |
 | `SEED_ADMIN_EMAIL` | Backend | No | `admin@appointly.local` | Seed administrator account email |
-| `SEED_DEFAULT_PASSWORD` | Backend | **Yes** | `ChangeMe123!` | Seed test account initial password |
+| `SEED_DEFAULT_PASSWORD` | Backend | **Yes** (dev/CI) | `ChangeMe123!` | Shared password for the seeded admin and demo/test accounts outside production |
+| `ADMIN_PASSWORD` | Backend | **Yes** (production) | — | Production admin password. Used **only** for the admin account, never for demo/test accounts |
+| `SEED_DEMO_DATA` | Backend | No | off in production | Set `true` to seed demo doctors/patients in production (always seeded outside production) |
+| `DEMO_USER_PASSWORD` | Backend | When `SEED_DEMO_DATA=true` in production | — | Dedicated password for demo/test accounts; must differ from `ADMIN_PASSWORD`. There is no fallback to `SEED_DEFAULT_PASSWORD` in production |
+| `ADMIN_PASSWORD_RESET` | Backend | No | `false` | Production only. `true` rotates the existing admin's password hash from `ADMIN_PASSWORD` (role and status untouched). One-shot: set per run by the deploy tooling, never stored (see §5.4) |
 | `VITE_API_BASE_URL` | Frontend | No | `http://localhost:4000/api/v1` | Base REST API URL consumed by Vite frontend |
 | `VITE_API_URL` | Frontend | No | `http://localhost:4000` | API base URL for Nginx proxy |
 
@@ -187,7 +191,7 @@ Appointly strictly adheres to the Twelve-Factor App methodology. All configurati
 > **Timezone in Sprint 1:** the application logic uses the fixed clinic timezone `Asia/Bangkok` (decision `DEC-016`; all timestamps are stored in UTC). The two timezone variables above are read into the configuration but do not change behaviour yet.
 
 > [!NOTE]
-> In production (GCP Cloud Run), sensitive secrets (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SEED_DEFAULT_PASSWORD`) are loaded securely via **GCP Secret Manager** and mounted into the container at runtime.
+> In production (GCP Cloud Run), sensitive secrets (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_PASSWORD`, and `DEMO_USER_PASSWORD` when demo data is enabled) are loaded securely via **GCP Secret Manager** and mounted into the container at runtime.
 
 ---
 
@@ -253,6 +257,25 @@ npm run prisma:seed
 
 # Or inside server/:
 cd server && npm run prisma:seed
+```
+
+**Seeding policy** (implemented in `server/prisma/seed-config.ts` and `seed-runner.ts`):
+
+| | Development / CI (`NODE_ENV` ≠ `production`) | Production (`NODE_ENV=production`) |
+| :--- | :--- | :--- |
+| Admin account | Always reset to defaults (password from `SEED_DEFAULT_PASSWORD`, `ACTIVE`, `ADMIN`) | **Create-if-missing**, password from `ADMIN_PASSWORD` (required). An existing admin is never changed: password, role and status (e.g. an `INACTIVE` admin stays inactive) are kept |
+| Clinic Settings | Reset to defaults | **Create-if-missing**; existing settings are never overwritten |
+| Medical Services | Reset to defaults | **Create-if-missing**; existing description / duration / status are never overwritten |
+| Demo doctors / patients / inactive user, doctor-service links, schedules | Always seeded with `SEED_DEFAULT_PASSWORD` | **Skipped** unless `SEED_DEMO_DATA=true`; then seeded with `DEMO_USER_PASSWORD` (required, must differ from `ADMIN_PASSWORD`, never `ADMIN_PASSWORD` or `SEED_DEFAULT_PASSWORD`) |
+
+Re-running the production seed is therefore safe: administrator changes survive every release.
+
+**Rotating the production admin password.** Change the `ADMIN_PASSWORD` secret, then run **one** deployment with the reset flag. It updates the password hash only (role and account status are not touched) and is *one-shot*: the flag defaults to `false`, the Cloud Run job always stores `ADMIN_PASSWORD_RESET=false`, and `true` is passed only as an override for that single execution, so it cannot stay enabled for later releases.
+
+```bash
+# GitHub Actions: Actions -> "Deploy demo" -> Run workflow -> tick "reset_admin_password"
+# Manual first-setup script:
+./deploy/deploy.sh --reset-admin-password
 ```
 
 ---

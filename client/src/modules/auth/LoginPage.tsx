@@ -196,52 +196,54 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* Quick-fill Seeded Test Accounts Helper */}
-          <div className="mt-6 pt-6 border-t border-slate-100">
-            <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-sky-500" />
-              <span>Quick Test Accounts</span>
+          {!import.meta.env.PROD && (
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+                <span>Quick Test Accounts</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill('doctor@appointly.local')}
+                  className="p-2 text-left rounded-lg border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition"
+                >
+                  <div className="font-semibold text-indigo-900">Doctor</div>
+                  <div className="text-slate-500 truncate">doctor@appointly.local</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill('admin@appointly.local')}
+                  className="p-2 text-left rounded-lg border border-slate-200 hover:border-amber-400 hover:bg-amber-50/50 transition"
+                >
+                  <div className="font-semibold text-amber-900">Admin</div>
+                  <div className="text-slate-500 truncate">admin@appointly.local</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill('patient@appointly.local')}
+                  className="p-2 text-left rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 transition"
+                >
+                  <div className="font-semibold text-emerald-900">Patient</div>
+                  <div className="text-slate-500 truncate">patient@appointly.local</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill('inactive@appointly.local')}
+                  className="p-2 text-left rounded-lg border border-slate-200 hover:border-rose-400 hover:bg-rose-50/50 transition"
+                >
+                  <div className="font-semibold text-rose-900">Inactive User</div>
+                  <div className="text-slate-500 truncate">inactive@appointly.local</div>
+                </button>
+              </div>
+              <p className="mt-2 text-center text-xs text-slate-400">
+                Default password: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">ChangeMe123!</code>
+              </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('doctor@appointly.local')}
-                className="p-2 text-left rounded-lg border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition"
-              >
-                <div className="font-semibold text-indigo-900">Doctor</div>
-                <div className="text-slate-500 truncate">doctor@appointly.local</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin@appointly.local')}
-                className="p-2 text-left rounded-lg border border-slate-200 hover:border-amber-400 hover:bg-amber-50/50 transition"
-              >
-                <div className="font-semibold text-amber-900">Admin</div>
-                <div className="text-slate-500 truncate">admin@appointly.local</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('patient@appointly.local')}
-                className="p-2 text-left rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 transition"
-              >
-                <div className="font-semibold text-emerald-900">Patient</div>
-                <div className="text-slate-500 truncate">patient@appointly.local</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('inactive@appointly.local')}
-                className="p-2 text-left rounded-lg border border-slate-200 hover:border-rose-400 hover:bg-rose-50/50 transition"
-              >
-                <div className="font-semibold text-rose-900">Inactive User</div>
-                <div className="text-slate-500 truncate">inactive@appointly.local</div>
-              </button>
-            </div>
-            <p className="mt-2 text-center text-xs text-slate-400">
-              Default password: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">ChangeMe123!</code>
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </div>

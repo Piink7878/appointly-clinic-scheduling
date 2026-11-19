@@ -646,12 +646,21 @@ All runtime configuration is injected via environment variables documented in `.
 | `COOKIE_SECURE` | Backend | No | Boolean (`false` on localhost HTTP; `true` on GCP HTTPS) |
 | `CLINIC_DEFAULT_TIMEZONE` | Backend | No | Default clinic timezone (`Asia/Bangkok`) |
 | `SEED_ADMIN_EMAIL` | Backend | No | Synthetic seed administrator email for local/staging initialization |
-| `SEED_DEFAULT_PASSWORD` | Backend | **Yes** | Synthetic seed password for local/staging test accounts (never hardcoded in source) |
+| `SEED_DEFAULT_PASSWORD` | Backend | **Yes** (dev/CI) | Synthetic shared seed password for the admin and demo/test accounts outside production (never hardcoded in source; ignored in production) |
+| `ADMIN_PASSWORD` | Backend | **Yes** (production) | Production administrator password (GCP Secret Manager). Used only for the admin account, never for demo/test accounts |
+| `SEED_DEMO_DATA` | Backend | No | `true` seeds demo doctors/patients in production (default off; always on outside production) |
+| `DEMO_USER_PASSWORD` | Backend | **Yes** (when `SEED_DEMO_DATA=true`) | Dedicated demo/test account password (GCP Secret Manager); must differ from `ADMIN_PASSWORD`; no fallback in production |
+| `ADMIN_PASSWORD_RESET` | Backend | No | Production only, default `false`. `true` rotates the existing admin's password hash only (role/status unchanged); passed per Cloud Run job execution, never stored |
 | `VITE_API_BASE_URL` | Frontend | No | Base REST API URL consumed by Vite build/runtime (e.g., `/api/v1`) |
 
 **Secret Handling Policy:**
 * Local development uses `.env` files listed in `.gitignore`; only `.env.example` with dummy placeholders is committed.
-* On GCP (Lab 5), sensitive values (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SEED_DEFAULT_PASSWORD`) are stored in **GCP Secret Manager** and mounted into Cloud Run revisions at runtime. GitHub Actions authenticates to GCP using **Workload Identity Federation (OIDC)** rather than long-lived JSON service account keys.
+* On GCP (Lab 5), sensitive values (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ADMIN_PASSWORD`, and `DEMO_USER_PASSWORD` when demo data is enabled) are stored in **GCP Secret Manager** and mounted into Cloud Run revisions at runtime. GitHub Actions authenticates to GCP using **Workload Identity Federation (OIDC)** rather than long-lived JSON service account keys.
+
+**Production Seeding Policy:**
+* The seed job runs on every release and must be idempotent **and non-destructive**. In production the Administrator account, Clinic Settings and Medical Services are *create-if-missing*: existing rows are never overwritten, so changes made by administrators (including a deactivated admin account) survive deployments. Development and CI reset these to known defaults so tests start from a deterministic state.
+* The production administrator password comes only from `ADMIN_PASSWORD`. Demo/test accounts are not seeded in production unless `SEED_DEMO_DATA=true`, in which case they use a separate `DEMO_USER_PASSWORD`; production admin credentials are never reused for them.
+* Admin password rotation is an explicit, one-shot operation (`ADMIN_PASSWORD_RESET=true`, default `false`) that updates only the password hash. It is supplied as a per-execution override of the Cloud Run job (`gcloud run jobs execute --update-env-vars`); the job itself always stores `false`, and `deploy/release.sh` resets it before every run, so it cannot remain enabled for subsequent deployments.
 
 ### 8.3 Planned GCP Deployment Topology (Lab 5 Reference Stack)
 

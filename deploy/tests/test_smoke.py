@@ -23,7 +23,7 @@ class SmokeTests(unittest.TestCase):
             '/api/health': b'{"status":"ok"}',
             '/api/ready': b'{"db":"connected"}',
             '/': b'<html></html>',
-            '/api/categories': b'[{"id":1}]',
+            '/api/v1/settings/public': b'{"success":true,"data":{"clinicName":"Appointly Clinic"}}',
             '/api/auth/login': b'{"token":"test-session"}',
             '/api/auth/me': b'{"id":1}',
             '/api/auth/logout': b'{}',

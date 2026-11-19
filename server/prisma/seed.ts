@@ -16,7 +16,14 @@ import argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
-const DEFAULT_PASSWORD = process.env.SEED_DEFAULT_PASSWORD || 'ChangeMe123!';
+const DEFAULT_PASSWORD =
+  process.env.SEED_DEFAULT_PASSWORD ||
+  process.env.ADMIN_PASSWORD ||
+  (process.env.NODE_ENV === 'production' ? '' : 'ChangeMe123!');
+
+if (!DEFAULT_PASSWORD) {
+  throw new Error('SEED_DEFAULT_PASSWORD or ADMIN_PASSWORD must be set in production.');
+}
 
 async function main() {
   console.log('Appointly database seed: Starting seeding process...');

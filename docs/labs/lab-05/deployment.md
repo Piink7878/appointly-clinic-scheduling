@@ -59,10 +59,13 @@ Runtime configuration is strictly separated between public variables and encrypt
 | `COOKIE_SECURE` | Variable | Boolean flag (`true` for HTTPS in production) | Cloud Run Environment |
 | `CLINIC_DEFAULT_TIMEZONE` | Variable | Default clinic timezone (`Asia/Bangkok`) | Cloud Run Environment |
 | `SEED_ADMIN_EMAIL` | Variable | Administrator account seed identifier | Cloud Run Environment |
-| `SEED_DEFAULT_PASSWORD` | **Secret** | Shared dev/CI seed password (not used for the production admin) | GCP Secret Manager |
+| `SEED_DEFAULT_PASSWORD` | Variable | Shared dev/CI seed password. **Not used in production** (neither for the admin nor demo accounts) | Local `.env` / CI only |
 | `ADMIN_PASSWORD` | **Secret** | Production admin password; used only for the admin account | GCP Secret Manager |
 | `SEED_DEMO_DATA` | Variable | `true` seeds demo doctors/patients in production (default off) | Cloud Run Job Environment |
-| `DEMO_USER_PASSWORD` | **Secret** | Dedicated demo/test account password (required when `SEED_DEMO_DATA=true`) | GCP Secret Manager |
+| `DEMO_USER_PASSWORD` | **Secret** | Dedicated demo/test account password (required when `SEED_DEMO_DATA=true`; must differ from `ADMIN_PASSWORD`; no fallback) | GCP Secret Manager |
+| `ADMIN_PASSWORD_RESET` | Variable | Default `false`. `true` rotates the admin password hash only. One-shot: set per job execution by `deploy.sh --reset-admin-password` / the `reset_admin_password` workflow input; the job always stores `false` | Cloud Run Job execution override |
+
+**Production seeding is create-if-missing.** The migration job runs the seed on every release, but in production it never overwrites the existing Admin account (including an `INACTIVE` status), Clinic Settings or Medical Services. See README §5.4 for the full dev-vs-production table and the admin password rotation procedure.
 
 ### 2.2 Frontend Environment Variables
 

@@ -9,6 +9,8 @@
 #     partial   : DB secret missing   -> DB user password reset + secret created
 #     job-fail  : migration fails     -> script exits 1, service NOT deployed
 #     demo      : --demo flag         -> demo secret is created and granted
+#     reset     : --reset-admin-password -> one-shot rotation: only the job
+#                 EXECUTION gets ADMIN_PASSWORD_RESET=true, the job stores false
 #   It also checks: `--edition=enterprise`, no project-wide secretAccessor role,
 #   DB password == password inside DATABASE_URL, and that no password/secret
 #   value leaks into the output. Finally DRY_RUN=1 must make zero gcloud calls.
@@ -96,13 +98,15 @@ export REGION=asia-southeast1
 export DRY_RUN=0
 
 # --- Run every scenario and assert on what deploy.sh did ------------------------
-for MODE in first_run rerun partial job-fail demo; do
+for MODE in first_run rerun partial job-fail demo reset; do
   export STUB_MODE="$MODE"
   [ "$MODE" != demo ] || export STUB_MODE=first_run
+  [ "$MODE" != reset ] || export STUB_MODE=first_run
   export GCLOUD_LOG="$TEST_STATE_DIR/gcloud-$MODE.log"
   rm -f "$TEST_STATE_DIR/sql-pass" "$TEST_STATE_DIR"/payload-*
   args=()
   if [ "$MODE" = demo ]; then args+=(--demo); fi
+  if [ "$MODE" = reset ]; then args+=(--reset-admin-password); fi
   result=0
   bash "$DEPLOY_SCRIPT" "${args[@]}" > "$TEST_STATE_DIR/output" 2>&1 || result=$?
   expected=0
@@ -117,6 +121,17 @@ for MODE in first_run rerun partial job-fail demo; do
     fi
   else
     grep -q '^run deploy ' "$GCLOUD_LOG"
+  fi
+  # Admin password rotation is one-shot: the job never STORES it as true...
+  grep -q '^run jobs deploy .*ADMIN_PASSWORD_RESET=false' "$GCLOUD_LOG" || { echo 'FAIL: job does not pin ADMIN_PASSWORD_RESET=false'; exit 1; }
+  if grep '^run jobs deploy ' "$GCLOUD_LOG" | grep -q 'ADMIN_PASSWORD_RESET=true'; then
+    echo 'FAIL: ADMIN_PASSWORD_RESET=true stored on the job'; exit 1
+  fi
+  # ...and the execution only gets true when --reset-admin-password was passed.
+  if [ "$MODE" = reset ]; then
+    grep -q '^run jobs execute .*--update-env-vars ADMIN_PASSWORD_RESET=true' "$GCLOUD_LOG" || { echo 'FAIL: reset not passed to execution'; exit 1; }
+  else
+    grep -q '^run jobs execute .*--update-env-vars ADMIN_PASSWORD_RESET=false' "$GCLOUD_LOG" || { echo 'FAIL: execution missing ADMIN_PASSWORD_RESET=false'; exit 1; }
   fi
   if grep -q '^projects add-iam-policy-binding .*roles/secretmanager.secretAccessor' "$GCLOUD_LOG"; then
     echo 'FAIL: runtime has project-wide secret access'; exit 1

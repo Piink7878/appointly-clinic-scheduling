@@ -8,6 +8,8 @@
 #   2. rollback       : service updated, migration job NOT touched
 #   3. image missing / migration fails : service is NOT updated
 #   4. invalid tag    : rejected before any gcloud call
+#   5. admin password rotation is ONE-SHOT: the job is always reset to
+#      ADMIN_PASSWORD_RESET=false; `true` is only a per-execution override
 # HOW TO RUN (repo root, needs bash):  bash deploy/tests/test_release_stub.sh
 #   Prints `PASS ...` lines; any failure exits non-zero. CI runs it too.
 # ⭐ CHANGE ME: if you rename the image path `toktickit/toktickit` or the job /
@@ -39,6 +41,27 @@ grep -q 'run jobs execute .*--wait' "$CALL_LOG"
 grep -q 'run services update .*@sha256:abcdef' "$CALL_LOG"
 grep -q 'SERVICE_URL=https://demo.example.test' "$GITHUB_ENV"
 echo 'PASS normal release uses digest and waits for migration'
+
+# Default release: rotation OFF on the job and on the execution.
+grep -q 'run jobs update .*--update-env-vars=ADMIN_PASSWORD_RESET=false' "$CALL_LOG"
+grep -q 'run jobs execute .*--update-env-vars=ADMIN_PASSWORD_RESET=false' "$CALL_LOG"
+if grep -q 'ADMIN_PASSWORD_RESET=true' "$CALL_LOG"; then echo 'Rotation enabled by default' >&2; exit 1; fi
+echo 'PASS admin password rotation is off by default'
+
+# Requested rotation: only the execution gets true; the job itself is still reset to false.
+: > "$CALL_LOG"
+RESET_ADMIN_PASSWORD=true bash "$ROOT/deploy/release.sh"
+grep -q 'run jobs update .*--update-env-vars=ADMIN_PASSWORD_RESET=false' "$CALL_LOG"
+grep -q 'run jobs execute .*--update-env-vars=ADMIN_PASSWORD_RESET=true' "$CALL_LOG"
+if grep 'run jobs update' "$CALL_LOG" | grep -q 'ADMIN_PASSWORD_RESET=true'; then
+  echo 'Rotation flag was stored on the job' >&2; exit 1
+fi
+echo 'PASS admin password rotation is a one-shot execution override'
+
+: > "$CALL_LOG"
+if RESET_ADMIN_PASSWORD=yes bash "$ROOT/deploy/release.sh"; then echo 'Accepted invalid RESET_ADMIN_PASSWORD' >&2; exit 1; fi
+test ! -s "$CALL_LOG"
+echo 'PASS invalid RESET_ADMIN_PASSWORD rejected before GCP calls'
 
 : > "$CALL_LOG"
 export ROLLBACK=true

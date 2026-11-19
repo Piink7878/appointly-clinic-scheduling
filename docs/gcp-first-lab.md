@@ -60,7 +60,7 @@ DRY_RUN=1 PROJECT_ID="$PROJECT_ID" bash deploy/deploy.sh
 
 **What it does:** prints every command the script would run, without calling GCP and without creating anything.
 
-Add `--demo` to load sample users. Their password is generated and stored in Secret Manager. Demo accounts are allowed in your project because you will need them for UAT in Lab 6, but the password must never be in code or shown on screen.
+Add `--demo` to load sample users. Their password is generated and stored in Secret Manager (separate from the admin password). Re-running never overwrites the existing admin, clinic settings or services; to rotate the admin password from its secret, run once with `--reset-admin-password`. Demo accounts are allowed in your project because you will need them for UAT in Lab 6, but the password must never be in code or shown on screen.
 
 **Be able to point out these names in the output:**
 

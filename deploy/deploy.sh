@@ -5,7 +5,11 @@ set -euo pipefail
 # TokTickIT — Idempotent Google Cloud Run Deployment Script
 # ==============================================================================
 # Usage:
-#   ./deploy/deploy.sh [--demo]
+#   ./deploy/deploy.sh [--demo] [--reset-admin-password]
+#     --demo                  also seed demo doctors/patients (own generated password)
+#     --reset-admin-password  ONE-SHOT: rotate the admin password hash from the
+#                             ADMIN_PASSWORD secret for this run only (role and
+#                             status are untouched). Never stored on the job.
 #
 # Environment Variables (Optional):
 #   PROJECT_ID   GCP Project ID (defaults to active gcloud config project)
@@ -50,15 +54,21 @@ DRY_RUN="${DRY_RUN:-0}"
 # CHANGE ME: default region if your group uses another one.
 REGION="${REGION:-asia-southeast1}"
 SEED_DEMO_DATA="false"
+# One-shot admin password rotation. Passed as a per-execution override below and
+# NEVER stored on the Cloud Run job, so it cannot stay enabled for later releases.
+RESET_ADMIN_PASSWORD="false"
 
 for arg in "$@"; do
   case "$arg" in
     --demo)
       SEED_DEMO_DATA="true"
       ;;
+    --reset-admin-password)
+      RESET_ADMIN_PASSWORD="true"
+      ;;
     *)
       echo "Unknown argument: $arg" >&2
-      echo "Usage: $0 [--demo]" >&2
+      echo "Usage: $0 [--demo] [--reset-admin-password]" >&2
       exit 1
       ;;
   esac
@@ -325,15 +335,18 @@ run_cmd gcloud run jobs deploy "$MIGRATE_JOB_NAME" \
   --service-account "$SA_EMAIL" \
   --set-cloudsql-instances "$SQL_CONN_NAME" \
   --set-secrets "$JOB_SECRETS" \
-  --set-env-vars "NODE_ENV=production,TZ=Asia/Bangkok,SEED_DEMO_DATA=${SEED_DEMO_DATA}" \
+  --set-env-vars "NODE_ENV=production,TZ=Asia/Bangkok,SEED_DEMO_DATA=${SEED_DEMO_DATA},ADMIN_PASSWORD_RESET=false" \
   --command "sh" \
   --args "-c,npx prisma migrate deploy && npm run prisma:seed" \
   --max-retries 1 \
   --task-timeout 300s \
   --project "$PROJECT_ID"
 
+# ADMIN_PASSWORD_RESET is overridden for THIS execution only (the job itself always
+# stores false), so a rotation can never leak into the next release.
 if ! run_cmd gcloud run jobs execute "$MIGRATE_JOB_NAME" \
   --region "$REGION" \
+  --update-env-vars "ADMIN_PASSWORD_RESET=${RESET_ADMIN_PASSWORD}" \
   --wait \
   --project "$PROJECT_ID"; then
   printf '%s\n' "ERROR: Cloud Run migration job '${MIGRATE_JOB_NAME}' failed. Aborting service deployment." >&2

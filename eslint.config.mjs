@@ -51,7 +51,12 @@ export default tseslint.config(
   },
   {
     // The process entry point and the seed script are CLIs: console output is their interface.
-    files: ['server/src/server.ts', 'server/prisma/seed.ts', 'server/src/shared/utils/logger.ts'],
+    files: [
+      'server/src/server.ts',
+      'server/prisma/seed.ts',
+      'server/prisma/seed-runner.ts',
+      'server/src/shared/utils/logger.ts',
+    ],
     rules: { 'no-console': 'off' },
   },
 

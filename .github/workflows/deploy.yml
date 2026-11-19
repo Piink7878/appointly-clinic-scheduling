@@ -66,6 +66,11 @@ on:
         type: string
         required: false
         default: ''
+      reset_admin_password:
+        description: 'ONE-SHOT: rotate the admin password hash from the ADMIN_PASSWORD secret for this run only (role/status untouched). Leave off for normal releases.'
+        type: boolean
+        required: false
+        default: false
 
 # Least privilege by default; the deploy job adds `id-token: write` below.
 permissions:
@@ -163,6 +168,9 @@ jobs:
       #    DEPLOYED_IMAGE for the next steps.
       # ------------------------------------------------------------------------
       - name: Verify image, migrate and deploy
+        env:
+          # Per-run only (workflow_dispatch input, default false); never stored on the job.
+          RESET_ADMIN_PASSWORD: ${{ inputs.reset_admin_password && 'true' || 'false' }}
         run: bash deploy/release.sh
 
       # ------------------------------------------------------------------------

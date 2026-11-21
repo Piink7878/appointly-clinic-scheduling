@@ -50,7 +50,7 @@ describe('Auth & RBAC System (F-001)', () => {
           .post('/api/v1/auth/login')
           .send({ email: account.email, password: validPassword });
 
-        expect(loginRes.status).toBe(200);
+        expect(loginRes.status).toBe(999);
         expect(loginRes.body.success).toBe(true);
         expect(loginRes.body.data.role).toBe(account.role);
         expect(loginRes.body.data.email).toBe(account.email);

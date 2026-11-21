@@ -112,8 +112,8 @@ jobs:
       PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       REGION: ${{ vars.GCP_REGION }}
       # CHANGE ME: names of your Cloud Run service and migration job.
-      SERVICE_NAME: toktickit
-      MIGRATE_JOB_NAME: toktickit-migrate
+      SERVICE_NAME: s96ba5182
+      MIGRATE_JOB_NAME: s96ba5182-migrate
       # Image tag = commit SHA (or the rollback SHA that was typed in).
       IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
       ROLLBACK: ${{ inputs.image_tag != '' }}
@@ -151,14 +151,14 @@ jobs:
 
       # ------------------------------------------------------------------------
       # 4. Build and push the image (skipped for rollbacks)
-      #    CHANGE ME: image path `.../toktickit/toktickit` must match the
+      #    CHANGE ME: image path `.../s96ba5182/toktickit` must match the
       #    Artifact Registry repo and service names (see deploy/release.sh).
       # ------------------------------------------------------------------------
       - name: Build and push image
         if: env.ROLLBACK != 'true'
         run: |
           gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
-          IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/toktickit/toktickit:$IMAGE_TAG"
+          IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/s96ba5182/s96ba5182:$IMAGE_TAG"
           docker build --tag "$IMAGE" .
           docker push "$IMAGE"
 

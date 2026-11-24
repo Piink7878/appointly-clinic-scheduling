@@ -9,7 +9,8 @@
 * **Cloud Platform:** Google Cloud Platform (GCP) — Shared Course Project (`cpe-se-course-2026`)
 * **Target Region:** `asia-southeast1`
 * **Active Cloud Run Service:** `s96ba5182`
-* **Deployed Live URL:** `https://s96ba5182-ddqo5fpv2a-as.a.run.app`
+* **Active Cloud Run Revision:** `s96ba5182-00005-ch9` (100% traffic)
+* **Deployed Live URL:** `https://s96ba5182-4d7hbszvwq-as.a.run.app`
 * **Local Test Baseline:** Port `3000` (Web + API) or `5173` (Vite) / `4000` (Express)
 
 ---
@@ -168,7 +169,7 @@ If a test run encounters unexpected data or if the UAT team wishes to perform a 
   * Shift 2 (Afternoon): `13:00:00` to `17:00:00` (`isActive: true`)
 
 **Numbered User Actions:**
-1. Navigate to `https://s96ba5182-ddqo5fpv2a-as.a.run.app/login` in Google Chrome.
+1. Navigate to `https://s96ba5182-4d7hbszvwq-as.a.run.app/login` in Google Chrome.
 2. Enter email `doctor@appointly.local` and password `<ChangeMe123!>`, then click **Sign In**.
 3. Verify automatic redirection to `/doctor/schedule` with top navigation showing "Dr. Somchai Prasert (DOCTOR)".
 4. On the **Weekly Working Hours** builder, locate **Monday**.
@@ -289,8 +290,8 @@ If a test run encounters unexpected data or if the UAT team wishes to perform a 
 3. Verify rejection on UI and inspect Console output.
 4. Log in with active patient account: `patient@appointly.local` / `<ChangeMe123!>`.
 5. After landing at `/patient/services`, manually type administrative URLs into the browser address bar:
-   * Navigate to `https://s96ba5182-ddqo5fpv2a-as.a.run.app/admin/settings`
-   * Navigate to `https://s96ba5182-ddqo5fpv2a-as.a.run.app/admin/doctors`
+   * Navigate to `https://s96ba5182-4d7hbszvwq-as.a.run.app/admin/settings`
+   * Navigate to `https://s96ba5182-4d7hbszvwq-as.a.run.app/admin/doctors`
 6. Observe client-side route guard redirection.
 7. Open DevTools Console (F12) and verify authoritative backend RBAC rejection via API call:
    ```javascript
@@ -489,7 +490,7 @@ If any test case fails, please file a defect report using this standardized sche
 ### Defect Report: [DEFECT-ID]
 * **Product Team:** TH-017 (Appointly)
 * **Reporting Tester:** [Tester Name, Student ID, Team TH-045_P2]
-* **Tested Revision:** [e.g. s96ba5182-00001-xxx / commit 6b73bfdb]
+* **Tested Revision:** [e.g. s96ba5182-00005-ch9 / commit 6b73bfdb]
 * **Linked Test Case ID:** [e.g. UAT-AP-02]
 * **Linked Sprint 1 AC:** [e.g. AC-F006-02]
 * **Severity:** [ Critical (blocks acceptance) | Major (blocks acceptance) | Minor ]
@@ -509,7 +510,7 @@ If any test case fails, please file a defect report using this standardized sche
 *Only to be completed by Independent UAT Team TH-045_P2.*
 
 * **Tested Application Version:** `Appointly Sprint 1 (commit 6b73bfdbf029343e4af3268d72e9364fbab12f52)`
-* **Deployment URL:** `https://s96ba5182-ddqo5fpv2a-as.a.run.app`
+* **Deployment URL:** `https://s96ba5182-4d7hbszvwq-as.a.run.app`
 * **Independent Testers:**
   1. Norawit (`67070501026`) — Team `TH-045_P2` (EquipFlow)
   2. Pawarisa (`67070501032`) — Team `TH-045_P2` (EquipFlow)

@@ -10,7 +10,12 @@ import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
 import { isValidUuid } from '../../shared/utils/uuid';
 import { parseClinicCalendarDate } from '../../shared/utils/timezone';
-import { scheduleValidator, type ShiftInput, type ExceptionInput } from './scheduleValidator';
+import {
+  scheduleValidator,
+  parseTimeToSeconds,
+  type ShiftInput,
+  type ExceptionInput,
+} from './scheduleValidator';
 import { type CreateExceptionInput } from './validation';
 
 export class ScheduleService {
@@ -180,8 +185,45 @@ export class ScheduleService {
     }
     const parsedDate = new Date(`${dateStr}T00:00:00.000Z`);
 
-    // 4. Create the ScheduleException; an administrator's override is audited in the same transaction
+    // 4. Check for duplicate/overlapping exceptions and create inside a transaction
     const createdException = await prisma.$transaction(async (tx) => {
+      // DEF-AP-02: Reject duplicate or overlapping schedule exceptions on the same date
+      const existingOnDate = await tx.scheduleException.findMany({
+        where: { doctorId, exceptionDate: parsedDate },
+      });
+
+      if (existingOnDate.length > 0) {
+        const incomingStart = input.startTime ? input.startTime.trim() : null;
+        const incomingEnd = input.endTime ? input.endTime.trim() : null;
+        const incomingIsFullDay = !incomingStart && !incomingEnd;
+        const hasFullDayConflict = existingOnDate.some(
+          (e) => e.startTime === null && e.endTime === null
+        );
+
+        if (incomingIsFullDay || hasFullDayConflict) {
+          throw AppError.conflict(
+            `A schedule exception already exists for ${dateStr}. Remove the existing exception before adding a new one.`,
+            'SCHEDULE_EXCEPTION_CONFLICT'
+          );
+        }
+
+        const inStart = parseTimeToSeconds(incomingStart!);
+        const inEnd = parseTimeToSeconds(incomingEnd!);
+        const hasTimeOverlap = existingOnDate.some((e) => {
+          if (e.startTime === null || e.endTime === null) return true;
+          const eStart = parseTimeToSeconds(e.startTime);
+          const eEnd = parseTimeToSeconds(e.endTime);
+          return inStart < eEnd && eStart < inEnd;
+        });
+
+        if (hasTimeOverlap) {
+          throw AppError.conflict(
+            `The exception window ${incomingStart}–${incomingEnd} on ${dateStr} overlaps an existing exception.`,
+            'SCHEDULE_EXCEPTION_CONFLICT'
+          );
+        }
+      }
+
       const created = await tx.scheduleException.create({
         data: {
           doctorId,

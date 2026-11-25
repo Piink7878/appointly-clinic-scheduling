@@ -11,7 +11,7 @@
 // ==============================================================================
 
 import { AppError } from '../../shared/middleware/errorHandler';
-import { parseClinicCalendarDate } from '../../shared/utils/timezone';
+import { parseClinicCalendarDate, toBangkokDateString } from '../../shared/utils/timezone';
 
 /**
  * Standard Shift input interface.
@@ -202,10 +202,20 @@ export function validateException(exception: ExceptionInput): void {
     throw AppError.badRequest('exceptionDate is required.', 'INVALID_EXCEPTION_DATE');
   }
 
-  if (parseClinicCalendarDate(exception.exceptionDate) === null) {
+  const dateStr = parseClinicCalendarDate(exception.exceptionDate);
+  if (dateStr === null) {
     throw AppError.badRequest(
       `Invalid exceptionDate: "${String(exception.exceptionDate)}".`,
       'INVALID_EXCEPTION_DATE'
+    );
+  }
+
+  // DEF-AP-03: Reject past dates compared against today in clinic timezone (Asia/Bangkok)
+  const todayStr = toBangkokDateString(new Date());
+  if (dateStr < todayStr) {
+    throw AppError.badRequest(
+      `exceptionDate "${dateStr}" is in the past. Only today or future dates are allowed.`,
+      'VALIDATION_ERROR'
     );
   }
 

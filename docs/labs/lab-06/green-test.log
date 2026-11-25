@@ -1,0 +1,15 @@
+Command: cd server && npx vitest run --reporter=verbose tests/sprint-1/integration/schedule-exception-defects.test.ts
+Exit Code: 0
+Date: 2026-11-26T01:53:18+07:00
+
+ RUN  v2.1.9 D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/server
+
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path A — Duplicate full-day HOLIDAY on the same date > rejects a second full-day HOLIDAY on 2026-12-31 with 409 SCHEDULE_EXCEPTION_CONFLICT
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path B — Partial-day overlaps existing full-day HOLIDAY > rejects partial 13:00-17:00 HOLIDAY on 2026-12-30 when full-day HOLIDAY exists with 409 SCHEDULE_EXCEPTION_CONFLICT
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-03 — Past date rejected > rejects exceptionDate 2020-01-01 with 400 VALIDATION_ERROR
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > Happy-path guard — Non-overlapping partial exceptions on same future date > allows two non-overlapping partial-day exceptions (09:00-12:00 and 13:00-17:00) on 2027-01-15
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  01:53:18
+   Duration  1.81s (transform 423ms, setup 0ms, collect 780ms, tests 446ms, environment 0ms, prepare 84ms)

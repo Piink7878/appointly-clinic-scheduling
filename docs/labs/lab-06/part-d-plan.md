@@ -173,13 +173,13 @@ if (existingOnDate.length > 0) {
 
 ### Step 4 — PR to `staging` ⛔ HUMAN GATE — STOP & WAIT
 
-- [ ] `git push origin fix/<issue#>-schedule-exception-validation`
-- [ ] Open PR on GitHub:
+- [x] `git push origin fix/37-schedule-exception-validation`
+- [x] Open PR on GitHub:
   - **Base:** `staging`
   - **Title:** `fix: reject duplicate/overlapping and past-date schedule exceptions (DEF-AP-02, DEF-AP-03)`
-  - **Body:** `Part of #<issue#>` — include one-paragraph summary of both fixes and links to `red-test.log`, `green-test.log`, `regression-summary.log`.
+  - **Body:** `Part of #37` — include one-paragraph summary of both fixes and links to `red-test.log`, `green-test.log`, `regression-summary.log`.
   - Request teammate review/approval.
-- [ ] Record Staging PR # in Evidence table.
+- [x] Record Staging PR # in Evidence table (`#38`).
 - [ ] **⛔ STOP — wait for teammate review/approval and merge into `staging` before proceeding to Step 5.**
 
 ### Step 5 — Release PR to `main` & Redeploy ⛔ HUMAN GATE — STOP & WAIT
@@ -221,7 +221,7 @@ if (existingOnDate.length > 0) {
 | Regression Log | `docs/labs/lab-06/regression-summary.log` |
 | Server Regression Counts | `25 files, 545 passed / 0 failed / 0 skipped (545 total)` |
 | Client Regression Counts | `10 files, 320 passed / 0 failed / 0 skipped (320 total)` |
-| Staging PR # | _(fill after Step 4)_ |
+| Staging PR # | `#38` (https://github.com/Piink7878/appointly-clinic-scheduling/pull/38) |
 | Release PR # | _(fill after Step 5)_ |
 | New Main Commit SHA | _(fill after Step 5 merge)_ |
 | Cloud Run Revision | _(fill after Step 5 deploy)_ |

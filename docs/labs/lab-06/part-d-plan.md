@@ -180,14 +180,14 @@ if (existingOnDate.length > 0) {
   - **Body:** `Part of #37` — include one-paragraph summary of both fixes and links to `red-test.log`, `green-test.log`, `regression-summary.log`.
   - Request teammate review/approval.
 - [x] Record Staging PR # in Evidence table (`#38`).
-- [ ] **⛔ STOP — wait for teammate review/approval and merge into `staging` before proceeding to Step 5.**
+- [x] **⛔ STOP — wait for teammate review/approval and merge into `staging` before proceeding to Step 5.**
 
 ### Step 5 — Release PR to `main` & Redeploy ⛔ HUMAN GATE — STOP & WAIT
 
-- [ ] After `staging` merge and CI green, open **release PR** `staging → main`:
+- [x] After `staging` merge and CI green, open **release PR** `staging → main`:
   - **Title:** `release: schedule exception validation fixes (DEF-AP-02, DEF-AP-03)`
-  - **Body:** `Closes #<issue#>` — link test logs and regression summary.
-- [ ] Record Release PR # in Evidence table.
+  - **Body:** `Closes #37` — link test logs and regression summary.
+- [x] Record Release PR # in Evidence table (`#39`).
 - [ ] **⛔ STOP — wait for approval, merge, and `Deploy demo` CI workflow to push to Cloud Run.**
 - [ ] After deploy completes, record new Main Commit SHA and Cloud Run Revision in Evidence table.
 
@@ -222,7 +222,7 @@ if (existingOnDate.length > 0) {
 | Server Regression Counts | `25 files, 548 passed / 0 failed / 0 skipped (548 total)` |
 | Client Regression Counts | `10 files, 320 passed / 0 failed / 0 skipped (320 total)` |
 | Staging PR # | `#38` (https://github.com/Piink7878/appointly-clinic-scheduling/pull/38) |
-| Release PR # | _(fill after Step 5)_ |
+| Release PR # | `#39` (https://github.com/Piink7878/appointly-clinic-scheduling/pull/39) |
 | New Main Commit SHA | _(fill after Step 5 merge)_ |
 | Cloud Run Revision | _(fill after Step 5 deploy)_ |
 

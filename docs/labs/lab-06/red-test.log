@@ -1,0 +1,61 @@
+Command: cd server && npx vitest run --reporter=verbose tests/sprint-1/integration/schedule-exception-defects.test.ts
+Base Commit SHA: e87f8405e2746c4cbb616fc6d2e891f4eb036938
+RED Commit SHA: 2d0dfab7a291f075d66c30a76c02a637aa48db3e
+Exit Code: 1
+Date: 2026-11-26T01:52:13+07:00
+
+ RUN  v2.1.9 D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/server
+
+ × tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path A — Duplicate full-day HOLIDAY on the same date > rejects a second full-day HOLIDAY on 2026-12-31 with 409 SCHEDULE_EXCEPTION_CONFLICT
+   → expected 201 to be 409 // Object.is equality
+ × tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path B — Partial-day overlaps existing full-day HOLIDAY > rejects partial 13:00-17:00 HOLIDAY on 2026-12-30 when full-day HOLIDAY exists with 409 SCHEDULE_EXCEPTION_CONFLICT
+   → expected 201 to be 409 // Object.is equality
+ × tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-03 — Past date rejected > rejects exceptionDate 2020-01-01 with 400 VALIDATION_ERROR
+   → expected 201 to be 400 // Object.is equality
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > Happy-path guard — Non-overlapping partial exceptions on same future date > allows two non-overlapping partial-day exceptions (09:00-12:00 and 13:00-17:00) on 2027-01-15
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path A — Duplicate full-day HOLIDAY on the same date > rejects a second full-day HOLIDAY on 2026-12-31 with 409 SCHEDULE_EXCEPTION_CONFLICT
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/sprint-1/integration/schedule-exception-defects.test.ts:92:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path B — Partial-day overlaps existing full-day HOLIDAY > rejects partial 13:00-17:00 HOLIDAY on 2026-12-30 when full-day HOLIDAY exists with 409 SCHEDULE_EXCEPTION_CONFLICT
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/sprint-1/integration/schedule-exception-defects.test.ts:124:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-03 — Past date rejected > rejects exceptionDate 2020-01-01 with 400 VALIDATION_ERROR
+AssertionError: expected 201 to be 400 // Object.is equality
+
+- Expected
++ Received
+
+- 400
++ 201
+
+ ❯ tests/sprint-1/integration/schedule-exception-defects.test.ts:143:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  01:52:13
+   Duration  1.77s (transform 283ms, setup 0ms, collect 788ms, tests 687ms, environment 0ms, prepare 104ms)

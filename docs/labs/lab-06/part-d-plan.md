@@ -40,8 +40,8 @@
 | File | Type | Change Summary |
 |------|------|----------------|
 | `server/src/modules/schedules/scheduleValidator.ts` | Existing | Add `toBangkokDateString` import; insert past-date guard in `validateException()` |
-| `server/src/modules/schedules/service.ts` | Existing | Add `parseTimeToSeconds` import; insert DB overlap check in `createException()` inside `prisma.$transaction` |
-| `server/tests/sprint-1/integration/schedule-exception-defects.test.ts` | **New** | RED/GREEN integration tests for DEF-AP-02 (Path A, Path B) and DEF-AP-03 with `beforeAll`/`afterAll` test-date cleanup |
+| `server/src/modules/schedules/service.ts` | Existing | Add `parseTimeToSeconds` import; insert DB overlap check in `createException()` inside a `Serializable` `prisma.$transaction` with `P2034` retry |
+| `server/tests/sprint-1/integration/schedule-exception-defects.test.ts` | **New** | RED/GREEN integration tests for DEF-AP-02 (Path A, Path B, overlapping partials, concurrency) and DEF-AP-03, cleaning up only `createdExceptionIds` in `afterAll` |
 | `server/tests/sprint-1/integration/timezone-handling.test.ts` | Existing | Delete each created `2099-12-25` test exception between `it.each` iterations so consecutive cases don't collide with DEF-AP-02 |
 
 > [!NOTE]
@@ -215,11 +215,11 @@ if (existingOnDate.length > 0) {
 | RED Commit SHA | `2d0dfab7a291f075d66c30a76c02a637aa48db3e` |
 | RED Test Log | `docs/labs/lab-06/red-test.log` |
 | RED Test Counts (pass / fail / skip) | `1 passed / 3 failed / 0 skipped (4 total)` |
-| GREEN Commit SHA | `237593115deca5c207184932f5f2ea529bf0d4da` |
+| GREEN Commit SHA | `abfd14244311f9d24a6b1558e4ce9297cf13664b` |
 | GREEN Test Log | `docs/labs/lab-06/green-test.log` |
-| GREEN Test Counts (pass / fail / skip) | `4 passed / 0 failed / 0 skipped (4 total)` |
+| GREEN Test Counts (pass / fail / skip) | `7 passed / 0 failed / 0 skipped (7 total)` |
 | Regression Log | `docs/labs/lab-06/regression-summary.log` |
-| Server Regression Counts | `25 files, 545 passed / 0 failed / 0 skipped (545 total)` |
+| Server Regression Counts | `25 files, 548 passed / 0 failed / 0 skipped (548 total)` |
 | Client Regression Counts | `10 files, 320 passed / 0 failed / 0 skipped (320 total)` |
 | Staging PR # | `#38` (https://github.com/Piink7878/appointly-clinic-scheduling/pull/38) |
 | Release PR # | _(fill after Step 5)_ |

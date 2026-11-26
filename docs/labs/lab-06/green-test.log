@@ -1,0 +1,18 @@
+Command: cd server && npx vitest run --reporter=verbose tests/sprint-1/integration/schedule-exception-defects.test.ts
+Exit Code: 0
+Date: 2026-11-26T21:03:21+07:00
+
+ RUN  v2.1.9 D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/server
+
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path A — Duplicate full-day HOLIDAY on the same date > rejects a second full-day HOLIDAY on 2026-12-31 with 409 SCHEDULE_EXCEPTION_CONFLICT
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path B — Partial-day overlaps existing full-day HOLIDAY > rejects partial 13:00-17:00 HOLIDAY on 2026-12-30 when full-day HOLIDAY exists with 409 SCHEDULE_EXCEPTION_CONFLICT
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Path C — Overlapping partial-day exceptions on the same date > rejects partial 11:00-14:00 BREAK overlapping existing 09:00-12:00 BREAK on 2027-02-10 with 409 SCHEDULE_EXCEPTION_CONFLICT
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Concurrency — Simultaneous conflicting requests > serializes two concurrent full-day HOLIDAY requests on 2027-02-11: exactly one 201 and one 409
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Concurrency — Simultaneous conflicting requests > serializes two concurrent overlapping partial-day requests on 2027-02-12: exactly one 201 and one 409
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-03 — Past date rejected > rejects exceptionDate 2020-01-01 with 400 VALIDATION_ERROR
+ ✓ tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > Happy-path guard — Non-overlapping partial exceptions on same future date > allows two non-overlapping partial-day exceptions (09:00-12:00 and 13:00-17:00) on 2027-01-15
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  21:03:21
+   Duration  2.59s (transform 435ms, setup 0ms, collect 1.16s, tests 1.01s, environment 0ms, prepare 148ms)

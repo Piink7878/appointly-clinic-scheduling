@@ -90,6 +90,8 @@ describe('Timezone & calendar-date handling', () => {
       expect(res.status).toBe(201);
       createdExceptionIds.push(res.body.data.exceptionId);
       expect(await storedDate(res.body.data.exceptionId)).toBe(expected);
+      // Remove the exception before the next it.each case so 2099-12-25 variants don't collide (DEF-AP-02)
+      await prisma.scheduleException.delete({ where: { exceptionId: res.body.data.exceptionId } });
     });
 
     it.each(['2099-02-30', '2099-13-01', '2099-04-31', 'not-a-date', ''])(

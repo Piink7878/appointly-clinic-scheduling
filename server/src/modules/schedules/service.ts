@@ -5,12 +5,17 @@
 // Manages weekly working shifts, split shifts, date-specific exceptions, and audit logging.
 // ==============================================================================
 
-import { type ExceptionType } from '@prisma/client';
+import { Prisma, type ExceptionType } from '@prisma/client';
 import { prisma } from '../../shared/database';
 import { AppError } from '../../shared/middleware/errorHandler';
 import { isValidUuid } from '../../shared/utils/uuid';
 import { parseClinicCalendarDate } from '../../shared/utils/timezone';
-import { scheduleValidator, type ShiftInput, type ExceptionInput } from './scheduleValidator';
+import {
+  scheduleValidator,
+  parseTimeToSeconds,
+  type ShiftInput,
+  type ExceptionInput,
+} from './scheduleValidator';
 import { type CreateExceptionInput } from './validation';
 
 export class ScheduleService {
@@ -180,41 +185,112 @@ export class ScheduleService {
     }
     const parsedDate = new Date(`${dateStr}T00:00:00.000Z`);
 
-    // 4. Create the ScheduleException; an administrator's override is audited in the same transaction
-    const createdException = await prisma.$transaction(async (tx) => {
-      const created = await tx.scheduleException.create({
-        data: {
-          doctorId,
-          exceptionDate: parsedDate,
-          startTime: input.startTime ? input.startTime.trim() : null,
-          endTime: input.endTime ? input.endTime.trim() : null,
-          exceptionType: input.exceptionType as ExceptionType,
-          reason: input.reason ? input.reason.trim() : null,
-          createdBy: authorUserId,
-        },
-      });
+    // 4. Run conflict check and creation inside a Serializable transaction with retry on P2034
+    //    so concurrent requests for the same doctor and date cannot race past the overlap check.
+    const MAX_SERIALIZATION_RETRIES = 4;
+    let createdException;
 
-      if (isAdmin) {
-        await tx.auditLog.create({
-          data: {
-            userId: authorUserId,
-            actionType: 'ADMIN_SCHEDULE_EXCEPTION_CREATED',
-            entityType: 'ScheduleException',
-            entityId: created.exceptionId,
-            details: {
-              doctorId,
-              exceptionDate: dateStr,
-              exceptionType: input.exceptionType,
-              reason: input.reason || null,
-            },
+    for (let attempt = 0; attempt <= MAX_SERIALIZATION_RETRIES; attempt++) {
+      try {
+        createdException = await prisma.$transaction(
+          async (tx) => {
+            await this.assertNoExceptionConflict(tx, doctorId, parsedDate, dateStr, input);
+
+            const created = await tx.scheduleException.create({
+              data: {
+                doctorId,
+                exceptionDate: parsedDate,
+                startTime: input.startTime ? input.startTime.trim() : null,
+                endTime: input.endTime ? input.endTime.trim() : null,
+                exceptionType: input.exceptionType as ExceptionType,
+                reason: input.reason ? input.reason.trim() : null,
+                createdBy: authorUserId,
+              },
+            });
+
+            if (isAdmin) {
+              await tx.auditLog.create({
+                data: {
+                  userId: authorUserId,
+                  actionType: 'ADMIN_SCHEDULE_EXCEPTION_CREATED',
+                  entityType: 'ScheduleException',
+                  entityId: created.exceptionId,
+                  details: {
+                    doctorId,
+                    exceptionDate: dateStr,
+                    exceptionType: input.exceptionType,
+                    reason: input.reason || null,
+                  },
+                },
+              });
+            }
+
+            return created;
           },
-        });
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+        );
+        break;
+      } catch (error) {
+        const isSerializationFailure =
+          error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034';
+        if (!isSerializationFailure || attempt === MAX_SERIALIZATION_RETRIES) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10 * (attempt + 1)));
       }
+    }
 
-      return created;
+    return createdException!;
+  }
+
+  /**
+   * Ensures a prospective schedule exception does not duplicate a full-day exception
+   * or overlap an existing exception window on the same date for the doctor.
+   */
+  private async assertNoExceptionConflict(
+    tx: Prisma.TransactionClient,
+    doctorId: string,
+    parsedDate: Date,
+    dateStr: string,
+    input: CreateExceptionInput
+  ): Promise<void> {
+    const existingOnDate = await tx.scheduleException.findMany({
+      where: { doctorId, exceptionDate: parsedDate },
     });
 
-    return createdException;
+    if (existingOnDate.length === 0) {
+      return;
+    }
+
+    const incomingStart = input.startTime ? input.startTime.trim() : null;
+    const incomingEnd = input.endTime ? input.endTime.trim() : null;
+    const incomingIsFullDay = !incomingStart && !incomingEnd;
+    const hasFullDayConflict = existingOnDate.some(
+      (e) => e.startTime === null && e.endTime === null
+    );
+
+    if (incomingIsFullDay || hasFullDayConflict) {
+      throw AppError.conflict(
+        `A schedule exception already exists for ${dateStr}. Remove the existing exception before adding a new one.`,
+        'SCHEDULE_EXCEPTION_CONFLICT'
+      );
+    }
+
+    const inStart = parseTimeToSeconds(incomingStart!);
+    const inEnd = parseTimeToSeconds(incomingEnd!);
+    const hasTimeOverlap = existingOnDate.some((e) => {
+      if (e.startTime === null || e.endTime === null) return true;
+      const eStart = parseTimeToSeconds(e.startTime);
+      const eEnd = parseTimeToSeconds(e.endTime);
+      return inStart < eEnd && eStart < inEnd;
+    });
+
+    if (hasTimeOverlap) {
+      throw AppError.conflict(
+        `The exception window ${incomingStart}–${incomingEnd} on ${dateStr} overlaps an existing exception.`,
+        'SCHEDULE_EXCEPTION_CONFLICT'
+      );
+    }
   }
 
   /**

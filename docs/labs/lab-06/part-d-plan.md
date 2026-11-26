@@ -1,7 +1,7 @@
 # Lab 06 Part D — Execution Plan
 ## Appointly: Schedule Exception Validation Defects (DEF-AP-02 & DEF-AP-03)
 
-> **Status:** 🔵 IN PROGRESS (Approved)
+> **Status:** ✅ COMPLETED — Steps 1–6 Executed & EquipFlow (`TH-045_P2`) Notified for Independent Retest
 > **Prepared:** 2026-11-26 | **Timezone:** Asia/Bangkok (UTC+7)
 > **Repo:** `Piink7878/appointly-clinic-scheduling`
 
@@ -188,21 +188,21 @@ if (existingOnDate.length > 0) {
   - **Title:** `release: schedule exception validation fixes (DEF-AP-02, DEF-AP-03)`
   - **Body:** `Closes #37` — link test logs and regression summary.
 - [x] Record Release PR # in Evidence table (`#39`).
-- [ ] **⛔ STOP — wait for approval, merge, and `Deploy demo` CI workflow to push to Cloud Run.**
-- [ ] After deploy completes, record new Main Commit SHA and Cloud Run Revision in Evidence table.
+- [x] **⛔ STOP — wait for approval, merge, and `Deploy demo` CI workflow to push to Cloud Run.**
+- [x] After deploy completes, record new Main Commit SHA and Cloud Run Revision in Evidence table.
 
 ### Step 6 — Post-Deploy Cleanup & Partner Retest
 
-- [ ] **Clean up production test data** created before the fix was deployed:
-  - Remove any `ScheduleException` records with `exceptionDate = '2020-01-01'` (invalid past-date records) from the production DB.
-  - Remove any duplicate `ScheduleException` records with `exceptionDate = '2026-12-31'` (keep at most one valid record per doctor; delete the extras created during UAT).
-  - Verify doctor `isActive` status is correct (not affected by this fix, but confirm no collateral damage from testing).
-- [ ] **Notify the EquipFlow partner team:**
-  - Share production Cloud Run URL and new revision ID.
+- [x] **Clean up production test data** created before the fix was deployed:
+  - Remove any `ScheduleException` records with `exceptionDate = '2020-01-01'` (invalid past-date records) from the production DB. *(Verified & deleted `"Past date edge test"` via `/admin/schedules` on `2026-11-27`.)*
+  - Remove any duplicate `ScheduleException` records with `exceptionDate = '2026-12-31'` (keep at most one valid record per doctor; delete the extras created during UAT). *(Deleted duplicate full-day `"New Year Holiday - Clinic Closed"` and overlapping `13:00–17:00` `"UAT-F-006-Test"`; 1 valid `2026-12-31` Holiday remains.)*
+  - Verify doctor `isActive` status is correct (not affected by this fix, but confirm no collateral damage from testing). *(Both doctors `Dr. Somchai Prasert (Lead)` and `Dr. Somchai Prasert` verified `Active` on `/admin/doctors`.)*
+- [x] **Notify the EquipFlow partner team:**
+  - Share production Cloud Run URL (`https://s96ba5182-4d7hbszvwq-as.a.run.app`) and new revision ID (`s96ba5182-00006-x6z`).
   - Confirm **DEF-AP-02 closed**: `POST .../exceptions` now returns `409 SCHEDULE_EXCEPTION_CONFLICT` for duplicate/overlapping exceptions.
   - Confirm **DEF-AP-03 closed**: `POST .../exceptions` now returns `400 VALIDATION_ERROR` for past `exceptionDate`.
   - Note **DEF-AP-01** (Idle 401) as a Known Minor Limitation — not fixed in this pass, frontend should handle token refresh.
-- [ ] Update `docs/labs/lab-06/part-d-plan.md`: mark all Step 6 items `[x]`.
+- [x] Update `docs/labs/lab-06/part-d-plan.md`: mark all Step 6 items `[x]`.
 
 ---
 
@@ -223,8 +223,8 @@ if (existingOnDate.length > 0) {
 | Client Regression Counts | `10 files, 320 passed / 0 failed / 0 skipped (320 total)` |
 | Staging PR # | `#38` (https://github.com/Piink7878/appointly-clinic-scheduling/pull/38) |
 | Release PR # | `#39` (https://github.com/Piink7878/appointly-clinic-scheduling/pull/39) |
-| New Main Commit SHA | _(fill after Step 5 merge)_ |
-| Cloud Run Revision | _(fill after Step 5 deploy)_ |
+| New Main Commit SHA | `10d4a3c664b6461c2ecb2a5b7b0591ab4fed1d4f` |
+| Cloud Run Revision | `s96ba5182-00006-x6z` |
 
 ---
 

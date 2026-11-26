@@ -4,6 +4,8 @@
 // Covers UAT release-blocking defects reported by EquipFlow:
 //   - DEF-AP-02 Path A: Duplicate full-day HOLIDAY on the same date -> 409 Conflict
 //   - DEF-AP-02 Path B: Partial-day exception overlapping full-day HOLIDAY -> 409 Conflict
+//   - DEF-AP-02 Path C: Two partial-day exceptions with overlapping time ranges -> 409 Conflict
+//   - DEF-AP-02 Concurrency: Simultaneous requests on the same date -> exactly one 201 and one 409
 //   - DEF-AP-03: Past-date exception (compared against Asia/Bangkok today) -> 400 VALIDATION_ERROR
 //   - Happy-path guard: Non-overlapping partial-day exceptions on the same future date -> 201 Created
 // ==============================================================================
@@ -18,26 +20,9 @@ describe('Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03)', () => {
   const validPassword = 'ChangeMe123!';
   const doctorEmail = 'doctor@appointly.local';
 
-  const TEST_DATES = [
-    new Date('2026-12-31T00:00:00.000Z'),
-    new Date('2026-12-30T00:00:00.000Z'),
-    new Date('2020-01-01T00:00:00.000Z'),
-    new Date('2027-01-15T00:00:00.000Z'),
-  ];
-
   let doctorCookies: string[];
   let primaryDoctorId: string;
   const createdExceptionIds: string[] = [];
-
-  async function cleanTestDateExceptions() {
-    if (!primaryDoctorId) return;
-    await prisma.scheduleException.deleteMany({
-      where: {
-        doctorId: primaryDoctorId,
-        exceptionDate: { in: TEST_DATES },
-      },
-    });
-  }
 
   beforeAll(async () => {
     const doctorLogin = await request(app)
@@ -51,18 +36,15 @@ describe('Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03)', () => {
     });
     expect(docProfile).toBeDefined();
     primaryDoctorId = docProfile!.doctorId;
-
-    // Clean up any leftover test rows from previous runs (e.g., RED -> GREEN)
-    await cleanTestDateExceptions();
   });
 
   afterAll(async () => {
+    // Clean up only the specific ScheduleException rows created by this test suite
     if (createdExceptionIds.length > 0) {
       await prisma.scheduleException.deleteMany({
         where: { exceptionId: { in: createdExceptionIds } },
       });
     }
-    await cleanTestDateExceptions();
   });
 
   // --------------------------------------------------------------------------
@@ -124,6 +106,125 @@ describe('Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03)', () => {
       expect(partial.status).toBe(409);
       expect(partial.body.success).toBe(false);
       expect(partial.body.error.code).toBe('SCHEDULE_EXCEPTION_CONFLICT');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // DEF-AP-02 Path C — Overlapping partial-day exceptions on the same date
+  // --------------------------------------------------------------------------
+  describe('DEF-AP-02 Path C — Overlapping partial-day exceptions on the same date', () => {
+    it('rejects partial 11:00-14:00 BREAK overlapping existing 09:00-12:00 BREAK on 2027-02-10 with 409 SCHEDULE_EXCEPTION_CONFLICT', async () => {
+      const first = await request(app)
+        .post('/api/v1/doctors/me/exceptions')
+        .set('Cookie', doctorCookies)
+        .send({
+          exceptionDate: '2027-02-10',
+          exceptionType: 'BREAK',
+          startTime: '09:00',
+          endTime: '12:00',
+          reason: 'Morning block',
+        });
+      expect(first.status).toBe(201);
+      createdExceptionIds.push(first.body.data.exceptionId);
+
+      const overlapping = await request(app)
+        .post('/api/v1/doctors/me/exceptions')
+        .set('Cookie', doctorCookies)
+        .send({
+          exceptionDate: '2027-02-10',
+          exceptionType: 'BREAK',
+          startTime: '11:00',
+          endTime: '14:00',
+          reason: 'Overlapping midday block',
+        });
+      expect(overlapping.status).toBe(409);
+      expect(overlapping.body.success).toBe(false);
+      expect(overlapping.body.error.code).toBe('SCHEDULE_EXCEPTION_CONFLICT');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // DEF-AP-02 Concurrency — Simultaneous conflicting requests on the same date
+  // --------------------------------------------------------------------------
+  describe('DEF-AP-02 Concurrency — Simultaneous conflicting requests', () => {
+    it('serializes two concurrent full-day HOLIDAY requests on 2027-02-11: exactly one 201 and one 409', async () => {
+      const targetDate = new Date('2027-02-11T00:00:00.000Z');
+      const countBefore = await prisma.scheduleException.count({
+        where: { doctorId: primaryDoctorId, exceptionDate: targetDate },
+      });
+
+      const payload = {
+        exceptionDate: '2027-02-11',
+        exceptionType: 'HOLIDAY',
+        reason: 'Concurrent full-day test',
+      };
+
+      const [resA, resB] = await Promise.all([
+        request(app).post('/api/v1/doctors/me/exceptions').set('Cookie', doctorCookies).send(payload),
+        request(app).post('/api/v1/doctors/me/exceptions').set('Cookie', doctorCookies).send(payload),
+      ]);
+
+      for (const res of [resA, resB]) {
+        if (res.status === 201 && res.body?.data?.exceptionId) {
+          createdExceptionIds.push(res.body.data.exceptionId);
+        }
+      }
+
+      expect([resA.status, resB.status].sort()).toEqual([201, 409]);
+      const conflict = resA.status === 409 ? resA : resB;
+      expect(conflict.body.success).toBe(false);
+      expect(conflict.body.error.code).toBe('SCHEDULE_EXCEPTION_CONFLICT');
+
+      const countAfter = await prisma.scheduleException.count({
+        where: { doctorId: primaryDoctorId, exceptionDate: targetDate },
+      });
+      expect(countAfter - countBefore).toBe(1);
+    });
+
+    it('serializes two concurrent overlapping partial-day requests on 2027-02-12: exactly one 201 and one 409', async () => {
+      const targetDate = new Date('2027-02-12T00:00:00.000Z');
+      const countBefore = await prisma.scheduleException.count({
+        where: { doctorId: primaryDoctorId, exceptionDate: targetDate },
+      });
+
+      const [resA, resB] = await Promise.all([
+        request(app)
+          .post('/api/v1/doctors/me/exceptions')
+          .set('Cookie', doctorCookies)
+          .send({
+            exceptionDate: '2027-02-12',
+            exceptionType: 'BREAK',
+            startTime: '09:00',
+            endTime: '12:00',
+            reason: 'Concurrent partial A',
+          }),
+        request(app)
+          .post('/api/v1/doctors/me/exceptions')
+          .set('Cookie', doctorCookies)
+          .send({
+            exceptionDate: '2027-02-12',
+            exceptionType: 'BREAK',
+            startTime: '11:00',
+            endTime: '14:00',
+            reason: 'Concurrent partial B',
+          }),
+      ]);
+
+      for (const res of [resA, resB]) {
+        if (res.status === 201 && res.body?.data?.exceptionId) {
+          createdExceptionIds.push(res.body.data.exceptionId);
+        }
+      }
+
+      expect([resA.status, resB.status].sort()).toEqual([201, 409]);
+      const conflict = resA.status === 409 ? resA : resB;
+      expect(conflict.body.success).toBe(false);
+      expect(conflict.body.error.code).toBe('SCHEDULE_EXCEPTION_CONFLICT');
+
+      const countAfter = await prisma.scheduleException.count({
+        where: { doctorId: primaryDoctorId, exceptionDate: targetDate },
+      });
+      expect(countAfter - countBefore).toBe(1);
     });
   });
 

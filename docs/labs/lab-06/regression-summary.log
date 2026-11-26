@@ -9,8 +9,8 @@ Command: cd server && npm test
 Lint/Typecheck: cd server && npm run lint (eslint . && tsc -p tsconfig.lint.json) -> Exit Code 0
 Exit Code: 0
 Test Files: 25 passed (25)
-Tests: 545 passed | 0 failed | 0 skipped (545)
-Duration: 69.16s
+Tests: 548 passed | 0 failed | 0 skipped (548)
+Duration: 44.28s
 
 Notes on existing tests during regression:
 - No existing tests failed due to hardcoded past dates.
@@ -19,8 +19,12 @@ Notes on existing tests during regression:
   it.each iterations all targeted `2099-12-25` for the same doctor without deleting between runs,
   correctly triggering the new DEF-AP-02 409 duplicate-exception check. Updated
   timezone-handling.test.ts to delete each test exception right after asserting storedDate().
-- tests/sprint-1/integration/doctors.test.ts initially failed on 1 test due to a leftover local
-  DB row (`Empty Unassigned Service Test` from 2026-11-14); cleared the stale local row and re-ran.
+- tests/sprint-1/integration/schedule-exception-defects.test.ts expanded to 7 tests covering:
+  Path A (duplicate full-day HOLIDAY), Path B (partial-day overlapping full-day HOLIDAY),
+  Path C (overlapping partial-day exceptions), Concurrency (simultaneous full-day & simultaneous
+  overlapping partial-day requests serialized via Serializable tx + P2034 retry), DEF-AP-03
+  (past-date rejection), and non-overlapping partial-day happy path, cleaning up only
+  createdExceptionIds in afterAll.
 
 2. Client Regression Suite
 --------------------------
@@ -28,5 +32,5 @@ Command: cd client && npm test
 Exit Code: 0
 Test Files: 10 passed (10)
 Tests: 320 passed | 0 failed | 0 skipped (320)
-Duration: 16.97s
+Duration: 8.69s
 ==============================================================================

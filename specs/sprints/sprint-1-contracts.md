@@ -3,9 +3,9 @@
 * **Product Name:** Appointly
 * **System Name:** Clinic Appointment & Scheduling Management System
 * **Sprint Scope:** Sprint 1 — System Foundation & Clinic Configuration (`F-001` to `F-007`)
-* **Document Version:** 1.0 — Deliverable 1 Baseline Confirmed
+* **Document Version:** 1.1 — Lab 7 Maintenance Revision (`MNT-LAB7-01`)
 * **Reference Documents:** SRS & Product Scope v1.0; Feature Inventory & Traceability v1.0; System-Level SDS v1.0; Three-Sprint Implementation Plan v1.0
-* **Status:** Engineering Baseline Approved
+* **Status:** Maintenance Revision v1.1 (Issue #40 — Pending Teammate Review)
 
 ---
 
@@ -15,6 +15,7 @@
 | :--- | :--- | :--- | :--- |
 | **v0.1** | 2026-11-01 | Appointly Team | Initial draft of Sprint 1 contracts (`F-001` to `F-007`), data schemas, REST endpoints, Acceptance Criteria, and STS test cases. |
 | **v1.0** | 2026-11-03 | Appointly Team | Aligned Sprint 1 baseline with Project Deliverable 1 & Lab 5 specifications: (1) scoped `F-001` & `F-002` to seeded test accounts with `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, and `GET/PUT /patients/me` (`DEC-017`), deferring self-registration, password change, and account suspension to Sprint 2; (2) designated `F-006` (Doctor Self-Schedule) and `F-005` (Doctor-Service Assignment) as primary Sprint 1 domain journeys; (3) moved Docker, CI/CD, and cloud smoke test gates out of Sprint 1 DoD into Lab 5 readiness criteria. |
+| **v1.1** | 2026-11-27 | Appointly Team (`Piink7878`, `Kamonnatt23`) | Maintenance revision **MNT-LAB7-01** (GitHub Issue #40): expanded `F-007` `ClinicSetting.fixed_start_interval_minutes` allowed values from `{5, 10, 15, 20, 30, 60}` to `{5, 10, 15, 20, 30, 45, 60}` (default remains `15`) to support 45-minute consultation slots; updated DB `CHECK` and API schema contracts; added `AC-F007-04` and `STS-S1-010`; preserved all existing `AC-F007-03` / `STS-S1-009` bounds and RBAC guards. |
 
 ---
 
@@ -109,7 +110,7 @@
 
 * **Mapped Requirements:** `FR-047`, `FR-048`; `BR-020`, `BR-021`, `BR-023`; `NFR-015`, `NFR-027`; `DEC-008`, `DEC-010`, `DEC-016`
 * **Data Schema Contract (`ClinicSetting`, `DoctorSchedule`, `ScheduleException`, `AuditLog`):**
-  * `ClinicSetting`: `setting_id` (`UUID PK`), `clinic_name` (`VARCHAR(150) NOT NULL`), `timezone` (`VARCHAR(64) DEFAULT 'Asia/Bangkok'`), `fixed_start_interval_minutes` (`INTEGER DEFAULT 15`, `CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60))`), `cancellation_cutoff_hours` (`INTEGER DEFAULT 24`, `CHECK (cancellation_cutoff_hours >= 0)`), `reminder_lead_hours` (`INTEGER DEFAULT 24`, `CHECK (reminder_lead_hours > 0)`), `updated_by` (`UUID FK -> User.user_id NULLABLE`), `updated_at` (`TIMESTAMPTZ UTC`).
+  * `ClinicSetting`: `setting_id` (`UUID PK`), `clinic_name` (`VARCHAR(150) NOT NULL`), `timezone` (`VARCHAR(64) DEFAULT 'Asia/Bangkok'`), `fixed_start_interval_minutes` (`INTEGER DEFAULT 15`, `CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 45, 60))`), `cancellation_cutoff_hours` (`INTEGER DEFAULT 24`, `CHECK (cancellation_cutoff_hours >= 0)`), `reminder_lead_hours` (`INTEGER DEFAULT 24`, `CHECK (reminder_lead_hours > 0)`), `updated_by` (`UUID FK -> User.user_id NULLABLE`), `updated_at` (`TIMESTAMPTZ UTC`).
 * **API Contract:**
   * `GET /api/v1/admin/doctors/:doctorId/schedule` (**ADMIN**): Retrieves weekly schedule and exceptions for any specified doctor.
   * `PUT /api/v1/admin/doctors/:doctorId/schedule` (**ADMIN**): Updates any doctor's weekly schedule (validating non-overlapping windows) and writes an `AuditLog` entry (`ADMIN_SCHEDULE_UPDATE`). Returns `200 OK`.
@@ -158,7 +159,8 @@
 ### 2.7 F-007: Administrator Schedule & Clinic Configuration
 * **AC-F007-01 (Positive — Admin Schedule Override & Clinic Settings Update):** Given an `ADMIN` updates Doctor D1's schedule or updates `ClinicSetting` (`fixedStartIntervalMinutes = 15`, `cancellationCutoffHours = 24`, `timezone = 'Asia/Bangkok'`), then PostgreSQL persists the update (`200 OK`) and inserts a corresponding `AuditLog` record.
 * **AC-F007-02 (Negative — Unauthorized Settings Access & Invalid Timezone):** A `DOCTOR` calling `PATCH /api/v1/admin/settings` receives `403 Forbidden`. An `ADMIN` submitting an invalid IANA timezone (`'Mars/Olympus'`) receives `400 Bad Request`.
-* **AC-F007-03 (Boundary — Interval & Cutoff Lower Bounds):** Setting `fixedStartIntervalMinutes = 0` or unsupported interval `7` returns `400 Bad Request`. Setting `cancellationCutoffHours = 0` is accepted (`200 OK`); `-1` is rejected (`400 Bad Request`).
+* **AC-F007-03 (Boundary — Interval & Cutoff Lower Bounds):** Setting `fixedStartIntervalMinutes = 0` or unsupported interval `7` returns `400 Bad Request`. Setting `cancellationCutoffHours = 0` is accepted (`200 OK`); `-1` is rejected (`400 Bad Request`). *(Lower-bound and unsupported-interval rejections remain unchanged in v1.1; the allowed interval set is expanded to `{5, 10, 15, 20, 30, 45, 60}` in `AC-F007-04`.)*
+* **AC-F007-04 (Maintenance v1.1 — 45-Minute Fixed Start Interval Support, Issue #40):** Given an authenticated `ADMIN`, when submitting `PATCH /api/v1/admin/settings` with `fixedStartIntervalMinutes = 45` (numeric `45` or string `"45"`), then the API returns `200 OK`, PostgreSQL persists `45` (accepted by `chk_clinic_settings_interval`), `GET /api/v1/settings/public` returns `fixedStartIntervalMinutes = 45`, an `AuditLog` entry (`CLINIC_SETTINGS_UPDATED`) is recorded when the value changed, and other `ClinicSetting` fields remain unaltered. Boundary neighbours `44` and `46` (along with `61`, `4.5`, `0`, `7`, `-45`, `"abc"`) remain rejected (`400 Bad Request`), existing values `{5, 10, 15, 20, 30, 60}` remain accepted (`200 OK`), and non-admin requests remain rejected (`403 Forbidden` for `DOCTOR`/`PATIENT`, `401 Unauthorized` if unauthenticated).
 
 ---
 
@@ -182,7 +184,8 @@
 | **STS-S1-006** | AC-F004-01, AC-F004-02, AC-F004-03 | API | Authenticated `ADMIN` and `PATIENT` | Admin creates Service (`durationMinutes = 30` -> `201`), boundary `durationMinutes = 0` or `481` rejected (`400`), deactivated service hidden from Patient `GET /api/v1/services`. |
 | **STS-S1-007** | AC-F005-01, AC-F005-02, AC-F005-03 | API + E2E | Active Doctor D1, Active Service S1, Active Service S_EMPTY | Admin assigns `(D1, S1)` (`201`), duplicate `(D1, S1)` rejected (`409 DUPLICATE_ASSIGNMENT`), `GET /api/v1/doctors?serviceId=S1` returns `[D1]`, `serviceId=S_EMPTY` returns `[]`. |
 | **STS-S1-008** | AC-F006-01, AC-F006-02, AC-F006-03 | Unit + API + E2E | Authenticated `DOCTOR` | `PUT /api/v1/doctors/me/schedule` with split shifts (`09:00–12:00`, `13:00–17:00`) persists (`200 OK`) and `GET /doctors/me/schedule` retrieves it; overlapping shift (`11:00–14:00`) rejected (`422 INVALID_SCHEDULE_WINDOW`); full-day `HOLIDAY` exception saved (`201`). |
-| **STS-S1-009** | AC-F007-01, AC-F007-02, AC-F007-03 | API | Authenticated `ADMIN` | `PATCH /api/v1/admin/settings` updates interval (`15`) and cutoff (`0` boundary -> `200`, `-1` -> `400`), persists in PostgreSQL, and creates `AuditLog` entry with Admin `user_id` and UTC timestamp. |
+| **STS-S1-009** *(unchanged in v1.1)* | AC-F007-01, AC-F007-02, AC-F007-03 | API | Authenticated `ADMIN` | `PATCH /api/v1/admin/settings` updates interval (`15`) and cutoff (`0` boundary -> `200`, `-1` -> `400`), persists in PostgreSQL, and creates `AuditLog` entry with Admin `user_id` and UTC timestamp. |
+| **STS-S1-010** | AC-F007-04 | API + DB + UI | Authenticated `ADMIN`, `DOCTOR`, `PATIENT`, and unauthenticated client; PostgreSQL `clinic_settings` | `ADMIN` `PATCH /api/v1/admin/settings` with `45` or `"45"` returns `200 OK`, persists `45` in DB (verified at DB level against `chk_clinic_settings_interval`), returns `45` on `GET /api/v1/settings/public`, writes `CLINIC_SETTINGS_UPDATED` audit row, and leaves other settings fields unchanged; `{5, 10, 15, 20, 30, 60}` remain `200 OK`; invalid boundaries `44`, `46`, `61`, `4.5`, `0`, `7`, `-45`, `"abc"` return `400 VALIDATION_ERROR` (and DB `CHECK` rejects `7`); `DOCTOR`/`PATIENT` receive `403 Forbidden` and anonymous receives `401 Unauthorized`; `/admin/settings` dropdown offers `45 minutes` and inline validation accepts `'45'` while rejecting `'44'` and `'46'`. |
 
 ---
 
@@ -201,4 +204,4 @@
 8. **Transparent Disclosure:** Any known limitations or incomplete items are explicitly disclosed in Part F of the Deliverable 1 submission PDF.
 
 ---
-*End of Appointly Sprint 1 Engineering Contracts — Version 1.0*
+*End of Appointly Sprint 1 Engineering Contracts — Version 1.1*

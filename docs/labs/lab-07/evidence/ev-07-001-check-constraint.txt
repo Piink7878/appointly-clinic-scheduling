@@ -1,0 +1,37 @@
+# EV-07-001: Database CHECK Constraint Proof (Pre-Change)
+# Date: 2026-11-27 22:52 (Asia/Bangkok)
+# Branch/HEAD: staging @ 4c3b5d567ab52496c82d8a17548c005cda01973a
+
+## 1. Migration SQL (`server/prisma/migrations/20261113172926_init_sprint1/migration.sql:185`)
+ALTER TABLE "clinic_settings" ADD CONSTRAINT "chk_clinic_settings_interval" CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60));
+
+## 2. Prisma Schema Comment (`server/prisma/schema.prisma:176`)
+  fixedStartIntervalMinutes  Int       @default(15) @map("fixed_start_interval_minutes") // CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60))
+
+## 3. Live Local PostgreSQL Catalog (`pg_constraint` on `clinic_settings`)
+[
+  {
+    "conname": "chk_clinic_settings_interval",
+    "definition": "CHECK ((fixed_start_interval_minutes = ANY (ARRAY[5, 10, 15, 20, 30, 60])))"
+  },
+  {
+    "conname": "chk_clinic_settings_cutoff",
+    "definition": "CHECK ((cancellation_cutoff_hours >= 0))"
+  },
+  {
+    "conname": "chk_clinic_settings_reminder",
+    "definition": "CHECK ((reminder_lead_hours > 0))"
+  }
+]
+
+## 4. Prisma Migrate Status (`cd server && npx prisma migrate status`)
+1 migration found in prisma/migrations
+Database schema is up to date!
+
+## 5. Current `clinic_settings` Row
+settingId: ff0c5453-618f-465f-b25a-d899aa842ce7
+clinicName: Appointly Clinic
+timezone: Asia/Bangkok
+fixedStartIntervalMinutes: 15
+cancellationCutoffHours: 24
+reminderLeadHours: 24

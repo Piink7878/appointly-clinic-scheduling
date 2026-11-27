@@ -60,6 +60,6 @@ Every repository usage of `fixedStartIntervalMinutes`, `fixed_start_interval_min
 
 ---
 
-## 5. Pre-Existing Documentation Debt Observed
+## 5. Pre-Existing Documentation Debt Observed (Resolved)
 
-* `specs/03-system-level-sds.md:407` currently documents `fixed_start_interval_minutes` as `INTEGER (DEFAULT 15, CHECK > 0)`, which drifted from the Sprint 1 contract (`IN (5, 10, 15, 20, 30, 60)`) and actual SQL migration `20261113172926_init_sprint1`. This wording will be aligned to `IN (5, 10, 15, 20, 30, 45, 60)` in the Step 3 contract revision commit.
+* Prior to `MNT-LAB7-01`, `specs/03-system-level-sds.md:407` documented `fixed_start_interval_minutes` as `INTEGER (DEFAULT 15, CHECK > 0)`, which had drifted from the Sprint 1 v1.0 contract (`IN (5, 10, 15, 20, 30, 60)`) and the initial SQL migration `20261113172926_init_sprint1`. That pre-existing wording drift was aligned to `INTEGER (DEFAULT 15, CHECK IN (5, 10, 15, 20, 30, 45, 60))` in the Step 3 contract revision commit (`7ad1241`).

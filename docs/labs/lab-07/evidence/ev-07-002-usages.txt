@@ -1,0 +1,84 @@
+﻿# EV-07-002: Usage Grep of fixedStartIntervalMinutes / Interval Constants
+# Date: 2026-11-27 22:50 (Asia/Bangkok)
+# Branch/HEAD: staging @ 4c3b5d567ab52496c82d8a17548c005cda01973a
+# Command: git grep -n -E "fixedStartIntervalMinutes|fixed_start_interval_minutes|FIXED_START_INTERVALS|ALLOWED_FIXED_START_INTERVALS|chk_clinic_settings_interval" server client specs deploy
+
+client/src/modules/settings/AdminSettingsPage.tsx:7://   Asia/Bangkok), fixedStartIntervalMinutes (5, 10, 15, 20, 30, 60) and
+client/src/modules/settings/AdminSettingsPage.tsx:20:  FIXED_START_INTERVALS,
+client/src/modules/settings/AdminSettingsPage.tsx:225:            error={errors.fixedStartIntervalMinutes}
+client/src/modules/settings/AdminSettingsPage.tsx:231:                value={values.fixedStartIntervalMinutes}
+client/src/modules/settings/AdminSettingsPage.tsx:232:                onChange={(e) => setField('fixedStartIntervalMinutes', e.target.value)}
+client/src/modules/settings/AdminSettingsPage.tsx:233:                aria-invalid={Boolean(errors.fixedStartIntervalMinutes)}
+client/src/modules/settings/AdminSettingsPage.tsx:236:                className={fieldInputClass(Boolean(errors.fixedStartIntervalMinutes))}
+client/src/modules/settings/AdminSettingsPage.tsx:238:                {FIXED_START_INTERVALS.map((minutes) => (
+client/src/modules/settings/api.ts:5://   GET   /api/v1/settings/public   { clinicName, timezone, fixedStartIntervalMinutes,
+client/src/modules/settings/api.ts:18:  fixedStartIntervalMinutes: Number(data.fixedStartIntervalMinutes),
+client/src/modules/settings/types.ts:12:  fixedStartIntervalMinutes: number;
+client/src/modules/settings/validation.ts:8://   fixedStartIntervalMinutes  one of 5, 10, 15, 20, 30, 60 (0 and 7 are rejected)
+client/src/modules/settings/validation.ts:16:export const FIXED_START_INTERVALS = [5, 10, 15, 20, 30, 60] as const;
+client/src/modules/settings/validation.ts:24:  fixedStartIntervalMinutes: string;
+client/src/modules/settings/validation.ts:33:  fixedStartIntervalMinutes: String(s.fixedStartIntervalMinutes),
+client/src/modules/settings/validation.ts:72:  const interval = Number(values.fixedStartIntervalMinutes);
+client/src/modules/settings/validation.ts:73:  if (!(FIXED_START_INTERVALS as readonly number[]).includes(interval))
+client/src/modules/settings/validation.ts:74:    errors.fixedStartIntervalMinutes = `Choose one of: ${FIXED_START_INTERVALS.join(', ')} minutes.`;
+client/src/modules/settings/validation.ts:90:  fixedStartIntervalMinutes: Number(values.fixedStartIntervalMinutes),
+client/src/modules/settings/validation.ts:99:    values.fixedStartIntervalMinutes !== original.fixedStartIntervalMinutes ||
+client/tests/sprint-1/admin-settings.test.tsx:20:  FIXED_START_INTERVALS,
+client/tests/sprint-1/admin-settings.test.tsx:51:  fixedStartIntervalMinutes: 15,
+client/tests/sprint-1/admin-settings.test.tsx:87:    expect(validateSettingsForm({ ...valid, fixedStartIntervalMinutes: value }).fixedStartIntervalMinutes).toBeUndefined();
+client/tests/sprint-1/admin-settings.test.tsx:91:    expect(validateSettingsForm({ ...valid, fixedStartIntervalMinutes: value }).fixedStartIntervalMinutes).toBeDefined();
+client/tests/sprint-1/admin-settings.test.tsx:123:      toSettingsInput({ clinicName: '  Clinic  ', timezone: ' UTC ', fixedStartIntervalMinutes: '30', cancellationCutoffHours: ' 0 ' })
+client/tests/sprint-1/admin-settings.test.tsx:124:    ).toEqual({ clinicName: 'Clinic', timezone: 'UTC', fixedStartIntervalMinutes: 30, cancellationCutoffHours: 0 });
+client/tests/sprint-1/admin-settings.test.tsx:137:    expect(FIXED_START_INTERVALS).toEqual([5, 10, 15, 20, 30, 60]);
+client/tests/sprint-1/admin-settings.test.tsx:150:    resolve({ ...settings, clinicName: 'Siam Clinic', fixedStartIntervalMinutes: 30, cancellationCutoffHours: 12 });
+client/tests/sprint-1/admin-settings.test.tsx:190:      fixedStartIntervalMinutes: 30,
+client/tests/sprint-1/admin-settings.test.tsx:203:      fixedStartIntervalMinutes: 30,
+client/tests/sprint-1/e2e/sprint-1.spec.ts:288:    const { settingId, clinicName, timezone, fixedStartIntervalMinutes, cancellationCutoffHours, reminderLeadHours, updatedBy } =
+client/tests/sprint-1/e2e/sprint-1.spec.ts:292:      data: { clinicName, timezone, fixedStartIntervalMinutes, cancellationCutoffHours, reminderLeadHours, updatedBy },
+client/tests/sprint-1/e2e/sprint-1.spec.ts:392:    await expect(page.getByLabel('Fixed start interval')).toHaveValue(String(original.fixedStartIntervalMinutes));
+client/tests/sprint-1/e2e/sprint-1.spec.ts:397:      fixedStartIntervalMinutes: original.fixedStartIntervalMinutes === 30 ? 20 : 30,
+client/tests/sprint-1/e2e/sprint-1.spec.ts:402:    await page.getByLabel('Fixed start interval').selectOption(String(updated.fixedStartIntervalMinutes));
+client/tests/sprint-1/e2e/sprint-1.spec.ts:410:    await expect(page.getByLabel('Fixed start interval')).toHaveValue(String(updated.fixedStartIntervalMinutes));
+client/tests/sprint-1/navigation.test.tsx:49:        return respond({ clinicName: 'Appointly Clinic', timezone: 'Asia/Bangkok', fixedStartIntervalMinutes: 15, cancellationCutoffHours: 24 });
+server/prisma/migrations/20261113172926_init_sprint1/migration.sql:114:    "fixed_start_interval_minutes" INTEGER NOT NULL DEFAULT 15,
+server/prisma/migrations/20261113172926_init_sprint1/migration.sql:185:ALTER TABLE "clinic_settings" ADD CONSTRAINT "chk_clinic_settings_interval" CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60));
+server/prisma/schema.prisma:176:  fixedStartIntervalMinutes  Int       @default(15) @map("fixed_start_interval_minutes") // CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60))
+server/prisma/seed-runner.ts:229:  // fixed_start_interval_minutes = 15
+server/prisma/seed-runner.ts:237:        fixedStartIntervalMinutes: 15,
+server/prisma/seed-runner.ts:252:        fixedStartIntervalMinutes: 15,
+server/src/modules/settings/controller.ts:18:   * Returns { clinicName, timezone, fixedStartIntervalMinutes, cancellationCutoffHours }.
+server/src/modules/settings/service.ts:16:  'fixedStartIntervalMinutes',
+server/src/modules/settings/service.ts:34:          fixedStartIntervalMinutes: 15,
+server/src/modules/settings/service.ts:53:   * { clinicName, timezone, fixedStartIntervalMinutes, cancellationCutoffHours }
+server/src/modules/settings/service.ts:60:      fixedStartIntervalMinutes: setting.fixedStartIntervalMinutes,
+server/src/modules/settings/service.ts:103:                fixedStartIntervalMinutes: current.fixedStartIntervalMinutes,
+server/src/modules/settings/service.ts:110:                fixedStartIntervalMinutes: updated.fixedStartIntervalMinutes,
+server/src/modules/settings/validation.ts:11:export const ALLOWED_FIXED_START_INTERVALS = [5, 10, 15, 20, 30, 60] as const;
+server/src/modules/settings/validation.ts:55:  fixedStartIntervalMinutes: z
+server/src/modules/settings/validation.ts:64:          invalid_type_error: 'fixedStartIntervalMinutes must be a number',
+server/src/modules/settings/validation.ts:66:        .int('fixedStartIntervalMinutes must be an integer')
+server/src/modules/settings/validation.ts:68:          (val) => (ALLOWED_FIXED_START_INTERVALS as readonly number[]).includes(val),
+server/src/modules/settings/validation.ts:70:            message: 'fixedStartIntervalMinutes must be one of: 5, 10, 15, 20, 30, 60',
+server/tests/sprint-1/integration/admin-settings.test.ts:103:          fixedStartIntervalMinutes: 15,
+server/tests/sprint-1/integration/admin-settings.test.ts:197:        fixedStartIntervalMinutes: 15,
+server/tests/sprint-1/integration/admin-settings.test.ts:210:      expect(patchRes.body.data.fixedStartIntervalMinutes).toBe(15);
+server/tests/sprint-1/integration/admin-settings.test.ts:219:      expect(publicRes.body.data.fixedStartIntervalMinutes).toBe(15);
+server/tests/sprint-1/integration/admin-settings.test.ts:315:    it('Submitting fixedStartIntervalMinutes as 0 returns 400 Bad Request', async () => {
+server/tests/sprint-1/integration/admin-settings.test.ts:319:        .send({ fixedStartIntervalMinutes: 0 });
+server/tests/sprint-1/integration/admin-settings.test.ts:325:    it('Submitting fixedStartIntervalMinutes as unsupported value 7 returns 400 Bad Request', async () => {
+server/tests/sprint-1/integration/admin-settings.test.ts:329:        .send({ fixedStartIntervalMinutes: 7 });
+server/tests/sprint-1/integration/api-robustness.test.ts:149:      ['ADMIN', 'PATCH', '/admin/settings', { fixedStartIntervalMinutes: 'abc', cancellationCutoffHours: {} }],
+server/tests/sprint-1/integration/api-robustness.test.ts:322:          fixedStartIntervalMinutes: 15,
+server/tests/sprint-1/integration/api-robustness.test.ts:332:            fixedStartIntervalMinutes: saved.fixedStartIntervalMinutes,
+server/tests/sprint-1/integration/api-robustness.test.ts:351:        const other = await request(app).patch('/api/v1/admin/settings').set(as('ADMIN')).send({ fixedStartIntervalMinutes: 30 });
+server/tests/sprint-1/integration/api-robustness.test.ts:359:            fixedStartIntervalMinutes: saved.fixedStartIntervalMinutes,
+server/tests/sprint-1/integration/auth.test.ts:261:        .send({ fixedStartIntervalMinutes: 30 });
+specs/03-system-level-sds.md:407:| `fixed_start_interval_minutes` | `INTEGER (DEFAULT 15, CHECK > 0)` | Candidate slot interval in minutes (`DEC-008`) |
+specs/api/openapi.yaml:467:                          fixedStartIntervalMinutes: { type: integer }
+specs/api/openapi.yaml:964:                fixedStartIntervalMinutes: { type: integer, enum: [5, 10, 15, 20, 30, 60] }
+specs/api/openapi.yaml:1321:        fixedStartIntervalMinutes: { type: integer, enum: [5, 10, 15, 20, 30, 60] }
+specs/sprints/sprint-1-contracts.md:112:  * `ClinicSetting`: `setting_id` (`UUID PK`), `clinic_name` (`VARCHAR(150) NOT NULL`), `timezone` (`VARCHAR(64) DEFAULT 'Asia/Bangkok'`), `fixed_start_interval_minutes` (`INTEGER DEFAULT 15`, `CHECK (fixed_start_interval_minutes IN (5, 10, 15, 20, 30, 60))`), `cancellation_cutoff_hours` (`INTEGER DEFAULT 24`, `CHECK (cancellation_cutoff_hours >= 0)`), `reminder_lead_hours` (`INTEGER DEFAULT 24`, `CHECK (reminder_lead_hours > 0)`), `updated_by` (`UUID FK -> User.user_id NULLABLE`), `updated_at` (`TIMESTAMPTZ UTC`).
+specs/sprints/sprint-1-contracts.md:117:  * `GET /api/v1/settings/public` (**Public / Authenticated**): Returns `{ clinicName, timezone, fixedStartIntervalMinutes, cancellationCutoffHours }`.
+specs/sprints/sprint-1-contracts.md:118:  * `PATCH /api/v1/admin/settings` (**ADMIN**): Updates clinic configuration fields (`clinicName`, `timezone`, `fixedStartIntervalMinutes`, `cancellationCutoffHours`, `reminderLeadHours`), validates IANA timezone string, and records an `AuditLog` entry (`CLINIC_SETTINGS_UPDATED`). Returns `200 OK`.
+specs/sprints/sprint-1-contracts.md:159:* **AC-F007-01 (Positive โ€” Admin Schedule Override & Clinic Settings Update):** Given an `ADMIN` updates Doctor D1's schedule or updates `ClinicSetting` (`fixedStartIntervalMinutes = 15`, `cancellationCutoffHours = 24`, `timezone = 'Asia/Bangkok'`), then PostgreSQL persists the update (`200 OK`) and inserts a corresponding `AuditLog` record.
+specs/sprints/sprint-1-contracts.md:161:* **AC-F007-03 (Boundary โ€” Interval & Cutoff Lower Bounds):** Setting `fixedStartIntervalMinutes = 0` or unsupported interval `7` returns `400 Bad Request`. Setting `cancellationCutoffHours = 0` is accepted (`200 OK`); `-1` is rejected (`400 Bad Request`).

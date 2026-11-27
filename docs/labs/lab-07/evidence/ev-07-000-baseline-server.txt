@@ -1,0 +1,362 @@
+﻿# EV-07-000a: Baseline Server Test Suite (Pre-Change)
+# Date: 2026-11-27 22:50 (Asia/Bangkok)
+# Branch/HEAD: staging @ 4c3b5d567ab52496c82d8a17548c005cda01973a
+# Command: cd server && npx vitest run
+# Result: 25 test files passed, 548 tests passed, 0 failed, 0 skipped (exit code 0)
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/server
+
+stdout | tests/sprint-1/integration/doctors.test.ts > Doctor Management System (F-003, F-005) > 5. F-005 Doctor-Service Assignment & Filtered Retrieval > should reject duplicate assignment with 409 Conflict (DUPLICATE_ASSIGNMENT) (AC-F005-02)
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+D:\modcom\CPE334_SE\lab05\toktickit-lab5-starter\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+โ’ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+ โ“ tests/sprint-1/integration/doctors.test.ts (27 tests) 1066ms
+ โ“ tests/sprint-1/integration/services.test.ts (41 tests) 774ms
+ โ“ tests/sprint-1/integration/schedules.test.ts (22 tests) 637ms
+stdout | tests/sprint-1/integration/doctor-services.test.ts > Doctor-Service Assignment (F-005) > 2. AC-F005-02 (Negative โ€” Duplicate Assignment, Missing Resources & RBAC) > re-submitting an existing (doctor, service) pair returns 409 DUPLICATE_ASSIGNMENT without a second row or audit entry
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+D:\modcom\CPE334_SE\lab05\toktickit-lab5-starter\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+โ’ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+stdout | tests/sprint-1/integration/doctor-services.test.ts > Doctor-Service Assignment (F-005) > 2. AC-F005-02 (Negative โ€” Duplicate Assignment, Missing Resources & RBAC) > two concurrent identical requests: exactly one 201 and one 409 (database UNIQUE constraint / P2002)
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+D:\modcom\CPE334_SE\lab05\toktickit-lab5-starter\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+โ’ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+stdout | tests/sprint-1/integration/doctor-services.test.ts > Doctor-Service Assignment (F-005) > 2. AC-F005-02 (Negative โ€” Duplicate Assignment, Missing Resources & RBAC) > a batch containing an already-assigned service fails with 409 and assigns nothing (atomic)
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+D:\modcom\CPE334_SE\lab05\toktickit-lab5-starter\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+โ’ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+ โ“ tests/sprint-1/integration/doctor-services.test.ts (30 tests) 1136ms
+ โ“ tests/sprint-1/integration/api-robustness.test.ts (91 tests) 1962ms
+ โ“ tests/sprint-1/integration/patients.test.ts (19 tests) 942ms
+ โ“ tests/sprint-1/integration/auth.test.ts (20 tests) 2323ms
+ โ“ tests/sprint-1/integration/admin-settings.test.ts (13 tests) 722ms
+stdout | tests/sprint-1/integration/schedule-exception-defects.test.ts > Schedule Exception Validation Defects (DEF-AP-02, DEF-AP-03) > DEF-AP-02 Concurrency โ€” Simultaneous conflicting requests > serializes two concurrent overlapping partial-day requests on 2027-02-12: exactly one 201 and one 409
+prisma:error 
+Invalid `prisma.scheduleException.create()` invocation:
+
+
+Transaction failed due to a write conflict or a deadlock. Please retry your transaction
+
+ โ“ tests/sprint-1/integration/schedule-exception-defects.test.ts (7 tests) 683ms
+ โ“ tests/sprint-1/integration/schedule-audit.test.ts (13 tests) 567ms
+stdout | tests/sprint-1/integration/audit-coverage.test.ts > AuditLog coverage for administrative actions > F-005 doctor-service assignment > assign writes DOCTOR_SERVICE_ASSIGNED once and unassign writes DOCTOR_SERVICE_UNASSIGNED once
+prisma:error 
+Invalid `tx.doctorService.create()` invocation in
+D:\modcom\CPE334_SE\lab05\toktickit-lab5-starter\server\src\modules\doctors\service.ts:505:53
+
+  502 const assignments = [];
+  503 for (const serviceId of serviceIds) {
+  504   const service = serviceById.get(serviceId)!;
+โ’ 505   const assignment = await tx.doctorService.create(
+Unique constraint failed on the fields: (`doctor_id`,`service_id`)
+
+ โ“ tests/sprint-1/integration/audit-coverage.test.ts (11 tests) 590ms
+ โ“ tests/sprint-1/unit/scheduleValidator.test.ts (17 tests) 19ms
+stderr | tests/sprint-1/integration/health.test.ts > Server Foundation & Health Checks > GET /api/v1/ready should return 503 and db disconnected when DB query fails
+[ERROR] 2026-11-27T15:50:28.938Z - PostgreSQL database readiness check failed: {
+  name: 'Error',
+  message: 'Connection lost',
+  stack: 'Error: Connection lost\n' +
+    '    at D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\server\\tests\\sprint-1\\integration\\health.test.ts:52:75\n' +
+    '    at file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:146:14\n' +
+    '    at file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:533:11\n' +
+    '    at runWithTimeout (file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:39:7)\n' +
+    '    at runTest (file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:1056:17)\n' +
+    '    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at runSuite (file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:1205:15)\n' +
+    '    at runSuite (file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:1205:15)\n' +
+    '    at runFiles (file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:1262:5)\n' +
+    '    at startTests (file:///D:/modcom/CPE334_SE/lab05/toktickit-lab5-starter/node_modules/@vitest/runner/dist/index.js:1271:3)'
+}
+
+stderr | tests/sprint-1/integration/health.test.ts > Shared Middleware: Error Handling & Envelope > should format unexpected errors into 500 standardized error envelope without leaking stack
+[ERROR] 2026-11-27T15:50:28.957Z - Unhandled internal server error: {
+  name: 'Error',
+  message: 'Unexpected disk failure',
+  stack: 'Error: Unexpected disk failure\n' +
+    '    at D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\server\\tests\\sprint-1\\integration\\health.test.ts:94:13\n' +
+    '    at Layer.handle [as handle_request] (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at router.process_params (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\body-parser\\lib\\types\\json.js:117:7)\n' +
+    '    at Layer.handle [as handle_request] (D:\\modcom\\CPE334_SE\\lab05\\toktickit-lab5-starter\\node_modules\\express\\lib\\router\\layer.js:95:5)'
+}
+
+ โ“ tests/sprint-1/integration/health.test.ts (15 tests) 305ms
+ โ“ tests/sprint-1/integration/schedule-privacy.test.ts (9 tests) 655ms
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI)
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI)
+Appointly database seed: Argon2 admin password hash generated.
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI)
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI)
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI)
+Appointly database seed: Seeded Service -> Flu Vaccination (15m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > keeps an existing INACTIVE admin inactive (status and password untouched)
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > keeps an existing INACTIVE admin inactive (status and password untouched)
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > keeps an existing INACTIVE admin inactive (status and password untouched)
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > keeps an existing INACTIVE admin inactive (status and password untouched)
+Appointly database seed: Seeded Service -> Flu Vaccination (15m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Clinic Settings unchanged
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Clinic Settings unchanged
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+Appointly database seed: Seeded Service -> Flu Vaccination (15m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Medical Services unchanged (status, duration, description)
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Medical Services unchanged (status, duration, description)
+Appointly database seed: Argon2 admin password hash generated.
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Medical Services unchanged (status, duration, description)
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Medical Services unchanged (status, duration, description)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > leaves existing Medical Services unchanged (status, duration, description)
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > does not touch existing demo accounts when demo seeding is off
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > does not touch existing demo accounts when demo seeding is off
+Appointly database seed: Argon2 admin password hash generated.
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > does not touch existing demo accounts when demo seeding is off
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > does not touch existing demo accounts when demo seeding is off
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > ADMIN_PASSWORD_RESET=true rotates the password hash only (role and status unchanged)
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > ADMIN_PASSWORD_RESET=true rotates the password hash only (role and status unchanged)
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: ADMIN_PASSWORD_RESET=true -> rotating admin password hash only.
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > ADMIN_PASSWORD_RESET=true rotates the password hash only (role and status unchanged)
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > ADMIN_PASSWORD_RESET=true rotates the password hash only (role and status unchanged)
+Appointly database seed: Seeded Service -> General Consultation (30m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > ADMIN_PASSWORD_RESET=true rotates the password hash only (role and status unchanged)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > ADMIN_PASSWORD_RESET=true rotates the password hash only (role and status unchanged)
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > a later seed without the flag does not rotate again (flag is not sticky)
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > a later seed without the flag does not rotate again (flag is not sticky)
+Appointly database seed: Argon2 admin password hash generated.
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > a later seed without the flag does not rotate again (flag is not sticky)
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > a later seed without the flag does not rotate again (flag is not sticky)
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > a later seed without the flag does not rotate again (flag is not sticky)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > a later seed without the flag does not rotate again (flag is not sticky)
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+Appointly database seed: Demo accounts skipped (production without SEED_DEMO_DATA=true).
+Appointly database seed: Existing ClinicSetting preserved (production).
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > running the production seed repeatedly overwrites nothing
+Appointly database seed: Seeded Service -> Flu Vaccination (20m)
+Appointly database seed: Doctor-Service assignments linked.
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Starting seeding process...
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Argon2 admin password hash generated.
+Appointly database seed: Seeded Admin user -> seed.policy.1795794630467@appointly.local
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Seeded Doctor user & profile -> doctor@appointly.local (Dr. Somchai Prasert)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Seeded secondary Doctor -> doctor.somchai@appointly.local
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Seeded Patient user & profile -> patient@appointly.local (Arisa Wongsuwan)
+Appointly database seed: Seeded secondary Patient -> patient.arisa@appointly.local
+Appointly database seed: Seeded Inactive user -> inactive@appointly.local
+Appointly database seed: ClinicSetting updated.
+Appointly database seed: Seeded Service -> General Consultation (30m)
+Appointly database seed: Seeded Service -> Comprehensive Health Checkup (60m)
+Appointly database seed: Seeded Service -> Flu Vaccination (15m)
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Doctor-Service assignments linked.
+
+stdout | tests/sprint-1/integration/seed-production.test.ts > Seed policy (production vs dev/CI) > dev/CI seeding still resets the admin, clinic settings and services to defaults
+Appointly database seed: Successfully completed all seeding tasks! ๐
+
+ โ“ tests/sprint-1/integration/seed-production.test.ts (9 tests) 1132ms
+ โ“ tests/sprint-1/unit/security.test.ts (14 tests) 415ms
+ โ“ tests/sprint-1/integration/route-guards.test.ts (67 tests) 886ms
+ โ“ tests/sprint-1/integration/timezone-handling.test.ts (12 tests) 326ms
+ โ“ tests/sprint-1/integration/login-rate-limit.test.ts (7 tests) 3602ms
+   โ“ Login brute-force protection > locks an account with 429 TOO_MANY_REQUESTS after 10 failed attempts, with Retry-After 696ms
+   โ“ Login brute-force protection > keeps a locked account locked even for the CORRECT password (otherwise guessing could simply continue) 487ms
+   โ“ Login brute-force protection > a successful sign-in resets the count, so ordinary typos never accumulate 962ms
+   โ“ Login brute-force protection > is case- and whitespace-insensitive about the e-mail (no bypass by changing the spelling) 471ms
+   โ“ Login brute-force protection > answers a locked-out attempt in the standard error envelope, and does not extend the lock by itself 483ms
+   โ“ Login brute-force protection > an unknown e-mail takes about as long as a wrong password (no account enumeration by timing) 424ms
+ โ“ tests/sprint-1/unit/shared-utils.test.ts (19 tests) 10ms
+ โ“ tests/sprint-1/unit/loginRateLimiter.test.ts (18 tests) 9ms
+ โ“ tests/sprint-1/unit/timezone.test.ts (35 tests) 27ms
+ โ“ tests/sprint-1/unit/seed-config.test.ts (14 tests) 6ms
+ โ“ tests/sprint-1/integration/settings-bounds.test.ts (4 tests) 508ms
+ โ“ tests/sprint-1/unit/seed-policy.test.ts (14 tests) 8ms
+
+ Test Files  25 passed (25)
+      Tests  548 passed (548)
+   Start at  22:50:08
+   Duration  32.64s (transform 525ms, setup 0ms, collect 6.70s, tests 19.31s, environment 4ms, prepare 1.84s)
+

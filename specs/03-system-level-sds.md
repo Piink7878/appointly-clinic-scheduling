@@ -404,7 +404,7 @@ Stores clinic-wide configurable operational parameters governed by Clinic Admini
 | `setting_id` | `UUID (PK)` | Singleton configuration identifier |
 | `clinic_name` | `VARCHAR(150) (NOT NULL)` | Official clinic display name |
 | `timezone` | `VARCHAR(64) (DEFAULT 'Asia/Bangkok', NOT NULL)` | IANA timezone identifier (`DEC-016`) |
-| `fixed_start_interval_minutes` | `INTEGER (DEFAULT 15, CHECK > 0)` | Candidate slot interval in minutes (`DEC-008`) |
+| `fixed_start_interval_minutes` | `INTEGER (DEFAULT 15, CHECK IN (5, 10, 15, 20, 30, 45, 60))` | Candidate slot interval in minutes (`DEC-008`; aligned with Contract v1.1 in MNT-LAB7-01) |
 | `cancellation_cutoff_hours` | `INTEGER (DEFAULT 24, CHECK >= 0)` | Minimum hours before appointment for patient cancel/reschedule (`DEC-010`) |
 | `reminder_lead_hours` | `INTEGER (DEFAULT 24, CHECK > 0)` | Hours before appointment to dispatch scheduled reminders |
 | `updated_by` | `UUID (FK -> User.user_id, NULLABLE)` | Last Administrator who updated settings |
